@@ -1,0 +1,28 @@
+.DS_Store
+.Rhistory
+
+# Local environment
+.env
+.venv/
+backend/.venv/
+
+# Runtime data
+*.db
+*.sqlite
+*.sqlite3
+backend/skill_orbit.db
+.logs/
+uploads/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Editor / OS
+.claude/
+.idea/
+.vscode/
+*.swp

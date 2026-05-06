@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - "feature/**"
+      - "fix/**"
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  backend:
+    name: Backend checks
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    env:
+      APP_ENV: test
+      DATABASE_URL: sqlite:///./ci_skill_orbit.db
+      AUTH_SECRET_KEY: ci-only-secret
+      DEFAULT_ADMIN_USERNAME: admin
+      DEFAULT_ADMIN_EMAIL: admin@example.com
+      DEFAULT_ADMIN_PASSWORD: admin123
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Run migrations
+        run: alembic upgrade head
+
+      - name: Run tests
+        run: pytest -q
+
+  frontend-static:
+    name: Frontend static smoke check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check frontend files exist
+        run: |
+          test -f "Skill Memory Globe.html"
+          test -f "orbit.js"
