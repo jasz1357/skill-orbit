@@ -12,7 +12,6 @@ backend/.venv/
 *.sqlite3
 backend/skill_orbit.db
 .logs/
-uploads/
 
 # Python
 __pycache__/

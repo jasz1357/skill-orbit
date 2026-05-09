@@ -1,13 +1,39 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-const API_BASE = localStorage.getItem('skill-orbit-api-base') || 'http://127.0.0.1:8000/api/v1';
-const BACKEND_MODE_KEY = 'skill-orbit-use-backend';
-const AUTH_TOKEN_KEY = 'skill-orbit-auth-token';
-const AUTH_USER_KEY = 'skill-orbit-auth-user';
-let useBackend = localStorage.getItem(BACKEND_MODE_KEY) === '1';
-let authToken = localStorage.getItem(AUTH_TOKEN_KEY) || '';
-let currentUser = readJson(localStorage.getItem(AUTH_USER_KEY));
+// ---------------- theme system ----------------
+// Two distinct visual worlds, each with isolated data:
+//   ORBIT  — cosmic night, dark Earth + city lights, satellite-tracking aesthetic
+//   BLOOM  — warm dawn, pastel garden moon, drifting pollen, watercolor aesthetic
+const THEMES = {
+  orbit: {
+    label: 'ORBIT',
+    cnLabel: '工作',
+    brandName: 'Skill & Orbit',
+    tagline: 'A PERSONAL UNIVERSE OF SKILLS',
+    defaultRings: [
+      { id:'craft',  label:'CRAFT',  labelCn:'', color:'#ffb066', r:1.55, tilt:[ 0.30, 0.10, 0.05], speed:0.06 },
+      { id:'theory', label:'THEORY', labelCn:'', color:'#7ed6e6', r:1.95, tilt:[-0.55, 0.40, 0.20], speed:0.04 },
+      { id:'life',   label:'LIFE',   labelCn:'', color:'#e69aa3', r:2.40, tilt:[ 0.80,-0.30, 0.10], speed:0.03 },
+    ],
+  },
+  bloom: {
+    label: 'BLOOM',
+    cnLabel: '生活',
+    brandName: 'Ember & Forge',
+    tagline: 'A LOG OF LIFE OFF THE GRID',
+    defaultRings: [
+      { id:'forge', label:'FORGE', labelCn:'锻', color:'#ff7a30', r:1.55, tilt:[ 0.20, 0.08, 0.06], speed:0.055 },
+      { id:'rest',  label:'REST',  labelCn:'息', color:'#7ed6e6', r:1.95, tilt:[-0.45, 0.30, 0.18], speed:0.038 },
+      { id:'kin',   label:'KIN',   labelCn:'亲', color:'#e88a96', r:2.40, tilt:[ 0.70,-0.25, 0.08], speed:0.026 },
+    ],
+  },
+};
+
+let currentTheme = (() => {
+  try{ return localStorage.getItem('skill-current-theme') || 'orbit'; }
+  catch(e){ return 'orbit'; }
+})();
 
 // ---------------- scene ----------------
 const scene = new THREE.Scene();
@@ -32,14 +58,15 @@ controls.minDistance = 3.4;
 controls.maxDistance = 11;
 controls.enablePan = false;
 
-// ---------------- starfield ----------------
+// ---------------- background fields (per-theme) ----------------
+// ORBIT: starfield — sharp distant suns
+// BLOOM: pollen field — soft warm motes drifting slowly upward
 function makeStars(count, radius){
   const g = new THREE.BufferGeometry();
   const pos = new Float32Array(count*3);
   const col = new Float32Array(count*3);
   const sz  = new Float32Array(count);
   for(let i=0;i<count;i++){
-    // uniform sphere
     const u = Math.random(), v = Math.random();
     const theta = 2*Math.PI*u;
     const phi = Math.acos(2*v - 1);
@@ -47,8 +74,6 @@ function makeStars(count, radius){
     pos[i*3+0] = r*Math.sin(phi)*Math.cos(theta);
     pos[i*3+1] = r*Math.sin(phi)*Math.sin(theta);
     pos[i*3+2] = r*Math.cos(phi);
-    const t = Math.random();
-    // tinted whites — cool to warm
     const c = new THREE.Color().setHSL(0.55 + (Math.random()-0.5)*0.2, 0.15, 0.6 + Math.random()*0.4);
     col[i*3+0]=c.r; col[i*3+1]=c.g; col[i*3+2]=c.b;
     sz[i] = Math.random() < 0.02 ? 2.4 : 0.6 + Math.random()*0.9;
@@ -59,8 +84,7 @@ function makeStars(count, radius){
   const m = new THREE.ShaderMaterial({
     transparent: true, depthWrite: false,
     vertexShader: `
-      attribute float size;
-      varying vec3 vColor;
+      attribute float size; varying vec3 vColor;
       void main(){
         vColor = color;
         vec4 mv = modelViewMatrix * vec4(position,1.0);
@@ -80,10 +104,73 @@ function makeStars(count, radius){
   });
   return new THREE.Points(g, m);
 }
-scene.add(makeStars(2200, 90));
+
+// Pollen / drifting motes — soft warm specks for BLOOM
+function makePollen(count, radius){
+  const g = new THREE.BufferGeometry();
+  const pos = new Float32Array(count*3);
+  const col = new Float32Array(count*3);
+  const sz  = new Float32Array(count);
+  const ph  = new Float32Array(count);
+  for(let i=0;i<count;i++){
+    const u = Math.random(), v = Math.random();
+    const theta = 2*Math.PI*u;
+    const phi = Math.acos(2*v - 1);
+    const r = radius * (0.55 + Math.random()*0.5);
+    pos[i*3+0] = r*Math.sin(phi)*Math.cos(theta);
+    pos[i*3+1] = r*Math.sin(phi)*Math.sin(theta);
+    pos[i*3+2] = r*Math.cos(phi);
+    // warm cream / peach / dusty rose
+    const c = new THREE.Color().setHSL(0.07 + Math.random()*0.06, 0.35 + Math.random()*0.2, 0.78 + Math.random()*0.15);
+    col[i*3]=c.r; col[i*3+1]=c.g; col[i*3+2]=c.b;
+    sz[i] = 1.4 + Math.random()*2.2;
+    ph[i] = Math.random()*Math.PI*2;
+  }
+  g.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  g.setAttribute('color', new THREE.BufferAttribute(col,3));
+  g.setAttribute('size', new THREE.BufferAttribute(sz,1));
+  g.setAttribute('phase', new THREE.BufferAttribute(ph,1));
+  const m = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false,
+    uniforms: { uTime:{ value:0 } },
+    vertexShader: `
+      attribute float size; attribute float phase;
+      varying vec3 vColor; varying float vAlpha;
+      uniform float uTime;
+      void main(){
+        vColor = color;
+        vec3 p = position;
+        // gentle drift — soft vertical sway
+        p.y += sin(uTime*0.18 + phase)*0.6;
+        p.x += cos(uTime*0.13 + phase*1.3)*0.4;
+        // breathing alpha
+        vAlpha = 0.45 + 0.35*sin(uTime*0.6 + phase*2.0);
+        vec4 mv = modelViewMatrix * vec4(p,1.0);
+        gl_PointSize = size * (260.0 / -mv.z);
+        gl_Position = projectionMatrix * mv;
+      }`,
+    fragmentShader: `
+      varying vec3 vColor; varying float vAlpha;
+      void main(){
+        vec2 c = gl_PointCoord - 0.5;
+        float d = length(c);
+        float a = smoothstep(0.5, 0.0, d);
+        a = pow(a, 2.0);
+        gl_FragColor = vec4(vColor, a*vAlpha);
+      }`,
+    vertexColors: true,
+  });
+  return { points: new THREE.Points(g, m), material: m };
+}
+
+const starfield = makeStars(2200, 90);
+scene.add(starfield);
+const pollen = makePollen(1400, 70);
+scene.add(pollen.points);
+pollen.points.visible = false;  // legacy: BLOOM no longer uses pollen — kept to avoid uniform lookups changing
 
 // far nebulae as faint colored gradient sphere
-{
+const nebulaeORBIT = (() => {
   const g = new THREE.SphereGeometry(120, 32, 32);
   const m = new THREE.ShaderMaterial({
     side: THREE.BackSide,
@@ -100,8 +187,38 @@ scene.add(makeStars(2200, 90));
         gl_FragColor = vec4(c, 1.0);
       }`
   });
-  scene.add(new THREE.Mesh(g, m));
-}
+  const mesh = new THREE.Mesh(g, m);
+  scene.add(mesh);
+  return mesh;
+})();
+
+// BLOOM nebula: warm dawn gradient — cream top, peach mid, dusty rose bottom
+const nebulaeBLOOM = (() => {
+  const g = new THREE.SphereGeometry(120, 32, 32);
+  const m = new THREE.ShaderMaterial({
+    side: THREE.BackSide,
+    vertexShader: `varying vec3 vN; void main(){ vN = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+    fragmentShader: `
+      varying vec3 vN;
+      void main(){
+        float y = vN.y * 0.5 + 0.5;
+        // top: cream, middle: peach, bottom: dusty rose
+        vec3 cream = vec3(0.96, 0.90, 0.80);
+        vec3 peach = vec3(0.92, 0.78, 0.66);
+        vec3 rose  = vec3(0.78, 0.62, 0.60);
+        vec3 c = mix(rose, peach, smoothstep(0.0, 0.55, y));
+        c = mix(c, cream, smoothstep(0.55, 1.0, y));
+        // soft warm vignette darkening at horizon
+        float vign = 1.0 - pow(abs(vN.y), 1.4);
+        c = mix(c, c*0.92, vign*0.25);
+        gl_FragColor = vec4(c, 1.0);
+      }`
+  });
+  const mesh = new THREE.Mesh(g, m);
+  scene.add(mesh);
+  return mesh;
+})();
+nebulaeBLOOM.visible = false;  // legacy: BLOOM now shares the cosmic background
 
 // ---------------- earth (procedural, no textures) ----------------
 const EARTH_R = 1.0;
@@ -223,7 +340,118 @@ const earthMat = new THREE.ShaderMaterial({
 
 const earthGeo = new THREE.SphereGeometry(EARTH_R, 96, 96);
 const earth = new THREE.Mesh(earthGeo, earthMat);
-scene.add(earth);
+const groupOrbit = new THREE.Group();
+groupOrbit.add(earth);
+scene.add(groupOrbit);
+
+// ---------------- BLOOM planet — Verdania, a living green world ----------------
+// Earth-sibling life world: teal-green oceans, dark olive forest continents,
+// warm golden city networks on the night side, drifting white cloud bands.
+// Shader mirrors the ORBIT earth (continents + cities + clouds + rim) but
+// re-keyed to a moss/teal/gold palette so it reads as the "living" twin.
+const earthBloomMat = new THREE.ShaderMaterial({
+  uniforms: {
+    uTime:   { value: 0 },
+    uSunDir: { value: new THREE.Vector3(0.55, 0.30, 0.65).normalize() },
+    uCamPos: { value: new THREE.Vector3() },
+    uOcean:  { value: new THREE.Color('#0e3a3a') },
+    uShallow:{ value: new THREE.Color('#3aa884') },
+    uLand:   { value: new THREE.Color('#1f3320') },
+    uHigh:   { value: new THREE.Color('#7a8a55') },
+    uGold:   { value: new THREE.Color('#ffc060') },
+  },
+  vertexShader: `
+    varying vec3 vWorldPos; varying vec3 vNormal; varying vec3 vObjPos;
+    void main(){
+      vObjPos = normalize(position);
+      vNormal = normalize(normalMatrix * normal);
+      vec4 wp = modelMatrix * vec4(position,1.0);
+      vWorldPos = wp.xyz;
+      gl_Position = projectionMatrix * viewMatrix * wp;
+    }`,
+  fragmentShader: `
+    precision highp float;
+    varying vec3 vWorldPos; varying vec3 vNormal; varying vec3 vObjPos;
+    uniform float uTime;
+    uniform vec3 uSunDir, uCamPos, uOcean, uShallow, uLand, uHigh, uGold;
+
+    float hash(vec3 p){ return fract(sin(dot(p, vec3(127.1,311.7,74.7)))*43758.5453); }
+    float noise(vec3 p){
+      vec3 i=floor(p), f=fract(p); f = f*f*(3.0-2.0*f);
+      float n = mix(
+        mix(mix(hash(i),hash(i+vec3(1,0,0)),f.x), mix(hash(i+vec3(0,1,0)),hash(i+vec3(1,1,0)),f.x),f.y),
+        mix(mix(hash(i+vec3(0,0,1)),hash(i+vec3(1,0,1)),f.x), mix(hash(i+vec3(0,1,1)),hash(i+vec3(1,1,1)),f.x),f.y), f.z);
+      return n;
+    }
+    float fbm(vec3 p){
+      float v=0.0, a=0.5;
+      for(int i=0;i<6;i++){ v+=a*noise(p); p*=2.07; a*=0.5; }
+      return v;
+    }
+    float fbmWarp(vec3 p){
+      vec3 q = vec3(fbm(p), fbm(p+vec3(5.2,1.3,2.8)), fbm(p+vec3(1.7,9.2,4.4)));
+      return fbm(p + 1.6*q);
+    }
+
+    void main(){
+      vec3 N = normalize(vObjPos);
+
+      float continents = fbm(N*1.8 + 3.1);
+      float detail = fbm(N*5.0);
+      float c = continents + detail*0.15;
+      float landMask = smoothstep(0.50, 0.58, c);
+
+      float landVar = fbm(N*3.4 + 11.0);
+      vec3 landCol = mix(uLand, uHigh, smoothstep(0.45, 0.75, landVar));
+
+      float oceanShallow = smoothstep(0.42, 0.52, c);
+      float oceanFlow = fbm(N*6.0 + vec3(uTime*0.020, 0.0, -uTime*0.018));
+      vec3 oceanCol = mix(uOcean, uOcean*1.4 + vec3(0.0, 0.04, 0.04), oceanFlow*0.5);
+      oceanCol = mix(oceanCol, uShallow, oceanShallow * 0.55);
+
+      vec3 base = mix(oceanCol, landCol, landMask);
+
+      float diff = max(dot(N, normalize(uSunDir)), 0.0);
+      float nightFactor = smoothstep(0.25, -0.05, dot(N, normalize(uSunDir)));
+      vec3 ambient = mix(vec3(0.04, 0.10, 0.10), vec3(0.025, 0.035, 0.025), landMask);
+      vec3 col = ambient + base * (0.45 + 1.05*diff);
+
+      vec3 cellP = N*26.0;
+      float coast = 1.0 - smoothstep(0.0, 0.06, abs(continents - 0.55));
+      float density = landMask * (0.45 + 0.55*coast);
+      float city = 0.0;
+      for(int i=0;i<4;i++){
+        float k = float(i+1);
+        float v = noise(cellP*k + float(i)*7.3);
+        city += pow(smoothstep(0.84, 0.99, v), 5.0) * (0.7/k);
+      }
+      float spark = pow(noise(cellP*3.0 + 13.0), 18.0) * 4.0;
+      city += spark * landMask;
+      city *= density;
+      city *= smoothstep(0.95, 0.35, abs(N.y));
+      col += uGold * city * (0.8 + 1.8*nightFactor) * 3.0;
+
+      vec3 cloudP = N*2.3 + vec3(uTime*0.014, uTime*0.004, 0.0);
+      float clouds = fbmWarp(cloudP);
+      float cloudMask = smoothstep(0.52, 0.80, clouds);
+      float wisps = smoothstep(0.62, 0.85, fbm(N*4.5 + vec3(-uTime*0.02, 0.0, uTime*0.01)));
+      col += vec3(0.85, 0.92, 0.85) * cloudMask * (0.20 + 0.65*diff);
+      col += vec3(0.65, 0.72, 0.65) * wisps   * (0.10 + 0.55*diff) * 0.5;
+      col -= uGold * city * cloudMask * 0.4 * nightFactor;
+
+      vec3 V = normalize(uCamPos - vWorldPos);
+      float fres = pow(1.0 - max(dot(normalize(vNormal), V), 0.0), 3.0);
+      col += vec3(0.22, 0.55, 0.40) * fres * 0.35;
+      col += vec3(0.50, 0.85, 0.65) * pow(fres, 2.0) * 0.20;
+
+      gl_FragColor = vec4(col, 1.0);
+    }`,
+});
+const earthBloom = new THREE.Mesh(earthGeo, earthBloomMat);
+const groupBloom = new THREE.Group();
+groupBloom.add(earthBloom);
+scene.add(groupBloom);
+groupBloom.visible = false;
 
 // soft atmosphere shell — warm, very subtle (no thick blue ring)
 const atmoMat = new THREE.ShaderMaterial({
@@ -238,7 +466,22 @@ const atmoMat = new THREE.ShaderMaterial({
     }`
 });
 const atmo = new THREE.Mesh(new THREE.SphereGeometry(EARTH_R*1.04, 64, 64), atmoMat);
-scene.add(atmo);
+groupOrbit.add(atmo);
+
+// BLOOM atmosphere — thin, subtle moss halo (matches ORBIT's quiet rim)
+const atmoBloomMat = new THREE.ShaderMaterial({
+  transparent: true, side: THREE.BackSide, depthWrite: false, blending: THREE.AdditiveBlending,
+  uniforms: { uColor:{ value: new THREE.Color('#1f4a30') } },
+  vertexShader: `varying vec3 vN; varying vec3 vP; void main(){ vN=normalize(normalMatrix*normal); vec4 mv=modelViewMatrix*vec4(position,1.0); vP=-mv.xyz; gl_Position=projectionMatrix*mv; }`,
+  fragmentShader: `
+    varying vec3 vN; varying vec3 vP; uniform vec3 uColor;
+    void main(){
+      float i = pow(1.0 - max(dot(normalize(vN), normalize(vP)),0.0), 5.0);
+      gl_FragColor = vec4(uColor*i, i*0.5);
+    }`
+});
+const atmoBloom = new THREE.Mesh(new THREE.SphereGeometry(EARTH_R*1.04, 64, 64), atmoBloomMat);
+groupBloom.add(atmoBloom);
 
 // ---------------- orbit rings (dynamic) ----------------
 // Cosmic-logic helpers for procedurally generating new rings.
@@ -285,31 +528,39 @@ function oklchToHex(L, C, hDeg){
   const h2 = n => n.toString(16).padStart(2,'0');
   return '#' + h2(r) + h2(g) + h2(bl);
 }
-// Default 3 categories — AI capability oriented taxonomy
-const DEFAULT_RING_DEFS = [
-  { id:'craft',  label:'CREATE',   labelCn:'', color:'#ffb066', r: 1.55, tilt:[ 0.30, 0.10, 0.05], speed: 0.06 },
-  { id:'theory', label:'ANALYZE',  labelCn:'', color:'#7ed6e6', r: 1.95, tilt:[-0.55, 0.40, 0.20], speed: 0.04 },
-  { id:'life',   label:'AUTOMATE', labelCn:'', color:'#e69aa3', r: 2.40, tilt:[ 0.80,-0.30, 0.10], speed: 0.03 },
-];
+// Default rings come from the active theme
+const DEFAULT_RING_DEFS = THEMES[currentTheme].defaultRings;
 
-const RINGS_KEY = 'skill-orbit-rings-v2';
-// one-time cleanup of legacy v1 keys (Chinese labels & seeds)
+const RINGS_KEY_BASE = 'skill-orbit-rings-v2';
+const ringsKey = () => `${RINGS_KEY_BASE}:${currentTheme}`;
+// one-time cleanup of legacy keys (Chinese labels & seeds, pre-theme storage)
 try{
   if(localStorage.getItem('skill-orbit-rings-v1') || localStorage.getItem('skill-orbit-cat-labels-v1')){
     localStorage.removeItem('skill-orbit-rings-v1');
     localStorage.removeItem('skill-orbit-cat-labels-v1');
     localStorage.removeItem('skill-orbit-v1');
   }
+  // migrate non-namespaced v2 → orbit theme namespace (one-time)
+  const oldR = localStorage.getItem('skill-orbit-rings-v2');
+  if(oldR && !localStorage.getItem('skill-orbit-rings-v2:orbit')){
+    localStorage.setItem('skill-orbit-rings-v2:orbit', oldR);
+    localStorage.removeItem('skill-orbit-rings-v2');
+  }
+  const oldS = localStorage.getItem('skill-orbit-v2');
+  if(oldS && !localStorage.getItem('skill-orbit-v2:orbit')){
+    localStorage.setItem('skill-orbit-v2:orbit', oldS);
+    localStorage.removeItem('skill-orbit-v2');
+  }
 }catch(e){}
 function loadRingDefs(){
   try{
-    const raw = localStorage.getItem(RINGS_KEY);
+    const raw = localStorage.getItem(ringsKey());
     if(raw){
       const arr = JSON.parse(raw);
       if(Array.isArray(arr) && arr.length >= 1) return arr;
     }
   }catch(e){}
-  return DEFAULT_RING_DEFS.map(d => ({ ...d }));
+  return THEMES[currentTheme].defaultRings.map(d => ({ ...d }));
 }
 function saveRingDefs(){
   try{
@@ -318,7 +569,7 @@ function saveRingDefs(){
       color: '#' + new THREE.Color(r.color).getHexString(),
       r: r.r, tilt: [r.tilt.x, r.tilt.y, r.tilt.z], speed: r.speed,
     }));
-    localStorage.setItem(RINGS_KEY, JSON.stringify(data));
+    localStorage.setItem(ringsKey(), JSON.stringify(data));
   }catch(e){}
 }
 
@@ -337,7 +588,8 @@ function buildRing(def){
   };
   const grp = new THREE.Group();
   grp.rotation.copy(cfg.tilt);
-  scene.add(grp);
+  // attach to whichever planet group is currently active so rings slide with the planet
+  (currentTheme === 'bloom' ? groupBloom : groupOrbit).add(grp);
   ringGroups[cfg.id] = grp;
 
   const segs = 256;
@@ -377,6 +629,112 @@ function buildRing(def){
 
 // Build initial rings from persisted defs (or defaults)
 loadRingDefs().forEach(buildRing);
+
+// ---------------- theme switcher ----------------
+// Tears down rings + nodes for the outgoing theme, then rebuilds from the
+// incoming theme's persisted state. Earth, atmosphere, and background fields
+// are pre-built for both themes — we just toggle visibility.
+// ---- diagonal-slide transition state ----
+// Outgoing planet slides off along a diagonal vector, incoming planet slides
+// in from the opposite diagonal. Data swap happens mid-flight while both
+// planets are off-axis. The animation loop reads `slideAnim` each frame.
+const SLIDE_DUR = 1100;
+const SLIDE_OFF_X = 13;
+const SLIDE_OFF_Y = 6;     // diagonal lift — outgoing rises, incoming drops in (or vice versa)
+let slideAnim = null;
+
+function parkInactivePlanet(){
+  if(currentTheme === 'orbit'){
+    groupOrbit.visible = true;  groupOrbit.position.set(0, 0, 0);
+    groupBloom.visible = false; groupBloom.position.set(SLIDE_OFF_X, -SLIDE_OFF_Y, 0);
+  } else {
+    groupBloom.visible = true;  groupBloom.position.set(0, 0, 0);
+    groupOrbit.visible = false; groupOrbit.position.set(-SLIDE_OFF_X, SLIDE_OFF_Y, 0);
+  }
+}
+parkInactivePlanet();
+
+function applyTheme(name, opts={}){
+  if(!THEMES[name]) return;
+  if(name === currentTheme && !opts.force) return;
+  if(slideAnim) return; // ignore re-clicks during a transition
+
+  // 1. save outgoing world's data
+  saveRingDefs();
+  saveState();
+
+  // 2. update DOM theme class & brand IMMEDIATELY (panel slides out as planet slides out)
+  document.body.classList.toggle('theme-bloom', name === 'bloom');
+  document.body.classList.toggle('theme-orbit', name === 'orbit');
+  const t = THEMES[name];
+  const brandNameEl = document.querySelector('.hud .brand .name');
+  const brandTagEl = document.querySelector('.hud .brand .tag');
+  if(brandNameEl){
+    const m = t.brandName.match(/^(.+?)\s*&\s*(.+)$/);
+    brandNameEl.innerHTML = m
+      ? `${m[1]} <span class="amp">&amp;</span> ${m[2]}`
+      : t.brandName;
+  }
+  if(brandTagEl) brandTagEl.textContent = t.tagline;
+  document.querySelectorAll('[data-theme-pill]').forEach(el => {
+    el.classList.toggle('active', el.dataset.themePill === name);
+  });
+
+  // 3. kick off diagonal slide — actual data swap happens at the midpoint
+  // ORBIT → BLOOM: orbit slides up-left, bloom enters from down-right
+  // BLOOM → ORBIT: bloom slides down-right, orbit enters from up-left
+  slideAnim = {
+    t0: performance.now(),
+    dur: SLIDE_DUR,
+    fromTheme: currentTheme,
+    toTheme: name,
+    swapped: false,
+  };
+  groupOrbit.visible = true;
+  groupBloom.visible = true;
+}
+
+// Called at the midpoint of the slide — outgoing is offscreen, incoming is
+// still offscreen on the other side. We tear down the outgoing rings/nodes,
+// flip currentTheme, rebuild from the new theme's storage attached to the
+// incoming planet group.
+function performThemeSwap(toTheme){
+  // tear down rings + nodes (they were parented to the OUTGOING planet group)
+  for(const n of memoryNodes){
+    if(n.mesh.parent) n.mesh.parent.remove(n.mesh);
+    n.mesh.material.dispose();
+  }
+  memoryNodes.length = 0;
+  for(const cfg of RINGS){
+    if(cfg._group){
+      cfg._group.children.slice().forEach(ch => {
+        cfg._group.remove(ch);
+        if(ch.geometry) ch.geometry.dispose();
+        if(ch.material) ch.material.dispose();
+      });
+      if(cfg._group.parent) cfg._group.parent.remove(cfg._group);
+    }
+    delete ringGroups[cfg.id];
+  }
+  RINGS.length = 0;
+  activeCat = null;
+
+  currentTheme = toTheme;
+  try{ localStorage.setItem('skill-current-theme', toTheme); }catch(e){}
+
+  // rebuild rings + nodes for the new theme — buildRing reads currentTheme
+  // and parents the new ring groups onto the correct planet group.
+  loadRingDefs().forEach(buildRing);
+  const saved = loadState();
+  if(saved && Array.isArray(saved) && saved.length){
+    saved.forEach(s => addNode({
+      id: s.id, name: s.name, cat: s.cat, note: s.note || '',
+      created: s.created || Date.now(), angle: s.angle, animateBirth: false
+    }));
+  }
+  refreshUI();
+}
+window.__applyTheme = applyTheme;
 
 // Generate a new ring def with cosmic-physics-inspired params
 function generateNewRingDef(label, labelCn){
@@ -433,7 +791,7 @@ const memoryNodes = []; // { mesh, ring, angle, speed, name, cat, day, color, id
 let _idCounter = 0;
 function genId(){ return 'n_' + Date.now().toString(36) + '_' + (_idCounter++).toString(36); }
 
-function addNode({ id, name, cat='craft', day=0, animateBirth=true, note='', created=Date.now(), angle, persist=true }){
+function addNode({ id, name, cat='craft', day=0, animateBirth=true, note='', created=Date.now(), angle }){
   const cfg = RINGS.find(r=>r.id===cat) || RINGS[0];
   const grp = ringGroups[cfg.id];
 
@@ -467,140 +825,47 @@ function addNode({ id, name, cat='craft', day=0, animateBirth=true, note='', cre
   };
   memoryNodes.push(node);
   refreshUI();
-  if(persist) saveState();
+  saveState();
   return node;
 }
 
-function removeNode(id, { sync=true } = {}){
+function removeNode(id){
   const i = memoryNodes.findIndex(n=>n.id===id);
   if(i<0) return;
   const n = memoryNodes[i];
-  if(sync && useBackend && authToken){
-    apiFetch(`/skills/${encodeURIComponent(id)}`, { method: 'DELETE' }).catch(showApiError);
-  }
   if(n.mesh.parent) n.mesh.parent.remove(n.mesh);
   n.mesh.material.dispose();
   memoryNodes.splice(i,1);
   // re-index
   memoryNodes.forEach((m, k)=> m.idx = k+1);
   refreshUI();
-  if(!useBackend) saveState();
-}
-
-function clearNodes(){
-  memoryNodes.slice().forEach(n => removeNode(n.id, { sync:false }));
+  saveState();
 }
 
 // ---------------- persistence ----------------
-const STORE_KEY = 'skill-orbit-v2';
+const STORE_KEY_BASE = 'skill-orbit-v2';
+const storeKey = () => `${STORE_KEY_BASE}:${currentTheme}`;
 function saveState(){
-  if(useBackend) return;
   try{
     const data = memoryNodes.map(n => ({
       id: n.id, name: n.name, cat: n.cat, note: n.note,
       created: n.created, angle: n.angle,
     }));
-    localStorage.setItem(STORE_KEY, JSON.stringify(data));
+    localStorage.setItem(storeKey(), JSON.stringify(data));
   }catch(e){}
 }
 function loadState(){
   try{
-    const raw = localStorage.getItem(STORE_KEY);
+    const raw = localStorage.getItem(storeKey());
     if(!raw) return null;
     return JSON.parse(raw);
   }catch(e){ return null; }
 }
 
-function readJson(raw){
-  try{ return raw ? JSON.parse(raw) : null; }catch(e){ return null; }
-}
-
-async function apiFetch(path, options={}){
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(options.headers || {}),
-  };
-  if(authToken) headers.Authorization = `Bearer ${authToken}`;
-  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
-  if(res.status === 401){
-    clearAuth();
-    showAuthPanel('login', 'Your session expired. Please sign in again.');
-  }
-  if(!res.ok){
-    let message = `Request failed (${res.status})`;
-    try{
-      const body = await res.json();
-      message = body.detail || message;
-    }catch(e){}
-    throw new Error(message);
-  }
-  if(res.status === 204) return null;
-  return res.json();
-}
-
-function showApiError(err){
-  appendMsg('sys', escapeHtml(err.message || 'Backend request failed.'));
-}
-
-function clearAuth(){
-  authToken = '';
-  currentUser = null;
-  localStorage.removeItem(AUTH_TOKEN_KEY);
-  localStorage.removeItem(AUTH_USER_KEY);
-}
-
-function scheduleNodeUpdate(node, patch){
-  if(!useBackend || !authToken || !node) return;
-  clearTimeout(node._syncT);
-  node._syncT = setTimeout(()=>{
-    apiFetch(`/skills/${encodeURIComponent(node.id)}`, {
-      method: 'PATCH',
-      body: JSON.stringify(patch),
-    }).catch(showApiError);
-  }, 250);
-}
-
-let pendingPanelConfirm = null;
-let activePanelConfirmKind = null;
-function askPanelConfirm(kind, message, onConfirm){
-  closePanelConfirm(false);
-  const box = document.getElementById(`${kind}-confirm`);
-  const msg = document.getElementById(`${kind}-confirm-msg`);
-  const ok = document.getElementById(`${kind}-confirm-ok`);
-  const cancel = document.getElementById(`${kind}-confirm-cancel`);
-  if(!box || !msg || !ok || !cancel){
-    onConfirm();
-    return;
-  }
-  pendingPanelConfirm = onConfirm;
-  activePanelConfirmKind = kind;
-  msg.textContent = message;
-  box.classList.add('show');
-  ok.focus();
-}
-
-function closePanelConfirm(run=false){
-  const box = activePanelConfirmKind ? document.getElementById(`${activePanelConfirmKind}-confirm`) : null;
-  const fn = pendingPanelConfirm;
-  pendingPanelConfirm = null;
-  activePanelConfirmKind = null;
-  if(box) box.classList.remove('show');
-  if(run && fn) fn();
-}
-
-['archive', 'node'].forEach(kind=>{
-  const ok = document.getElementById(`${kind}-confirm-ok`);
-  const cancel = document.getElementById(`${kind}-confirm-cancel`);
-  if(ok) ok.addEventListener('click', ()=> closePanelConfirm(true));
-  if(cancel) cancel.addEventListener('click', ()=> closePanelConfirm(false));
-});
-addEventListener('keydown', (e)=>{
-  if(e.key === 'Escape' && pendingPanelConfirm) closePanelConfirm(false);
-});
-
 // ---------------- raycaster for hover ----------------
 const ray = new THREE.Raycaster();
 ray.params.Sprite = { threshold: 0.01 };
+const _tmpV = new THREE.Vector3();
 const mouse = new THREE.Vector2(-9, -9);
 const tooltipEl = document.getElementById('tooltip');
 let hovered = null;
@@ -714,11 +979,11 @@ function appendMsg(who, body, opts={}){
 // classify a skill (heuristic fallback if AI fails)
 function heuristicClassify(text){
   const s = text.toLowerCase();
-  // AI capability keyword sets mapped to stable category ids
+  // legacy keyword sets — only useful if the corresponding category still exists
   const tables = {
-    craft: ['build','create','write','draft','generate','design','prototype','ui','ux','code','program','react','javascript','python','app','website'],
-    theory: ['analyze','analysis','research','reason','explain','compare','evaluate','summarize','insight','metric','data','model','math','logic'],
-    life: ['automate','workflow','pipeline','agent','schedule','integrate','deploy','ops','operation','process','task','script','monitor','sync']
+    craft: ['code','coding','program','framework','css','html','js','javascript','react','vue','python','algorithm','function','api','debug','tool','software','design','engineering','vim','git','sql'],
+    theory: ['principle','theory','proof','derivation','bayes','physics','chemistry','biology','philosophy','concept','logic','math','formula','history','economic','politic'],
+    life: ['cook','cooking','coffee','tea','recipe','running','yoga','sleep','communication','relationship','emotion','parenting','travel','photography','music','instrument']
   };
   for(const [id, words] of Object.entries(tables)){
     if(RINGS.find(r=>r.id===id) && words.some(k=>s.includes(k))) return id;
@@ -760,10 +1025,6 @@ Return ONLY a JSON object, no extra prose, in exactly this shape:
 }
 
 async function handleSend(){
-  if(!currentUser){
-    showLoginNudge();
-    return;
-  }
   const text = inputEl.value.trim();
   if(!text) return;
   inputEl.value = '';
@@ -776,93 +1037,21 @@ async function handleSend(){
   const dots = ind.querySelector('.dots');
   let d=0; const tID = setInterval(()=>{ d=(d+1)%4; dots.textContent='parsing'+'.'.repeat(d) }, 220);
 
-  let parsed;
-  let createdSkill = null;
-  let comboSuggestions = [];
-  let detectedIntent = 'learned_skill';
-  try{
-    if(useBackend){
-      const data = await apiFetch('/chat/assist', {
-        method: 'POST',
-        body: JSON.stringify({ text }),
-      });
-      detectedIntent = data.intent || 'learned_skill';
-      comboSuggestions = Array.isArray(data.combos) ? data.combos : [];
-      if(data.category){
-        ensureRingFromApi(data.category);
-      }
-      if(data.skill){
-        createdSkill = data.skill;
-        parsed = {
-          name: createdSkill.name,
-          cat: createdSkill.category_id,
-          oneLine: data.message || 'Logged to the orbit.',
-        };
-      } else {
-        parsed = {
-          name: '',
-          cat: RINGS[0] ? RINGS[0].id : 'craft',
-          oneLine: data.message || 'Suggestions ready.',
-        };
-      }
-    } else {
-      parsed = await classifyWithAI(text);
-    }
-  }catch(err){
-    clearInterval(tID);
-    ind.remove();
-    appendMsg('sys', escapeHtml(err.message || 'Could not reach backend.'));
-    sendBtn.disabled = false;
-    inputEl.focus();
-    return;
-  }
+  const parsed = await classifyWithAI(text);
   clearInterval(tID);
 
   // remove the indicator and replace
   ind.remove();
-  if(useBackend && parsed && parsed.cat && !RINGS.find(r => r.id === parsed.cat)){
-    try{
-      const categories = await apiFetch('/categories');
-      categories.forEach(ensureRingFromApi);
-    }catch(e){}
-  }
-  if(detectedIntent === 'goal_planning' && comboSuggestions.length){
-    const combosHtml = comboSuggestions.slice(0, 3).map((combo, idx)=>{
-      const skills = Array.isArray(combo.skills) ? combo.skills : [];
-      const skillNames = skills.map(s => escapeHtml(s.name)).join(' + ');
-      const reason = escapeHtml(combo.reason || '');
-      return `<div style="margin-top:${idx===0 ? 8 : 10}px; padding-top:8px; border-top:1px solid var(--line);">
-        <div style="font-size:10px; letter-spacing:.12em; color:var(--ink);">COMBO ${idx+1}</div>
-        <div style="margin-top:4px; font-size:12px;">${skillNames || escapeHtml(combo.title || 'Skill combo')}</div>
-        <div style="margin-top:5px; color:var(--dim); font-size:11px; line-height:1.5;">${reason}</div>
-      </div>`;
-    }).join('');
-    appendMsg('ai', `${escapeHtml(parsed.oneLine || 'Suggestions ready.')}${combosHtml}`);
-  } else {
-    const cfg = RINGS.find(r=>r.id===parsed.cat);
-    const catLabel = cfg ? cfg.label : parsed.cat.toUpperCase();
-    const sw = colorForCat(parsed.cat);
-    appendMsg('ai',
-      `${escapeHtml(parsed.oneLine || 'Logged to the memory orbit.')}<br/>
-       <span class="pill"><span class="sw" style="background:${sw}; box-shadow:0 0 8px ${sw}"></span> +1 NODE · <code>${catLabel}</code></span>
-       <div style="margin-top:6px; color:var(--dim); font-family:JetBrains Mono,monospace; font-size:10px; letter-spacing:0.2em;">→ ${escapeHtml(parsed.name)}</div>`
-    );
+  const cfg = RINGS.find(r=>r.id===parsed.cat);
+  const catLabel = cfg ? cfg.label : parsed.cat.toUpperCase();
+  const sw = colorForCat(parsed.cat);
+  appendMsg('ai',
+    `${escapeHtml(parsed.oneLine || 'Logged to the memory orbit.')}<br/>
+     <span class="pill"><span class="sw" style="background:${sw}; box-shadow:0 0 8px ${sw}"></span> +1 NODE · <code>${catLabel}</code></span>
+     <div style="margin-top:6px; color:var(--dim); font-family:JetBrains Mono,monospace; font-size:10px; letter-spacing:0.2em;">→ ${escapeHtml(parsed.name)}</div>`
+  );
 
-    if(createdSkill){
-      addNode({
-        id: createdSkill.id,
-        name: createdSkill.name,
-        cat: createdSkill.category_id,
-        note: createdSkill.note || '',
-        created: Date.parse(createdSkill.created_at) || Date.now(),
-        angle: createdSkill.angle,
-        animateBirth: true,
-        persist: false,
-      });
-    } else {
-      addNode({ name: parsed.name, cat: parsed.cat, day: 0, animateBirth: true });
-    }
-  }
+  addNode({ name: parsed.name, cat: parsed.cat, day: 0, animateBirth: true });
 
   sendBtn.disabled = false;
   inputEl.focus();
@@ -880,7 +1069,7 @@ skillUl.addEventListener('click', (e)=>{
     e.stopPropagation();
     const id = delBtn.dataset.del;
     const n = memoryNodes.find(x=>x.id===id); if(!n) return;
-    askPanelConfirm('node', '确认要删除此条技能吗？删除数据不可恢复。', ()=> flyOutAndRemove(n));
+    flyOutAndRemove(n);
     return;
   }
   const li = e.target.closest('li'); if(!li) return;
@@ -936,8 +1125,7 @@ function closeDetail(){
   if(openNode){
     openNode.note = detailNote.value;
     openNode._selected = false;
-    if(useBackend) scheduleNodeUpdate(openNode, { note: openNode.note });
-    else saveState();
+    saveState();
     refreshUI();
   }
   openNode = null;
@@ -947,20 +1135,15 @@ document.getElementById('detail-close').addEventListener('click', closeDetail);
 document.getElementById('detail-delete').addEventListener('click', ()=>{
   if(!openNode) return;
   const n = openNode;
-  askPanelConfirm('node', '确认要删除此条技能吗？删除数据不可恢复。', ()=>{
-    closeDetail();
-    flyOutAndRemove(n);
-  });
+  closeDetail();
+  flyOutAndRemove(n);
 });
 detailNote.addEventListener('input', ()=>{
   if(!openNode) return;
   openNode.note = detailNote.value;
   // debounced save
   clearTimeout(openNode._saveT);
-  openNode._saveT = setTimeout(()=>{
-    if(useBackend) scheduleNodeUpdate(openNode, { note: openNode.note });
-    else saveState();
-  }, 400);
+  openNode._saveT = setTimeout(saveState, 400);
 });
 addEventListener('keydown', (e)=>{
   if(e.key === 'Escape' && openNode) closeDetail();
@@ -1054,7 +1237,7 @@ if(chatToggle && chatEl){
     if(delBtn){
       e.stopPropagation();
       const cat = delBtn.dataset.delCat;
-      askPanelConfirm('archive', '确认要删除这条archive 吗，删除时同时删除node，数据不可恢复；', ()=> deleteCategory(cat));
+      deleteCategory(cat);
       return;
     }
     const row = e.target.closest('.stat.cat'); if(!row) return;
@@ -1090,15 +1273,7 @@ if(chatToggle && chatEl){
       k.removeAttribute('contenteditable');
       if(!cancel && cfg){
         const txt = (k.textContent || '').trim().toUpperCase();
-        if(txt){
-          cfg.label = txt;
-          if(useBackend && authToken){
-            apiFetch(`/categories/${encodeURIComponent(cat)}`, {
-              method: 'PATCH',
-              body: JSON.stringify({ label: txt }),
-            }).catch(showApiError);
-          }
-        }
+        if(txt) cfg.label = txt;
         saveRingDefs();
       }
       cleanup();
@@ -1119,7 +1294,19 @@ if(chatToggle && chatEl){
 function deleteCategory(catId){
   if(RINGS.length <= 1){ alert('Keep at least one category.'); return; }
   const cfg = RINGS.find(r=>r.id===catId); if(!cfg) return;
-  memoryNodes.filter(n=>n.cat===catId).forEach(n => removeNode(n.id));
+  const fallback = RINGS.find(r=>r.id!==catId);
+  const count = memoryNodes.filter(n=>n.cat===catId).length;
+  if(count > 0 && !confirm(`Delete category “${cfg.label}”?\nThe ${count} node(s) on this ring will move to “${fallback.label}”.`)) return;
+  // migrate nodes
+  memoryNodes.filter(n=>n.cat===catId).forEach(n => {
+    if(n.mesh && n.mesh.parent) n.mesh.parent.remove(n.mesh);
+    n.cat = fallback.id;
+    n.ring = fallback;
+    n.color = fallback.color;
+    n.speed = fallback.speed * (0.85 + Math.random()*0.3);
+    if(n.mesh && n.mesh.material) n.mesh.material.color = fallback.color;
+    if(ringGroups[fallback.id]) ringGroups[fallback.id].add(n.mesh);
+  });
   // remove ring visuals
   if(cfg._group){
     cfg._group.children.slice().forEach(ch => {
@@ -1135,9 +1322,6 @@ function deleteCategory(catId){
   if(activeCat === catId) activeCat = null;
   saveRingDefs();
   saveState();
-  if(useBackend && authToken){
-    apiFetch(`/categories/${encodeURIComponent(catId)}`, { method: 'DELETE' }).catch(showApiError);
-  }
   refreshUI();
 }
 
@@ -1149,10 +1333,6 @@ function deleteCategory(catId){
   if(!btn || !wrap || !input) return;
   let cancelTimer = null;
   btn.addEventListener('click', ()=>{
-    if(!currentUser){
-      showLoginNudge();
-      return;
-    }
     btn.classList.add('editing');
     wrap.classList.add('show');
     input.value = '';
@@ -1173,20 +1353,6 @@ function deleteCategory(catId){
     const def = generateNewRingDef(label, labelCn);
     buildRing(def);
     saveRingDefs();
-    if(useBackend && authToken){
-      apiFetch('/categories', {
-        method: 'POST',
-        body: JSON.stringify({
-          id: def.id,
-          label: def.label,
-          label_cn: def.labelCn || '',
-          color: def.color,
-          radius: def.r,
-          tilt: def.tilt,
-          speed: def.speed,
-        }),
-      }).catch(showApiError);
-    }
     cancel();
     refreshUI();
   };
@@ -1209,8 +1375,7 @@ function deleteCategory(catId){
     const v = (nameEl.textContent || '').trim();
     if(v && v !== openNode.name){
       openNode.name = v;
-      if(useBackend) scheduleNodeUpdate(openNode, { name: v });
-      else saveState();
+      saveState();
       refreshUI();
     } else {
       nameEl.textContent = openNode.name;
@@ -1233,225 +1398,19 @@ function deleteCategory(catId){
   });
 })();
 
-// ---------------- auth + boot data ----------------
-function setupAuthUI(){
-  const pop = document.getElementById('auth-pop');
-  const msg = document.getElementById('auth-message');
-  const loginTab = document.getElementById('auth-login-tab');
-  const registerTab = document.getElementById('auth-register-tab');
-  const loginForm = document.getElementById('auth-login-form');
-  const registerForm = document.getElementById('auth-register-form');
-  const localBtn = document.getElementById('auth-local-mode');
-  const loginOpen = document.getElementById('auth-login-open');
-  const registerOpen = document.getElementById('auth-register-open');
-  const logoutBtn = document.getElementById('auth-logout');
-  const nudgeOpen = document.getElementById('login-nudge-open');
-  if(!pop) return;
-
-  const setTab = (mode)=>{
-    const login = mode === 'login';
-    loginTab.classList.toggle('active', login);
-    registerTab.classList.toggle('active', !login);
-    loginForm.classList.toggle('active', login);
-    registerForm.classList.toggle('active', !login);
-    msg.textContent = '';
-  };
-  loginTab.addEventListener('click', ()=>setTab('login'));
-  registerTab.addEventListener('click', ()=>setTab('register'));
-
-  loginForm.addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    msg.textContent = 'Signing in...';
-    try{
-      const data = await apiFetch('/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({
-          username: document.getElementById('auth-login-user').value.trim(),
-          password: document.getElementById('auth-login-pass').value,
-        }),
-      });
-      await enterBackendSession(data);
-    }catch(err){
-      msg.textContent = err.message || 'Login failed.';
-    }
-  });
-
-  registerForm.addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    msg.textContent = 'Creating account...';
-    try{
-      const data = await apiFetch('/auth/register', {
-        method: 'POST',
-        body: JSON.stringify({
-          username: document.getElementById('auth-register-user').value.trim(),
-          email: document.getElementById('auth-register-email').value.trim(),
-          password: document.getElementById('auth-register-pass').value,
-        }),
-      });
-      await enterBackendSession(data);
-    }catch(err){
-      msg.textContent = err.message || 'Registration failed.';
-    }
-  });
-
-  localBtn.addEventListener('click', ()=>{
-    useBackend = false;
-    localStorage.setItem(BACKEND_MODE_KEY, '0');
-    clearAuth();
-    pop.classList.remove('show');
-    updateAuthStatus();
-    loadLocalData();
-  });
-
-  loginOpen.addEventListener('click', ()=> showAuthPanel('login'));
-  registerOpen.addEventListener('click', ()=> showAuthPanel('register'));
-  if(nudgeOpen) nudgeOpen.addEventListener('click', ()=> showAuthPanel('login'));
-
-  logoutBtn.addEventListener('click', ()=>{
-    clearAuth();
-    useBackend = false;
-    localStorage.setItem(BACKEND_MODE_KEY, '0');
-    showLoginNudge('Signed out. 请登陆以获得完整账户权限以及福利');
-    clearNodes();
-    updateAuthStatus();
-    loadLocalData();
-  });
-}
-
-function showAuthPanel(mode='login', message=''){
-  const pop = document.getElementById('auth-pop');
-  const msg = document.getElementById('auth-message');
-  const loginTab = document.getElementById('auth-login-tab');
-  const registerTab = document.getElementById('auth-register-tab');
-  const loginForm = document.getElementById('auth-login-form');
-  const registerForm = document.getElementById('auth-register-form');
-  const login = mode === 'login';
-  loginTab.classList.toggle('active', login);
-  registerTab.classList.toggle('active', !login);
-  loginForm.classList.toggle('active', login);
-  registerForm.classList.toggle('active', !login);
-  if(pop) pop.classList.add('show');
-  if(msg) msg.textContent = message;
-}
-
-function hideAuthPanel(){
-  const pop = document.getElementById('auth-pop');
-  if(pop) pop.classList.remove('show');
-}
-
-let loginNudgeTimer = null;
-function showLoginNudge(message='请登陆以获得完整账户权限以及福利'){
-  if(currentUser) return;
-  const nudge = document.getElementById('login-nudge');
-  if(!nudge) return;
-  nudge.querySelector('div').textContent = message;
-  nudge.classList.add('show');
-  clearTimeout(loginNudgeTimer);
-  loginNudgeTimer = setTimeout(()=> nudge.classList.remove('show'), 4200);
-}
-
-function updateAuthStatus(){
-  const text = document.getElementById('auth-status-text');
-  const logout = document.getElementById('auth-logout');
-  const loginOpen = document.getElementById('auth-login-open');
-  const registerOpen = document.getElementById('auth-register-open');
-  if(!text || !logout || !loginOpen || !registerOpen) return;
-  if(useBackend && currentUser){
-    text.textContent = `USER · ${currentUser.username}`;
-    logout.style.display = '';
-    loginOpen.style.display = 'none';
-    registerOpen.style.display = 'none';
-  } else {
-    text.textContent = 'GUEST';
-    logout.style.display = 'none';
-    loginOpen.style.display = '';
-    registerOpen.style.display = '';
-  }
-}
-
-async function enterBackendSession(data){
-  authToken = data.access_token;
-  currentUser = data.user;
-  useBackend = true;
-  localStorage.setItem(BACKEND_MODE_KEY, '1');
-  localStorage.setItem(AUTH_TOKEN_KEY, authToken);
-  localStorage.setItem(AUTH_USER_KEY, JSON.stringify(currentUser));
-  hideAuthPanel();
-  updateAuthStatus();
-  await loadBackendData();
-}
-
-async function bootData(){
-  setupAuthUI();
-  updateAuthStatus();
-  if(useBackend){
-    if(authToken){
-      try{
-        currentUser = await apiFetch('/auth/me');
-        localStorage.setItem(AUTH_USER_KEY, JSON.stringify(currentUser));
-        hideAuthPanel();
-        updateAuthStatus();
-        await loadBackendData();
-        return;
-      }catch(e){}
-    }
-    useBackend = false;
-    localStorage.setItem(BACKEND_MODE_KEY, '0');
-    updateAuthStatus();
-  }
-  loadLocalData();
-}
-
-function loadLocalData(){
-  clearNodes();
-  const saved = loadState();
-  if(saved && Array.isArray(saved) && saved.length){
-    saved.forEach(s => addNode({
-      id: s.id, name: s.name, cat: s.cat, note: s.note || '',
-      created: s.created || Date.now(), angle: s.angle, animateBirth: false, persist: false
-    }));
-  } else {
-    try{
-      const seed = JSON.parse(document.getElementById('seed-skills').textContent);
-      seed.forEach(s => addNode({ name: s.name, cat: s.cat, day: s.day, animateBirth: false, persist: false }));
-      saveState();
-    }catch(e){}
-  }
-}
-
-async function loadBackendData(){
-  clearNodes();
-  const categories = await apiFetch('/categories');
-  categories.forEach(ensureRingFromApi);
-  const skills = await apiFetch('/skills');
-  skills.slice().reverse().forEach(s => addNode({
-    id: s.id,
-    name: s.name,
-    cat: s.category_id,
-    note: s.note || '',
-    created: Date.parse(s.created_at) || Date.now(),
-    angle: s.angle,
-    animateBirth: false,
-    persist: false,
+// ---------------- seed nodes ----------------
+const saved = loadState();
+if(saved && Array.isArray(saved) && saved.length){
+  saved.forEach(s => addNode({
+    id: s.id, name: s.name, cat: s.cat, note: s.note || '',
+    created: s.created || Date.now(), angle: s.angle, animateBirth: false
   }));
-  appendMsg('sys', `Backend connected as <code>${escapeHtml(currentUser.username)}</code>.`);
+} else {
+  try{
+    const seed = JSON.parse(document.getElementById('seed-skills').textContent);
+    seed.forEach(s => addNode({ name: s.name, cat: s.cat, day: s.day, animateBirth: false }));
+  }catch(e){}
 }
-
-function ensureRingFromApi(category){
-  const existing = RINGS.find(r => r.id === category.id);
-  if(existing) return existing;
-  return buildRing({
-    id: category.id,
-    label: category.label,
-    labelCn: category.label_cn || '',
-    color: category.color,
-    r: category.radius,
-    tilt: category.tilt,
-    speed: category.speed,
-  });
-}
-
-bootData();
 
 // ---------------- HUD live values ----------------
 function pad(n,l=2){ return String(n).padStart(l,'0') }
@@ -1476,6 +1435,24 @@ addEventListener('resize', ()=>{
 });
 
 // ---------------- animate ----------------
+// Global motion controls — give the user calm anchors when density is high.
+// 1. Spacebar toggles a hard pause (visualises "world frozen").
+// 2. Hovering a node smoothly decelerates everything to 25% speed so the
+//    user can read what they're pointing at without it sliding away.
+// 3. When a category is solo'd, only that ring's nodes keep moving;
+//    the others freeze at their current angle and dim.
+let isPaused = false;
+let motionScale = 1; // smoothed multiplier toward target speed (0..1)
+addEventListener('keydown', (e)=>{
+  if(e.key === ' ' && document.activeElement !== inputEl &&
+     document.activeElement !== detailNote && !document.activeElement?.isContentEditable){
+    e.preventDefault();
+    isPaused = !isPaused;
+    const badge = document.getElementById('pause-badge');
+    if(badge) badge.style.opacity = isPaused ? '1' : '0';
+  }
+});
+
 let last = performance.now();
 function animate(now){
   const dt = Math.min(0.05, (now - last)/1000); last = now;
@@ -1483,10 +1460,45 @@ function animate(now){
 
   earthMat.uniforms.uTime.value = now * 0.001;
   earthMat.uniforms.uCamPos.value.copy(camera.position);
+  earthBloomMat.uniforms.uTime.value = now * 0.001;
+  earthBloomMat.uniforms.uCamPos.value.copy(camera.position);
+  pollen.material.uniforms.uTime.value = now * 0.001;
 
-  // earth slow rotation
-  earth.rotation.y += dt * 0.04;
+  // smooth toward target motion scale
+  // — 0 when paused, 0.25 when hovering a node, 1 otherwise
+  const targetMotion = isPaused ? 0 : (hovered ? 0.25 : 1);
+  motionScale += (targetMotion - motionScale) * (1 - Math.pow(0.001, dt));
+
+  // earth slow rotation (also slows with the system so it feels coherent)
+  earth.rotation.y += dt * 0.04 * motionScale;
   atmo.rotation.y = earth.rotation.y;
+  // BLOOM exoplanet rotates a touch slower so the lava bands read more clearly
+  earthBloom.rotation.y += dt * 0.018 * motionScale;
+  atmoBloom.rotation.y = earthBloom.rotation.y;
+
+  // ---- diagonal-slide transition tick ----
+  if(slideAnim){
+    const k = Math.min(1, (now - slideAnim.t0) / slideAnim.dur);
+    // ease-in-out cubic for buttery acceleration/deceleration
+    const e = k < 0.5 ? 4*k*k*k : 1 - Math.pow(-2*k + 2, 3) / 2;
+    if(slideAnim.toTheme === 'bloom'){
+      // ORBIT slides up-left, BLOOM enters from down-right
+      groupOrbit.position.set(-SLIDE_OFF_X * e,  SLIDE_OFF_Y * e, 0);
+      groupBloom.position.set( SLIDE_OFF_X * (1 - e), -SLIDE_OFF_Y * (1 - e), 0);
+    } else {
+      // BLOOM slides down-right, ORBIT enters from up-left
+      groupBloom.position.set( SLIDE_OFF_X * e, -SLIDE_OFF_Y * e, 0);
+      groupOrbit.position.set(-SLIDE_OFF_X * (1 - e),  SLIDE_OFF_Y * (1 - e), 0);
+    }
+    if(!slideAnim.swapped && k >= 0.5){
+      performThemeSwap(slideAnim.toTheme);
+      slideAnim.swapped = true;
+    }
+    if(k >= 1){
+      parkInactivePlanet();
+      slideAnim = null;
+    }
+  }
 
   // animate ring opacity toward target based on activeCat
   for(const cfg of RINGS){
@@ -1501,9 +1513,17 @@ function animate(now){
     cfg._hlMat.opacity   += (targHl   - cfg._hlMat.opacity)   * k;
   }
 
+  // camera world position, used for depth-based attenuation below
+  const camWorld = camera.position;
+
   // animate nodes
   for(const n of memoryNodes){
-    n.angle += n.speed * dt;
+    // motion: pause non-active categories when one is solo'd, and apply
+    // global motionScale (pause / hover-slowdown).
+    const isActiveCat = !activeCat || n.cat === activeCat;
+    const moveK = motionScale * (isActiveCat ? 1 : 0);
+    n.angle += n.speed * dt * moveK;
+
     const r = n.ring.r;
     const x = Math.cos(n.angle) * r;
     const z = Math.sin(n.angle) * r;
@@ -1516,11 +1536,25 @@ function animate(now){
     let s = 0.16 * tw;
     if(n._selected) s = 0.32 * (0.9 + 0.15*Math.sin(now*0.012));
 
+    // ---- depth attenuation ----
+    // Distance from camera, normalized roughly to the orbit shell so that
+    // back-side nodes fade & shrink. This recovers a strong sense of front/back
+    // and stops dense rings from reading as a flat conveyor belt.
+    const wp = n.mesh.getWorldPosition(_tmpV);
+    const distCam = wp.distanceTo(camWorld);
+    // map [near .. far] of plausible distances into [1 .. 0.25]
+    const near = camWorld.length() - n.ring.r;
+    const far  = camWorld.length() + n.ring.r;
+    const depthT = THREE.MathUtils.clamp((distCam - near) / Math.max(0.001, far - near), 0, 1);
+    const depthScale   = THREE.MathUtils.lerp(1.0, 0.45, depthT);
+    const depthOpacity = THREE.MathUtils.lerp(1.0, 0.30, depthT);
+    s *= depthScale;
+
     // category focus: boost active cat nodes, dim others
-    let targetOpacity = 1.0;
+    let targetOpacity = depthOpacity;
     if(activeCat){
-      if(n.cat === activeCat){ s *= 1.35; targetOpacity = 1.0; }
-      else { s *= 0.6; targetOpacity = 0.18; }
+      if(n.cat === activeCat){ s *= 1.35; targetOpacity = depthOpacity; }
+      else { s *= 0.55; targetOpacity = 0.12; }
     }
 
     // birth animation
@@ -1566,3 +1600,32 @@ requestAnimationFrame(animate);
 
 // ---------------- boot fade ----------------
 setTimeout(()=>{ document.getElementById('boot').classList.add('gone'); }, 700);
+
+// ---------------- initial theme sync ----------------
+// rings + nodes were already loaded for `currentTheme` above; here we just
+// reflect that theme in the DOM (body class, brand text, theme-pill state).
+// Both planets share the same cosmic background — the slide swaps which
+// group sits at origin (parkInactivePlanet already positioned them).
+(function initThemeVisuals(){
+  document.body.classList.add(`theme-${currentTheme}`);
+  const t = THEMES[currentTheme];
+  const brandNameEl = document.querySelector('.hud .brand .name');
+  const brandTagEl  = document.querySelector('.hud .brand .tag');
+  if(brandNameEl){
+    const m = t.brandName.match(/^(.+?)\s*&\s*(.+)$/);
+    brandNameEl.innerHTML = m ? `${m[1]} <span class="amp">&amp;</span> ${m[2]}` : t.brandName;
+  }
+  if(brandTagEl) brandTagEl.textContent = t.tagline;
+  document.querySelectorAll('[data-theme-pill]').forEach(el => {
+    el.classList.toggle('active', el.dataset.themePill === currentTheme);
+  });
+})();
+
+// ---------------- theme switch wiring ----------------
+document.querySelectorAll('[data-theme-pill]').forEach(btn => {
+  btn.addEventListener('click', ()=>{
+    const target = btn.dataset.themePill;
+    if(target === currentTheme) return;
+    applyTheme(target);
+  });
+});

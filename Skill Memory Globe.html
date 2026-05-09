@@ -113,54 +113,7 @@
     display: flex; flex-direction: column;
     overflow: hidden;
   }
-  .panel-confirm{
-    position: absolute; left: 0; right: 0; top: 50%;
-    z-index: 9;
-    background: rgba(10,10,12,0.94);
-    border: 1px solid var(--line);
-    border-radius: 4px;
-    padding: 12px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,255,255,0.04);
-    opacity: 0; transform: translateY(calc(-50% - 6px));
-    pointer-events: none;
-    transition: opacity .16s ease, transform .16s ease;
-  }
-  .panel-confirm.show{
-    opacity: 1; transform: translateY(-50%);
-    pointer-events: auto;
-  }
-  .panel-confirm .msg{
-    color: var(--ink);
-    font-size: 11px;
-    line-height: 1.65;
-    letter-spacing: 0.04em;
-    text-transform: none;
-    margin-bottom: 10px;
-  }
-  .panel-confirm .actions{
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-  .panel-confirm button{
-    background: transparent;
-    border: 1px solid var(--line);
-    color: var(--dim);
-    padding: 8px 0;
-    border-radius: 3px;
-    font-family: inherit;
-    font-size: 10px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    cursor: pointer;
-  }
-  .panel-confirm .confirm{
-    color: var(--rose);
-    border-color: rgba(230,154,163,0.42);
-  }
-  .panel-confirm button:hover{ color: var(--ink); border-color: var(--ink); }
-  .panel-confirm .confirm:hover{ color: var(--rose); border-color: var(--rose); }
-  .panel .archive-section{ flex-shrink: 0; position: relative; }
+  .panel .archive-section{ flex-shrink: 0; }
   .panel .archive-section .head{
     display:flex; align-items:center; justify-content:space-between;
     margin-bottom: 12px;
@@ -199,7 +152,6 @@
     display: flex; flex-direction: column;
     border-top: 1px solid var(--line);
     padding-top: 16px;
-    position: relative;
   }
   .panel .recent-section .head{
     display:flex; align-items:center; justify-content:space-between;
@@ -444,7 +396,6 @@
     transition: color .15s, border-color .15s, background .15s;
   }
   .detail footer button:hover{ color: var(--rose); border-color: var(--rose); background: rgba(230,154,163,0.08); }
-
   .panel h3{
     font-size: 10px; letter-spacing: 0.3em; color: var(--dim);
     font-weight: 500; margin-bottom: 12px;
@@ -669,6 +620,65 @@
   .tooltip .meta{ font-size: 9px; color: var(--dim); margin-top: 5px; letter-spacing:0.2em }
   .tooltip.show{ opacity: 1; }
 
+  /* ---------- theme switcher ---------- */
+  .theme-switch{
+    position: fixed;
+    top: 28px; left: 50%; transform: translateX(-50%);
+    display: inline-flex; gap: 0;
+    background: rgba(10,10,10,0.55);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    padding: 4px;
+    z-index: 8;
+    box-shadow: 0 16px 60px rgba(0,0,0,0.5);
+  }
+  .theme-switch .pill{
+    display: inline-flex; align-items: center; gap: 8px;
+    background: transparent; border: 0;
+    padding: 8px 18px;
+    color: var(--dim);
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 10px; letter-spacing: 0.3em;
+    cursor: pointer;
+    border-radius: 100px;
+    text-transform: uppercase;
+    transition: color .25s, background .25s;
+  }
+  .theme-switch .pill .dot{
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--dim);
+    transition: background .25s, box-shadow .25s;
+  }
+  .theme-switch .pill[data-theme-pill="orbit"] .dot{ background: var(--amber); box-shadow: 0 0 10px var(--amber); }
+  .theme-switch .pill[data-theme-pill="bloom"] .dot{
+    background: #5fc090;
+    box-shadow: 0 0 10px #5fc090;
+  }
+  .theme-switch .pill:not(.active) .dot{ box-shadow: none; opacity: 0.3; }
+  .theme-switch .pill .cn{
+    font-family: "Cormorant Garamond", serif;
+    font-size: 13px; letter-spacing: 0.08em;
+    text-transform: none; font-style: italic;
+    color: var(--dim);
+  }
+  .theme-switch .pill.active{
+    background: rgba(255,255,255,0.06);
+    color: var(--ink);
+  }
+  .theme-switch .pill.active .cn{ color: var(--ink); }
+  .theme-switch .pill:hover:not(.active){ color: var(--ink); }
+
+  /* ---------- BLOOM theme tweaks ---------- */
+  /* UI stays cosmic across both themes — only the brand text gets a hot accent */
+  body.theme-bloom{
+    --bg: #000;
+  }
+  body.theme-bloom .hud .brand .name .amp{
+    color: #5fc090;
+  }
+
   /* ---------- loading ---------- */
   .boot{
     position: fixed; inset:0; background: #000;
@@ -685,113 +695,6 @@
   }
   @keyframes spin{ to{ transform: rotate(360deg) } }
   .boot.gone{ opacity:0; pointer-events:none }
-
-  .auth-pop{
-    position: fixed; right: 28px; top: 130px; z-index: 30;
-    font-family: "JetBrains Mono", ui-monospace, monospace;
-    opacity: 0; transform: translateY(-6px);
-    pointer-events: none;
-    transition: opacity .18s ease, transform .18s ease;
-  }
-  .auth-pop.show{ opacity: 1; transform: translateY(0); pointer-events: auto; }
-  .auth-card{
-    width: 340px; max-width: calc(100vw - 36px);
-    border: 1px solid var(--line);
-    background: rgba(10,10,12,0.86);
-    border-radius: 6px;
-    box-shadow: 0 50px 120px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.05);
-    padding: 22px;
-  }
-  .auth-card h2{
-    font-family: "Cormorant Garamond", "Times New Roman", serif;
-    font-size: 28px; font-weight: 500; font-style: italic;
-    letter-spacing: 0.12em; color: var(--ink);
-    margin-bottom: 6px;
-  }
-  .auth-card .sub{
-    color: var(--dim); font-size: 10px; letter-spacing: 0.18em;
-    text-transform: uppercase; line-height: 1.7;
-    margin-bottom: 18px;
-  }
-  .auth-tabs{
-    display: grid; grid-template-columns: 1fr 1fr;
-    border: 1px solid var(--line);
-    margin-bottom: 14px;
-  }
-  .auth-tabs button,
-  .auth-card button{
-    background: transparent; color: var(--dim);
-    border: 0; font-family: inherit;
-    font-size: 10px; letter-spacing: 0.2em;
-    text-transform: uppercase; cursor: pointer;
-  }
-  .auth-tabs button{ padding: 10px 0; }
-  .auth-tabs button.active{ color: var(--amber); background: rgba(255,176,102,0.08); }
-  .auth-form{ display: none; }
-  .auth-form.active{ display: block; }
-  .auth-card input{
-    width: 100%; background: rgba(0,0,0,0.35);
-    border: 1px solid var(--line); border-radius: 3px;
-    color: var(--ink); font: 13px/1.4 "Inter", system-ui, sans-serif;
-    padding: 11px 12px; margin-bottom: 10px;
-    outline: 0;
-  }
-  .auth-card input:focus{ border-color: rgba(255,176,102,0.5); }
-  .auth-primary,
-  .auth-secondary{
-    width: 100%; border: 1px solid var(--line) !important;
-    padding: 11px 12px; border-radius: 3px;
-  }
-  .auth-primary{ color: var(--amber) !important; border-color: rgba(255,176,102,0.35) !important; }
-  .auth-secondary{ margin-top: 10px; }
-  .auth-message{
-    min-height: 18px; color: var(--rose);
-    font-size: 10px; letter-spacing: 0.12em;
-    margin: 10px 0 0;
-  }
-  .auth-status{
-    position: fixed; right: 28px; top: 94px; z-index: 7;
-    pointer-events: auto; display: flex; gap: 8px; align-items: center;
-    font-family: "JetBrains Mono", ui-monospace, monospace;
-    font-size: 10px; letter-spacing: 0.18em; color: var(--dim);
-  }
-  .auth-status button{
-    background: transparent; border: 1px solid var(--line);
-    color: var(--dim); padding: 7px 10px; border-radius: 3px;
-    font: inherit; cursor: pointer; text-transform: uppercase;
-  }
-  .auth-status button:hover{ color: var(--amber); border-color: var(--amber); }
-  .login-nudge{
-    position: fixed; right: 28px; bottom: 414px; z-index: 32;
-    max-width: 360px;
-    background: rgba(10,10,12,0.92);
-    border: 1px solid rgba(255,176,102,0.26);
-    border-radius: 4px;
-    color: var(--ink);
-    padding: 12px 14px;
-    font-family: "JetBrains Mono", ui-monospace, monospace;
-    font-size: 11px; line-height: 1.65;
-    letter-spacing: 0.04em;
-    box-shadow: 0 18px 60px rgba(0,0,0,0.56);
-    opacity: 0; transform: translateY(8px);
-    pointer-events: none;
-    transition: opacity .18s ease, transform .18s ease;
-  }
-  .login-nudge.show{
-    opacity: 1; transform: translateY(0);
-    pointer-events: auto;
-  }
-  .login-nudge button{
-    margin-top: 8px;
-    background: transparent;
-    border: 1px solid var(--line);
-    color: var(--amber);
-    padding: 7px 10px;
-    border-radius: 3px;
-    font: inherit;
-    cursor: pointer;
-    text-transform: uppercase;
-  }
 
   /* flash when new star created */
   @keyframes flash{
@@ -814,42 +717,6 @@
 </script>
 </head>
 <body>
-<div class="auth-pop" id="auth-pop">
-  <div class="auth-card">
-    <h2>Skill Orbit</h2>
-    <div class="sub">Sign in to sync your archive and unlock account storage.</div>
-    <div class="auth-tabs">
-      <button id="auth-login-tab" class="active" type="button">Login</button>
-      <button id="auth-register-tab" type="button">Register</button>
-    </div>
-    <form class="auth-form active" id="auth-login-form">
-      <input id="auth-login-user" autocomplete="username" placeholder="Username or email" value="admin" />
-      <input id="auth-login-pass" autocomplete="current-password" placeholder="Password" type="password" value="admin123" />
-      <button class="auth-primary" type="submit">Enter Backend</button>
-    </form>
-    <form class="auth-form" id="auth-register-form">
-      <input id="auth-register-user" autocomplete="username" placeholder="Username" />
-      <input id="auth-register-email" autocomplete="email" placeholder="Email" type="email" />
-      <input id="auth-register-pass" autocomplete="new-password" placeholder="Password" type="password" />
-      <button class="auth-primary" type="submit">Create Account</button>
-    </form>
-    <button class="auth-secondary" id="auth-local-mode" type="button">Continue Local</button>
-    <div class="auth-message" id="auth-message"></div>
-  </div>
-</div>
-
-<div class="auth-status" id="auth-status">
-  <span id="auth-status-text">LOCAL MODE</span>
-  <button id="auth-login-open" type="button">Log in</button>
-  <button id="auth-register-open" type="button">Register</button>
-  <button id="auth-logout" type="button">Logout</button>
-</div>
-
-<div class="login-nudge" id="login-nudge">
-  <div>请登陆以获得完整账户权限以及福利</div>
-  <button id="login-nudge-open" type="button">Log in</button>
-</div>
-
 <template id="__bundler_thumbnail" data-bg-color="#06091a">
   <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
     <circle cx="600" cy="400" r="180" fill="#0e3a78"/>
@@ -883,6 +750,20 @@
     </div>
   </div>
 
+  <!-- Theme switcher: ORBIT (work) / BLOOM (life). Each world has isolated data. -->
+  <div class="theme-switch" id="theme-switch" style="pointer-events:auto;">
+    <button class="pill active" data-theme-pill="orbit" type="button">
+      <span class="dot"></span>
+      <span class="lbl">ORBIT</span>
+      <span class="cn">工作</span>
+    </button>
+    <button class="pill" data-theme-pill="bloom" type="button">
+      <span class="dot"></span>
+      <span class="lbl">BLOOM</span>
+      <span class="cn">生活</span>
+    </button>
+  </div>
+
   <div class="corner tr">
     <div><span class="label">LAT</span> <span class="val" id="hud-lat">+39.91°</span></div>
     <div><span class="label">LON</span> <span class="val" id="hud-lon">+116.40°</span></div>
@@ -893,20 +774,22 @@
 
   <div class="corner br">
     <div class="label">SCROLL · DRAG · HOVER</div>
-    <div class="label" style="margin-top:4px;">INTERACT · ZOOM · ROTATE</div>
+    <div class="label" style="margin-top:4px;">SPACE <span style="color:var(--ink)">PAUSE</span> · CLICK CATEGORY <span style="color:var(--ink)">SOLO</span></div>
+  </div>
+
+  <div id="pause-badge" style="position:absolute; left:50%; bottom:36px; transform:translateX(-50%);
+       padding:6px 14px; border:1px solid var(--line); border-radius:100px;
+       font-family:'JetBrains Mono', ui-monospace, monospace;
+       font-size:10px; letter-spacing:0.32em; color:var(--ink);
+       background:rgba(10,10,10,0.6); backdrop-filter:blur(10px);
+       opacity:0; transition:opacity .25s; pointer-events:none;">
+    ❚❚&nbsp; PAUSED &nbsp;·&nbsp; <span style="color:var(--dim)">SPACE TO RESUME</span>
   </div>
 </div>
 
 <!-- left panel -->
 <div class="panel">
   <div class="archive-section" id="archive-section">
-    <div class="panel-confirm" id="archive-confirm" role="dialog" aria-live="polite">
-      <div class="msg" id="archive-confirm-msg"></div>
-      <div class="actions">
-        <button class="cancel" id="archive-confirm-cancel" type="button">Cancel</button>
-        <button class="confirm" id="archive-confirm-ok" type="button">Confirm</button>
-      </div>
-    </div>
     <div class="head">
       <h3>MEMORY ARCHIVE</h3>
       <button class="toggle" id="archive-toggle" aria-label="collapse">−</button>
@@ -922,13 +805,6 @@
   </div>
 
   <div class="recent-section empty" id="skill-list">
-    <div class="panel-confirm" id="node-confirm" role="dialog" aria-live="polite">
-      <div class="msg" id="node-confirm-msg"></div>
-      <div class="actions">
-        <button class="cancel" id="node-confirm-cancel" type="button">Cancel</button>
-        <button class="confirm" id="node-confirm-ok" type="button">Confirm</button>
-      </div>
-    </div>
     <div class="head">
       <h3>RECENT NODES</h3>
       <button class="toggle" id="recent-toggle" aria-label="collapse">−</button>
