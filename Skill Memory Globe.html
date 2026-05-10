@@ -145,13 +145,81 @@
     max-height: 0; opacity: 0; pointer-events: none; overflow: hidden;
   }
   .panel .archive-section.collapsed .legend{ display: none; }
+  .panel .db-module{
+    flex:0 0 auto;
+    margin-top: 18px;
+    padding: 14px 0 16px;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .panel .db-module .eyebrow{
+    color: var(--dim);
+    font-size: 9px;
+    letter-spacing: .24em;
+    margin-bottom: 8px;
+  }
+  .panel .db-module .db-card{
+    width:100%;
+    border:1px solid rgba(255,176,102,.24);
+    background:
+      linear-gradient(135deg, rgba(255,176,102,.12), rgba(126,214,230,.055)),
+      rgba(0,0,0,.24);
+    color:var(--ink);
+    font-family:"JetBrains Mono", ui-monospace, monospace;
+    padding:12px 12px 11px;
+    cursor:pointer;
+    text-align:left;
+    position:relative;
+    overflow:hidden;
+    transition:border-color .18s, background .18s, transform .18s;
+  }
+  .panel .db-module .db-card::after{
+    content:'';
+    position:absolute;
+    width:80px;
+    height:80px;
+    right:-38px;
+    top:-36px;
+    border:1px solid rgba(255,176,102,.20);
+    border-radius:50%;
+    box-shadow:0 0 28px rgba(255,176,102,.08);
+  }
+  .panel .db-module .db-card:hover{
+    border-color:rgba(255,176,102,.56);
+    background:
+      linear-gradient(135deg, rgba(255,176,102,.16), rgba(126,214,230,.075)),
+      rgba(0,0,0,.30);
+    transform:translateY(-1px);
+  }
+  .panel .db-module .db-card .title{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    color:var(--amber);
+    font-size:11px;
+    letter-spacing:.16em;
+    margin-bottom:7px;
+  }
+  .panel .db-module .db-card .arrow{
+    color:var(--ink);
+    font-size:13px;
+    letter-spacing:0;
+  }
+  .panel .db-module .db-card .desc{
+    color:var(--dim);
+    font-size:9px;
+    line-height:1.5;
+    letter-spacing:.06em;
+    text-transform:none;
+  }
   .panel .recent-section{
-    margin-top: 22px;
-    flex: 1 1 auto;
+    margin-top: 16px;
+    flex: 0 1 260px;
+    max-height: min(260px, 42vh);
     min-height: 0;
     display: flex; flex-direction: column;
-    border-top: 1px solid var(--line);
-    padding-top: 16px;
+    padding-top: 0;
   }
   .panel .recent-section .head{
     display:flex; align-items:center; justify-content:space-between;
@@ -232,6 +300,7 @@
     list-style: none;
     flex: 1 1 auto;
     min-height: 0;
+    max-height: 160px;
     overflow-y: auto;
     padding-right: 6px;
     transition: max-height .3s, opacity .25s;
@@ -271,6 +340,73 @@
   .panel .recent-section li:hover .del{ opacity:1; }
   .panel .recent-section li .del:hover{ color: var(--rose); }
   .panel .recent-section.empty{ display: none; }
+  body.theme-orbit .panel .recent-section{ display:none !important; }
+  body.theme-bloom .panel .recent-section.empty{ display:flex; }
+  body.theme-bloom .panel .db-module{ display:none !important; }
+  body.theme-transition .panel .recent-section,
+  body.theme-transition .panel .db-module{ display:none !important; }
+
+  .confirm-modal{
+    position:fixed;
+    left:24px;
+    top:50%;
+    transform:translateY(-50%) scale(.98);
+    width:300px;
+    max-width:calc(100vw - 48px);
+    z-index:45;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .18s ease, transform .18s ease;
+  }
+  .confirm-modal.show{
+    opacity:1;
+    pointer-events:auto;
+    transform:translateY(-50%) scale(1);
+  }
+  .confirm-dialog{
+    border:1px solid rgba(232,138,150,.42);
+    background:rgba(10,10,12,.86);
+    backdrop-filter:blur(20px) saturate(140%);
+    -webkit-backdrop-filter:blur(20px) saturate(140%);
+    box-shadow:0 26px 70px rgba(0,0,0,.62), inset 0 1px 0 rgba(255,255,255,.05);
+    padding:16px;
+    font-family:"JetBrains Mono", ui-monospace, monospace;
+  }
+  .confirm-message{
+    color:var(--ink);
+    font-size:12px;
+    line-height:1.7;
+    letter-spacing:.04em;
+    margin-bottom:14px;
+  }
+  .confirm-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+  }
+  .confirm-actions button{
+    border:1px solid var(--line);
+    background:rgba(255,255,255,.035);
+    color:var(--dim);
+    padding:7px 10px;
+    font:inherit;
+    font-size:10px;
+    letter-spacing:.16em;
+    cursor:pointer;
+    transition:color .15s, border-color .15s, background .15s;
+  }
+  .confirm-actions button:hover{
+    color:var(--ink);
+    border-color:var(--dim);
+  }
+  .confirm-actions .danger{
+    color:var(--rose);
+    border-color:rgba(232,138,150,.46);
+  }
+  .confirm-actions .danger:hover{
+    background:rgba(232,138,150,.12);
+    border-color:var(--rose);
+  }
 
   /* ---------- detail card (memory node note editor) ---------- */
   .detail{
@@ -658,10 +794,21 @@
   }
   .theme-switch .pill:not(.active) .dot{ box-shadow: none; opacity: 0.3; }
   .theme-switch .pill .cn{
-    font-family: "Cormorant Garamond", serif;
-    font-size: 13px; letter-spacing: 0.08em;
+    font-family: "Cormorant Garamond", "Noto Serif SC", "Songti SC", serif;
+    font-size: 13px; letter-spacing: 0.04em;
     text-transform: none; font-style: italic;
     color: var(--dim);
+  }
+  html[lang="zh-CN"] .theme-switch .pill{
+    letter-spacing:0.12em;
+    gap:7px;
+  }
+  html[lang="zh-CN"] .theme-switch .pill .cn{
+    font-family: "Cormorant Garamond", "Noto Serif SC", "Songti SC", serif;
+    font-size:12px;
+    font-style:normal;
+    letter-spacing:0.12em;
+    opacity:.86;
   }
   .theme-switch .pill.active{
     background: rgba(255,255,255,0.06);
@@ -702,17 +849,815 @@
     100%{ box-shadow: 0 0 0 60px transparent; }
   }
   .stat.flash .v{ color: var(--amber); }
+
+  .db-drawer{
+    position:fixed;
+    left:286px;
+    top:96px;
+    bottom:110px;
+    width:min(460px, calc(100vw - 330px));
+    z-index:7;
+    pointer-events:auto;
+    border:1px solid var(--line);
+    background:rgba(3,5,10,.88);
+    backdrop-filter:blur(18px);
+    box-shadow:0 24px 90px rgba(0,0,0,.48);
+    transform:translateX(-16px);
+    opacity:0;
+    visibility:hidden;
+    transition:opacity .18s, transform .18s, visibility .18s;
+    display:flex;
+    flex-direction:column;
+    font-family:"JetBrains Mono", ui-monospace, monospace;
+  }
+  .db-drawer.show{ opacity:1; visibility:visible; transform:translateX(0); }
+  .db-drawer header{
+    flex:0 0 auto;
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:16px;
+    padding:16px 16px 12px;
+    border-bottom:1px solid var(--line);
+  }
+  .db-drawer h2{
+    font-size:13px;
+    letter-spacing:.18em;
+    font-weight:500;
+    color:var(--ink);
+    margin:0 0 5px;
+  }
+  .db-drawer .sub{
+    color:var(--dim);
+    font-size:10px;
+    letter-spacing:.09em;
+    line-height:1.45;
+    text-transform:none;
+  }
+  .db-close{
+    width:24px;
+    height:24px;
+    border:1px solid var(--line);
+    background:transparent;
+    color:var(--dim);
+    cursor:pointer;
+    font-size:16px;
+    line-height:1;
+  }
+  .db-close:hover{ color:var(--rose); border-color:var(--rose); }
+  .db-tools{
+    flex:0 0 auto;
+    padding:12px 16px;
+    border-bottom:1px solid var(--line);
+  }
+  .db-type-tabs{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap:6px;
+    margin-bottom:10px;
+  }
+  .db-type-tabs button{
+    border:1px solid var(--line);
+    background:rgba(255,255,255,.025);
+    color:var(--dim);
+    font-family:inherit;
+    font-size:9px;
+    letter-spacing:.14em;
+    padding:7px 5px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .db-type-tabs button.active,
+  .db-type-tabs button:hover{
+    color:var(--amber);
+    border-color:rgba(255,176,102,.45);
+    background:rgba(255,176,102,.07);
+  }
+  .db-search{
+    width:100%;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,.03);
+    color:var(--ink);
+    outline:0;
+    padding:9px 10px;
+    font-family:inherit;
+    font-size:11px;
+    caret-color:var(--amber);
+  }
+  .db-filter{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-top:10px;
+  }
+  .db-filter button{
+    border:1px solid var(--line);
+    background:transparent;
+    color:var(--dim);
+    font-family:inherit;
+    font-size:9px;
+    letter-spacing:.12em;
+    padding:5px 7px;
+    cursor:pointer;
+  }
+  .db-filter button.active,
+  .db-filter button:hover{ color:var(--amber); border-color:rgba(255,176,102,.45); }
+  .db-list{
+    flex:1 1 auto;
+    overflow:auto;
+    padding:8px 10px 14px;
+  }
+  .db-skill{
+    border-bottom:1px solid rgba(232,230,223,.08);
+    padding:10px 6px;
+  }
+  .db-skill .top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    color:var(--ink);
+    font-size:11px;
+    line-height:1.45;
+    letter-spacing:0;
+    text-transform:none;
+  }
+  .db-skill .meta{
+    margin-top:5px;
+    color:var(--dim);
+    font-size:9px;
+    letter-spacing:.10em;
+  }
+  .db-skill .desc{
+    margin-top:7px;
+    color:rgba(232,230,223,.72);
+    font-size:10px;
+    line-height:1.5;
+    letter-spacing:0;
+    text-transform:none;
+  }
+  .db-skill .chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap:5px;
+    margin-top:8px;
+  }
+  .db-skill .chips span{
+    border:1px solid rgba(232,230,223,.11);
+    color:rgba(232,230,223,.68);
+    padding:2px 5px;
+    font-size:8px;
+    letter-spacing:.06em;
+    text-transform:none;
+  }
+  .db-skill .core{
+    flex:0 0 auto;
+    color:var(--amber);
+    border:1px solid rgba(255,176,102,.35);
+    padding:2px 5px;
+    font-size:8px;
+    letter-spacing:.12em;
+  }
+  .db-empty{
+    color:var(--dim);
+    text-align:center;
+    padding:28px 10px;
+    font-size:10px;
+    letter-spacing:.14em;
+  }
+  .auth-widget{
+    margin-top:12px;
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+    pointer-events:auto;
+    font-family:"JetBrains Mono", ui-monospace, monospace;
+  }
+  .auth-widget button{
+    border:1px solid var(--line);
+    background:rgba(0,0,0,.32);
+    color:var(--dim);
+    font-family:inherit;
+    font-size:9px;
+    letter-spacing:.16em;
+    padding:6px 8px;
+    cursor:pointer;
+    text-transform:uppercase;
+  }
+  .auth-widget button:hover{ color:var(--amber); border-color:rgba(255,176,102,.45); }
+  .lang-toggle{
+    margin-top:8px;
+    pointer-events:auto;
+    display:flex;
+    justify-content:flex-end;
+  }
+  .lang-toggle button{
+    border:1px solid rgba(126,214,230,.26);
+    background:rgba(0,0,0,.32);
+    color:var(--dim);
+    font-family:"JetBrains Mono", ui-monospace, monospace;
+    font-size:9px;
+    letter-spacing:.16em;
+    padding:6px 8px;
+    cursor:pointer;
+    text-transform:uppercase;
+  }
+  .lang-toggle button:hover{
+    color:var(--cyan);
+    border-color:rgba(126,214,230,.5);
+  }
+  .auth-widget .user-chip{
+    max-width:150px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    color:var(--ink);
+    border-color:rgba(255,176,102,.26);
+  }
+  .auth-modal{
+    position:fixed;
+    inset:0;
+    z-index:40;
+    display:none;
+    align-items:flex-start;
+    justify-content:flex-end;
+    background:transparent;
+    pointer-events:auto;
+    padding:92px 28px 0 0;
+  }
+  .auth-modal.show{ display:flex; }
+  .auth-dialog{
+    width:min(320px, calc(100vw - 36px));
+    border:1px solid rgba(255,176,102,.26);
+    background:rgba(3,5,10,.92);
+    backdrop-filter:blur(18px);
+    box-shadow:0 18px 70px rgba(0,0,0,.42);
+    padding:18px;
+    font-family:"JetBrains Mono", ui-monospace, monospace;
+  }
+  .auth-dialog header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:14px;
+  }
+  .auth-dialog h2{
+    color:var(--ink);
+    font-size:13px;
+    letter-spacing:.2em;
+    font-weight:500;
+  }
+  .auth-close{
+    width:24px;
+    height:24px;
+    border:1px solid var(--line);
+    background:transparent;
+    color:var(--dim);
+    cursor:pointer;
+    font-size:16px;
+  }
+  .auth-close:hover{ color:var(--rose); border-color:var(--rose); }
+  .auth-tabs{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:6px;
+    margin-bottom:12px;
+  }
+  .auth-tabs button{
+    border:1px solid var(--line);
+    background:transparent;
+    color:var(--dim);
+    font-family:inherit;
+    font-size:10px;
+    letter-spacing:.16em;
+    padding:8px;
+    cursor:pointer;
+  }
+  .auth-tabs button.active,
+  .auth-tabs button:hover{ color:var(--amber); border-color:rgba(255,176,102,.45); }
+  .auth-field{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+    margin-bottom:10px;
+  }
+  .auth-field label{
+    color:var(--dim);
+    font-size:9px;
+    letter-spacing:.16em;
+  }
+  .auth-field input{
+    width:100%;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,.035);
+    color:var(--ink);
+    outline:0;
+    padding:9px 10px;
+    font-family:inherit;
+    font-size:11px;
+    caret-color:var(--amber);
+  }
+  .auth-submit{
+    width:100%;
+    margin-top:4px;
+    border:1px solid rgba(255,176,102,.42);
+    background:rgba(255,176,102,.09);
+    color:var(--amber);
+    font-family:inherit;
+    font-size:10px;
+    letter-spacing:.18em;
+    padding:10px;
+    cursor:pointer;
+  }
+  .auth-message{
+    min-height:18px;
+    margin-top:10px;
+    color:var(--dim);
+    font-size:10px;
+    line-height:1.5;
+    text-transform:none;
+    letter-spacing:0;
+  }
+  .auth-message.error{ color:var(--rose); }
 </style>
 
 <script type="application/json" id="seed-skills">
 [
-  {"name":"CSS Grid subgrid layout","cat":"craft","day":-6},
-  {"name":"useReducer for complex form state","cat":"craft","day":-5},
-  {"name":"Caesar & substitution cipher basics","cat":"theory","day":-4},
-  {"name":"Japanese sandwich technique","cat":"life","day":-3},
-  {"name":"fract() in WebGL shaders","cat":"craft","day":-2},
-  {"name":"Intuition for Bayesian inference","cat":"theory","day":-1},
-  {"name":"Water temperature curve in coffee brewing","cat":"life","day":0}
+  {
+    "id": "claude-complex-reasoning",
+    "name": "用 Claude 做复杂推理与长文写作",
+    "cat": "ai-models",
+    "day": 0
+  },
+  {
+    "id": "chatgpt-task-planning",
+    "name": "用 ChatGPT 做通用问答与任务规划",
+    "cat": "ai-models",
+    "day": 0
+  },
+  {
+    "id": "gemini-workspace-long-context",
+    "name": "用 Gemini 处理长上下文和 Google Workspace",
+    "cat": "ai-models",
+    "day": 0
+  },
+  {
+    "id": "perplexity-source-search",
+    "name": "用 Perplexity 做带来源的搜索问答",
+    "cat": "ai-models",
+    "day": 0
+  },
+  {
+    "id": "deepseek-chinese-reasoning",
+    "name": "用 DeepSeek 做中文推理与代码辅助",
+    "cat": "ai-models",
+    "day": 0
+  },
+  {
+    "id": "kimi-long-pdf-reading",
+    "name": "用 Kimi 阅读长文档和 PDF",
+    "cat": "ai-models",
+    "day": 0
+  },
+  {
+    "id": "qwen-enterprise-model",
+    "name": "用 Qwen 做中文多模态与企业应用",
+    "cat": "ai-models",
+    "day": 0
+  },
+  {
+    "id": "doubao-lightweight-creation",
+    "name": "用 Doubao 做中文创作和轻量任务",
+    "cat": "ai-models",
+    "day": 0
+  },
+  {
+    "id": "glm-browser-agent",
+    "name": "用 GLM / AutoGLM 做中文 Agent 任务",
+    "cat": "ai-models",
+    "day": 0
+  },
+  {
+    "id": "cursor-code-build",
+    "name": "用 Cursor 编写和重构代码",
+    "cat": "ai-coding",
+    "day": 0
+  },
+  {
+    "id": "claude-code-large-repo",
+    "name": "用 Claude Code 处理大型代码库",
+    "cat": "ai-coding",
+    "day": 0
+  },
+  {
+    "id": "github-copilot-completion",
+    "name": "用 GitHub Copilot 做 IDE 补全",
+    "cat": "ai-coding",
+    "day": 0
+  },
+  {
+    "id": "windsurf-agent-coding",
+    "name": "用 Windsurf 做 Agentic coding",
+    "cat": "ai-coding",
+    "day": 0
+  },
+  {
+    "id": "replit-agent-app",
+    "name": "用 Replit Agent 快速生成应用",
+    "cat": "ai-coding",
+    "day": 0
+  },
+  {
+    "id": "bolt-fullstack-prototype",
+    "name": "用 Bolt.new 生成全栈原型",
+    "cat": "ai-coding",
+    "day": 0
+  },
+  {
+    "id": "v0-react-ui",
+    "name": "用 v0 生成 React / shadcn UI",
+    "cat": "ai-coding",
+    "day": 0
+  },
+  {
+    "id": "lovable-saas-prototype",
+    "name": "用 Lovable 快速搭建 SaaS 原型",
+    "cat": "ai-coding",
+    "day": 0
+  },
+  {
+    "id": "devin-auto-pr",
+    "name": "用 Devin 做自动 PR / 工程任务",
+    "cat": "ai-coding",
+    "day": 0
+  },
+  {
+    "id": "continue-local-code-model",
+    "name": "用 Continue.dev 接入本地模型写代码",
+    "cat": "ai-coding",
+    "day": 0
+  },
+  {
+    "id": "midjourney-concept-art",
+    "name": "用 Midjourney 生成高质量概念图",
+    "cat": "ai-visual",
+    "day": 0
+  },
+  {
+    "id": "flux-realistic-image",
+    "name": "用 FLUX 生成真实感图片",
+    "cat": "ai-visual",
+    "day": 0
+  },
+  {
+    "id": "ideogram-text-poster",
+    "name": "用 Ideogram 生成带文字的海报图",
+    "cat": "ai-visual",
+    "day": 0
+  },
+  {
+    "id": "firefly-commercial-image",
+    "name": "用 Adobe Firefly 做商业安全图像生成",
+    "cat": "ai-visual",
+    "day": 0
+  },
+  {
+    "id": "recraft-brand-visual",
+    "name": "用 Recraft 做 Logo 和品牌视觉",
+    "cat": "ai-visual",
+    "day": 0
+  },
+  {
+    "id": "imagen-google-image",
+    "name": "用 Imagen 生成 Google 系图像",
+    "cat": "ai-visual",
+    "day": 0
+  },
+  {
+    "id": "photoshop-ai-generative-fill",
+    "name": "用 Photoshop AI 修图和 Generative Fill",
+    "cat": "ai-visual",
+    "day": 0
+  },
+  {
+    "id": "magnific-topaz-upscale",
+    "name": "用 Magnific / Topaz 做图片放大增强",
+    "cat": "ai-visual",
+    "day": 0
+  },
+  {
+    "id": "krea-realtime-visual",
+    "name": "用 Krea 做实时视觉生成",
+    "cat": "ai-visual",
+    "day": 0
+  },
+  {
+    "id": "canva-light-design",
+    "name": "用 Canva 做轻量设计排版",
+    "cat": "ai-visual",
+    "day": 0
+  },
+  {
+    "id": "veo-video-generation",
+    "name": "用 Veo 生成高质量视频",
+    "cat": "ai-media",
+    "day": 0
+  },
+  {
+    "id": "runway-video-editing",
+    "name": "用 Runway 做视频生成和编辑",
+    "cat": "ai-media",
+    "day": 0
+  },
+  {
+    "id": "kling-chinese-video",
+    "name": "用 Kling 做中文视频生成",
+    "cat": "ai-media",
+    "day": 0
+  },
+  {
+    "id": "luma-video-3d",
+    "name": "用 Luma 做视频和 3D 场景生成",
+    "cat": "ai-media",
+    "day": 0
+  },
+  {
+    "id": "hailuo-minimax-video",
+    "name": "用 Hailuo / MiniMax 做中文视频",
+    "cat": "ai-media",
+    "day": 0
+  },
+  {
+    "id": "suno-song-bgm",
+    "name": "用 Suno 生成歌曲和 BGM",
+    "cat": "ai-media",
+    "day": 0
+  },
+  {
+    "id": "udio-music-generation",
+    "name": "用 Udio 生成音乐",
+    "cat": "ai-media",
+    "day": 0
+  },
+  {
+    "id": "elevenlabs-voiceover",
+    "name": "用 ElevenLabs 生成语音和配音",
+    "cat": "ai-media",
+    "day": 0
+  },
+  {
+    "id": "heygen-avatar-video",
+    "name": "用 HeyGen 生成数字人视频",
+    "cat": "ai-media",
+    "day": 0
+  },
+  {
+    "id": "capcut-ai-editing",
+    "name": "用 CapCut 做 AI 剪辑",
+    "cat": "ai-media",
+    "day": 0
+  },
+  {
+    "id": "gamma-ppt-generation",
+    "name": "用 Gamma 生成 PPT",
+    "cat": "ai-office",
+    "day": 0
+  },
+  {
+    "id": "canva-magic-design",
+    "name": "用 Canva Magic Design 做演示设计",
+    "cat": "ai-office",
+    "day": 0
+  },
+  {
+    "id": "beautiful-ai-business-deck",
+    "name": "用 Beautiful.ai 做商业演示",
+    "cat": "ai-office",
+    "day": 0
+  },
+  {
+    "id": "aippt-chinese-slides",
+    "name": "用 AiPPT.cn 生成中文 PPT",
+    "cat": "ai-office",
+    "day": 0
+  },
+  {
+    "id": "excel-copilot-analysis",
+    "name": "用 Microsoft Excel Copilot 分析表格",
+    "cat": "ai-office",
+    "day": 0
+  },
+  {
+    "id": "claude-excel-reasoning",
+    "name": "用 Claude in Excel 做复杂表格推理",
+    "cat": "ai-office",
+    "day": 0
+  },
+  {
+    "id": "rows-numerous-ai-sheet",
+    "name": "用 Rows / Numerous.ai 做 AI 表格",
+    "cat": "ai-office",
+    "day": 0
+  },
+  {
+    "id": "gpt-for-work-sheets",
+    "name": "用 GPT for Work 处理 Excel / Sheets",
+    "cat": "ai-office",
+    "day": 0
+  },
+  {
+    "id": "notion-ai-knowledge",
+    "name": "用 Notion AI 做知识整理",
+    "cat": "ai-office",
+    "day": 0
+  },
+  {
+    "id": "google-workspace-ai",
+    "name": "用 Google Workspace AI 处理 Docs / Gmail / Sheets",
+    "cat": "ai-office",
+    "day": 0
+  },
+  {
+    "id": "notebooklm-source-grounded",
+    "name": "用 NotebookLM 阅读和总结资料",
+    "cat": "ai-research",
+    "day": 0
+  },
+  {
+    "id": "perplexity-deep-research",
+    "name": "用 Perplexity Deep Research 做深度搜索",
+    "cat": "ai-research",
+    "day": 0
+  },
+  {
+    "id": "elicit-academic-research",
+    "name": "用 Elicit 做学术研究",
+    "cat": "ai-research",
+    "day": 0
+  },
+  {
+    "id": "consensus-paper-answers",
+    "name": "用 Consensus 查论文结论",
+    "cat": "ai-research",
+    "day": 0
+  },
+  {
+    "id": "scite-citation-check",
+    "name": "用 Scite 检查论文引用关系",
+    "cat": "ai-research",
+    "day": 0
+  },
+  {
+    "id": "semantic-scholar-discovery",
+    "name": "用 Semantic Scholar 找学术资料",
+    "cat": "ai-research",
+    "day": 0
+  },
+  {
+    "id": "zotero-reference-management",
+    "name": "用 Zotero 管理文献",
+    "cat": "ai-research",
+    "day": 0
+  },
+  {
+    "id": "genspark-research-agent",
+    "name": "用 Genspark 做研究型 Agent",
+    "cat": "ai-research",
+    "day": 0
+  },
+  {
+    "id": "felo-multilingual-search",
+    "name": "用 Felo 做多语言搜索",
+    "cat": "ai-research",
+    "day": 0
+  },
+  {
+    "id": "phind-technical-search",
+    "name": "用 Phind 搜索技术问题",
+    "cat": "ai-research",
+    "day": 0
+  },
+  {
+    "id": "chatgpt-agent-operator",
+    "name": "用 ChatGPT Agent / Operator 操作网页任务",
+    "cat": "ai-agent",
+    "day": 0
+  },
+  {
+    "id": "claude-mcp-connectors",
+    "name": "用 Claude MCP 连接外部工具",
+    "cat": "ai-agent",
+    "day": 0
+  },
+  {
+    "id": "manus-general-agent",
+    "name": "用 Manus 做通用 Agent 任务",
+    "cat": "ai-agent",
+    "day": 0
+  },
+  {
+    "id": "genspark-super-agent",
+    "name": "用 Genspark Super Agent 生成报告 / PPT",
+    "cat": "ai-agent",
+    "day": 0
+  },
+  {
+    "id": "autoglm-browser-agent",
+    "name": "用 AutoGLM 做中文浏览器 Agent",
+    "cat": "ai-agent",
+    "day": 0
+  },
+  {
+    "id": "n8n-ai-workflow",
+    "name": "用 n8n 连接 AI 工作流",
+    "cat": "ai-agent",
+    "day": 0
+  },
+  {
+    "id": "dify-ai-app",
+    "name": "用 Dify 搭建 AI 应用",
+    "cat": "ai-agent",
+    "day": 0
+  },
+  {
+    "id": "coze-bot-agent",
+    "name": "用 Coze 搭建中文 Bot / Agent",
+    "cat": "ai-agent",
+    "day": 0
+  },
+  {
+    "id": "raycast-ai-local-automation",
+    "name": "用 Raycast AI 做本地快捷自动化",
+    "cat": "ai-agent",
+    "day": 0
+  },
+  {
+    "id": "claude-code-hooks-subagents",
+    "name": "用 Claude Code Hooks / Subagents 做工程自动化",
+    "cat": "ai-agent",
+    "day": 0
+  },
+  {
+    "id": "jasper-marketing-copy",
+    "name": "用 Jasper 写营销文案",
+    "cat": "ai-business",
+    "day": 0
+  },
+  {
+    "id": "copy-ai-sales-content",
+    "name": "用 Copy.ai 生成销售内容",
+    "cat": "ai-business",
+    "day": 0
+  },
+  {
+    "id": "grammarly-wordtune-polish",
+    "name": "用 Grammarly / Wordtune 优化英文写作",
+    "cat": "ai-business",
+    "day": 0
+  },
+  {
+    "id": "surferseo-content-optimization",
+    "name": "用 SurferSEO 做 SEO 内容优化",
+    "cat": "ai-business",
+    "day": 0
+  },
+  {
+    "id": "ahrefs-semrush-keywords",
+    "name": "用 Ahrefs / Semrush 做关键词研究",
+    "cat": "ai-business",
+    "day": 0
+  },
+  {
+    "id": "hubspot-breeze-crm",
+    "name": "用 HubSpot Breeze AI 做 CRM 和营销",
+    "cat": "ai-business",
+    "day": 0
+  },
+  {
+    "id": "klaviyo-email-automation",
+    "name": "用 Klaviyo 做邮件营销自动化",
+    "cat": "ai-business",
+    "day": 0
+  },
+  {
+    "id": "apollo-sales-leads",
+    "name": "用 Apollo 做销售线索挖掘",
+    "cat": "ai-business",
+    "day": 0
+  },
+  {
+    "id": "salesforce-claude-customer-data",
+    "name": "用 Salesforce + Claude 分析客户数据",
+    "cat": "ai-business",
+    "day": 0
+  },
+  {
+    "id": "intercom-zendesk-support",
+    "name": "用 Intercom / Zendesk + Claude 做客服支持",
+    "cat": "ai-business",
+    "day": 0
+  }
 ]
 </script>
 </head>
@@ -768,6 +1713,13 @@
     <div><span class="label">LAT</span> <span class="val" id="hud-lat">+39.91°</span></div>
     <div><span class="label">LON</span> <span class="val" id="hud-lon">+116.40°</span></div>
     <div><span class="label">UTC</span> <span class="val" id="hud-utc">--:--:--</span></div>
+    <div class="auth-widget" id="auth-widget">
+      <button type="button" id="auth-open-login">LOG IN</button>
+      <button type="button" id="auth-open-register">REGISTER</button>
+    </div>
+    <div class="lang-toggle">
+      <button type="button" id="lang-toggle">中文</button>
+    </div>
   </div>
 
 
@@ -804,6 +1756,14 @@
     </div>
   </div>
 
+  <div class="db-module">
+    <div class="eyebrow">KNOWLEDGE BASE</div>
+    <button class="db-card" id="open-ai-db" type="button">
+      <span class="title">AI SKILL DATABASE <span class="arrow">→</span></span>
+      <span class="desc">Full library for search, future updates, and AI combinations.</span>
+    </button>
+  </div>
+
   <div class="recent-section empty" id="skill-list">
     <div class="head">
       <h3>RECENT NODES</h3>
@@ -817,6 +1777,67 @@
     <ul id="skill-ul"></ul>
     <div class="no-match" id="skill-no-match">No matching nodes</div>
   </div>
+</div>
+
+<div class="confirm-modal" id="delete-confirm" aria-hidden="true">
+  <div class="confirm-dialog" role="dialog" aria-modal="true">
+    <div class="confirm-message" id="delete-confirm-message">Are you sure you want to delete? This cannot be recovered.</div>
+    <div class="confirm-actions">
+      <button type="button" id="delete-confirm-cancel">CANCEL</button>
+      <button type="button" class="danger" id="delete-confirm-ok">DELETE</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI skill database drawer -->
+<aside class="db-drawer" id="ai-db" aria-hidden="true">
+  <header>
+    <div>
+      <h2>AI SKILL DATABASE</h2>
+      <div class="sub">Complete AI skill library from the guide. Core skills appear as orbit nodes.</div>
+    </div>
+    <button class="db-close" id="ai-db-close" type="button" aria-label="close">×</button>
+  </header>
+  <div class="db-tools">
+    <div class="db-type-tabs" id="ai-db-type-tabs">
+      <button type="button" data-db-type="skills" class="active">SKILLS</button>
+      <button type="button" data-db-type="combination">COMBO</button>
+      <button type="button" data-db-type="workflow">WORKFLOW</button>
+    </div>
+    <input class="db-search" id="ai-db-search" placeholder="Search all AI skills…" autocomplete="off" spellcheck="false" />
+    <div class="db-filter" id="ai-db-filter"></div>
+  </div>
+  <div class="db-list" id="ai-db-list">
+    <div class="db-empty">LOADING DATABASE</div>
+  </div>
+</aside>
+
+<!-- auth modal -->
+<div class="auth-modal" id="auth-modal" aria-hidden="true">
+  <form class="auth-dialog" id="auth-form">
+    <header>
+      <h2 id="auth-title">LOG IN</h2>
+      <button class="auth-close" id="auth-close" type="button" aria-label="close">×</button>
+    </header>
+    <div class="auth-tabs">
+      <button type="button" data-auth-mode="login" class="active">LOG IN</button>
+      <button type="button" data-auth-mode="register">REGISTER</button>
+    </div>
+    <div class="auth-field">
+      <label for="auth-username">USERNAME</label>
+      <input id="auth-username" name="username" autocomplete="username" required />
+    </div>
+    <div class="auth-field" id="auth-email-row">
+      <label for="auth-email">EMAIL</label>
+      <input id="auth-email" name="email" type="email" autocomplete="email" />
+    </div>
+    <div class="auth-field">
+      <label for="auth-password">PASSWORD</label>
+      <input id="auth-password" name="password" type="password" autocomplete="current-password" required minlength="6" />
+    </div>
+    <button class="auth-submit" id="auth-submit" type="submit">LOG IN</button>
+    <div class="auth-message" id="auth-message"></div>
+  </form>
 </div>
 
 <!-- detail card -->
@@ -851,12 +1872,12 @@
     <div class="feed" id="feed">
       <div class="msg sys">
         <div class="who">SYSTEM</div>
-        <div class="body">Tell me what you learned today and I'll place it on the orbit.</div>
+        <div class="body">Ask for an AI task and I will search the skill database.</div>
       </div>
     </div>
     <div class="compose">
       <span class="prompt">&gt;</span>
-      <input id="input" placeholder="Today I learned…" autocomplete="off" />
+      <input id="input" placeholder="我今天想做一个 PPT…" autocomplete="off" />
       <button id="send">SEND ↵</button>
     </div>
   </div>
@@ -876,7 +1897,7 @@
   "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
 }}
 </script>
-<script type="module" src="orbit.js"></script>
+<script type="module" src="orbit.js?v=20260510-8"></script>
 
 </body>
 </html>

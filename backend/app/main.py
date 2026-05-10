@@ -4,6 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.router import api_router
 from app.core.config import settings
 from app.db.session import SessionLocal
+from app.repositories.ai_library import ensure_ai_library_seed
+from app.repositories.ai_skills import ensure_ai_skill_seed
 from app.repositories.users import ensure_admin_user
 
 
@@ -30,6 +32,8 @@ def create_app() -> FastAPI:
                 settings.default_admin_email,
                 settings.default_admin_password,
             )
+            ensure_ai_skill_seed(db)
+            ensure_ai_library_seed(db)
         finally:
             db.close()
 

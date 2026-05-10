@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Index, String, Text
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -67,3 +67,55 @@ class SkillRecord(Base):
 
     user: Mapped[Optional[UserRecord]] = relationship(back_populates="skills")
     category: Mapped[CategoryRecord] = relationship(back_populates="skills")
+
+
+class AISkillRecord(Base):
+    __tablename__ = "ai_skills"
+    __table_args__ = (
+        Index("ix_ai_skills_category_id", "category_id"),
+        Index("ix_ai_skills_is_core", "is_core"),
+        Index("ix_ai_skills_importance", "importance"),
+    )
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    name: Mapped[str] = mapped_column(String(120), nullable=False)
+    category_id: Mapped[str] = mapped_column(String(48), nullable=False)
+    category_label: Mapped[str] = mapped_column(String(80), nullable=False)
+    tool: Mapped[str] = mapped_column(String(80), nullable=False, default="")
+    stage: Mapped[str] = mapped_column(String(40), nullable=False, default="")
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    tags_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
+    examples_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
+    input_types_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
+    output_types_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
+    difficulty: Mapped[int] = mapped_column(Integer, nullable=False, default=2)
+    importance: Mapped[int] = mapped_column(Integer, nullable=False, default=50)
+    is_core: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)
+
+
+class AILibraryItemRecord(Base):
+    __tablename__ = "ai_library_items"
+    __table_args__ = (
+        Index("ix_ai_library_items_item_type", "item_type"),
+        Index("ix_ai_library_items_category_id", "category_id"),
+        Index("ix_ai_library_items_importance", "importance"),
+    )
+
+    id: Mapped[str] = mapped_column(String(100), primary_key=True)
+    item_type: Mapped[str] = mapped_column(String(24), nullable=False)
+    title: Mapped[str] = mapped_column(String(180), nullable=False)
+    category_id: Mapped[str] = mapped_column(String(48), nullable=False, default="")
+    category_label: Mapped[str] = mapped_column(String(80), nullable=False, default="")
+    summary: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    tools_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
+    steps_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
+    outputs_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
+    tags_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
+    source_section: Mapped[str] = mapped_column(String(120), nullable=False, default="")
+    importance: Mapped[int] = mapped_column(Integer, nullable=False, default=50)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)
