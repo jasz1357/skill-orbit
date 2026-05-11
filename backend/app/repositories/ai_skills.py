@@ -15,12 +15,27 @@ from app.models.ai_skill import AISkillCreate, AISkillRead, AISkillUpdate
 
 
 def ensure_ai_skill_seed(db: Session) -> None:
-    existing = db.scalar(select(AISkillRecord.id).limit(1))
-    if existing:
-        return
+    existing_ids = set(db.scalars(select(AISkillRecord.id)).all())
+    existing_signatures = {
+        (record.name, record.category_id, record.tool)
+        for record in db.scalars(select(AISkillRecord)).all()
+    }
+    existing_tools = {
+        (record.tool or "").strip().lower()
+        for record in db.scalars(select(AISkillRecord)).all()
+        if (record.tool or "").strip()
+    }
     now = datetime.now(timezone.utc)
     for item in AI_SKILLS:
+        signature = (item["name"], item["category_id"], item.get("tool", ""))
+        tool_key = (item.get("tool") or "").strip().lower()
+        if item["id"] in existing_ids or signature in existing_signatures or tool_key in existing_tools:
+            continue
         db.add(_create_record(item, now))
+        existing_ids.add(item["id"])
+        existing_signatures.add(signature)
+        if tool_key:
+            existing_tools.add(tool_key)
     db.commit()
 
 

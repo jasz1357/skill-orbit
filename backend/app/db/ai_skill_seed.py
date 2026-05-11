@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from app.db.ai_workflow_100_seed import workflow_skill_items
+from app.db.china_ai_tool_workflow_seed import china_tool_skill_items
+from app.db.expanded_ai_tool_workflow_seed import expanded_skill_items
+
 
 AI_SKILL_CATEGORIES = [
     {"id": "ai-models", "label": "AI MODELS", "color": "#ffb066", "radius": 1.45, "tilt": [0.26, 0.10, 0.04], "speed": 0.060},
@@ -149,3 +153,7 @@ AI_SKILLS = [
     skill("bigquery-looker-claude", "用 BigQuery / Looker + Claude 做数据分析", "ai-business", "BigQuery / Looker", "analysis", ["bigquery", "looker", "data"], "适合业务数据查询、洞察和可视化解释。", importance=70),
     skill("snowflake-hex-claude", "用 Snowflake / Hex + Claude 做数据报告", "ai-business", "Snowflake / Hex", "analysis", ["snowflake", "hex", "report"], "适合 SQL 分析、数据报告和汇报材料。", importance=70),
 ]
+
+AI_SKILLS.extend(workflow_skill_items())
+AI_SKILLS.extend(china_tool_skill_items())
+AI_SKILLS.extend(expanded_skill_items())

@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from app.db.ai_workflow_100_seed import workflow_library_items
+from app.db.china_ai_tool_workflow_seed import china_library_items
+from app.db.expanded_ai_tool_workflow_seed import expanded_library_items
+
 
 def combo(
     item_id: str,
@@ -38,13 +42,19 @@ def workflow(
     tags: list[str],
     importance: int = 88,
 ) -> dict:
+    clean_title = title
+    if "：" in clean_title:
+        clean_title = clean_title.split("：", 1)[1].strip()
+    tool_text = " + ".join(tools[:8])
+    output_text = "、".join(outputs[:4]) if outputs else "可交付成果"
+    step_text = "；".join(steps[:6])
     return {
         "id": item_id,
         "item_type": "workflow",
-        "title": title,
+        "title": clean_title,
         "category_id": category_id,
         "category_label": category_label,
-        "summary": "Project workflow from the PDF guide. Use it as a reusable plan for AI skill combinations.",
+        "summary": f"来自《2026 AI 工具实战指南》的真实项目工作流：{clean_title}。工具链：{tool_text}。主要产出：{output_text}。执行步骤：{step_text}。",
         "tools": tools,
         "steps": steps,
         "outputs": outputs,
@@ -126,3 +136,7 @@ AI_LIBRARY_ITEMS = [
     workflow("workflow-company-report", "项目工作流 19：三周做公司深度研报", "ai-business", "AI BUSINESS", ["Perplexity Deep Research", "Claude", "BigQuery", "Claude in Excel", "Granola", "Otter", "Kimi", "秘塔 AI", "Beautiful.ai"], ["30 页研报", "Excel 模型", "汇报 PPT"], ["Perplexity 做行业资料", "Claude + BigQuery 汇总数据", "Claude in Excel 做 DCF 和敏感性分析", "Granola/Otter 整理访谈", "Kimi 消化 PDF", "Claude 做图表和写作", "Beautiful.ai 生成汇报 PPT"], ["finance", "research", "ppt"], 92),
     workflow("workflow-support-automation", "项目工作流 20：客服 80% 工单 AI 自助解决", "ai-business", "AI BUSINESS", ["Coze", "Dify", "RAG", "Intercom", "Zendesk", "Claude", "Linear"], ["RAG Bot", "客服知识库", "工单升级流程"], ["Coze/Dify 搭建客服 RAG Bot", "整理 FAQ 和知识库", "Intercom/Zendesk 接入对话", "Claude 做复杂回复和总结", "Linear 回流产品缺陷", "持续优化召回和回答质量"], ["support", "rag", "automation"], 90),
 ]
+
+AI_LIBRARY_ITEMS.extend(workflow_library_items())
+AI_LIBRARY_ITEMS.extend(china_library_items())
+AI_LIBRARY_ITEMS.extend(expanded_library_items())

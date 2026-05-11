@@ -16,12 +16,31 @@ from app.repositories.ai_skills import _search_terms
 
 
 def ensure_ai_library_seed(db: Session) -> None:
-    existing = db.scalar(select(AILibraryItemRecord.id).limit(1))
-    if existing:
-        return
+    existing_ids = set(db.scalars(select(AILibraryItemRecord.id)).all())
+    existing_signatures = {
+        (
+            record.item_type,
+            record.title,
+            record.tools_json,
+            record.steps_json,
+            record.outputs_json,
+        )
+        for record in db.scalars(select(AILibraryItemRecord)).all()
+    }
     now = datetime.now(timezone.utc)
     for item in AI_LIBRARY_ITEMS:
+        signature = (
+            item["item_type"],
+            item["title"],
+            json.dumps(item.get("tools", []), ensure_ascii=False),
+            json.dumps(item.get("steps", []), ensure_ascii=False),
+            json.dumps(item.get("outputs", []), ensure_ascii=False),
+        )
+        if item["id"] in existing_ids or signature in existing_signatures:
+            continue
         db.add(_create_record(item, now))
+        existing_ids.add(item["id"])
+        existing_signatures.add(signature)
     db.commit()
 
 

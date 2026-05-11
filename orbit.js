@@ -74,20 +74,23 @@ const I18N = {
     searchNodes: 'Search nodes...',
     noMatchingNodes: 'No matching nodes',
     dbTitle: 'AI SKILL DATABASE',
-    dbSub: 'Complete AI skill library from the guide. Core skills appear as orbit nodes.',
+    dbSub: 'Complete AI skill library and workflow stacks from the guide. Core skills appear as orbit nodes.',
     skills: 'SKILLS',
-    combo: 'COMBO',
+    stacks: 'WORKFLOW STACKS',
+    integration: 'INTEGRATION',
+    combo: 'INTEGRATION',
     workflow: 'WORKFLOW',
     searchSkills: 'Search all AI skills...',
-    searchCombos: 'Search combinations...',
-    searchWorkflows: 'Search workflows...',
+    searchStacks: 'Search workflow stacks...',
+    searchCombos: 'Search workflow stacks...',
+    searchWorkflows: 'Search workflow stacks...',
     loadingDatabase: 'LOADING DATABASE',
     noMatchingSkills: 'NO MATCHING AI SKILLS',
     core: 'CORE',
     tool: 'TOOL',
     stage: 'STAGE',
     aiLibrary: 'AI LIBRARY',
-    noMatchingType: type => `NO MATCHING ${type.toUpperCase()} ITEMS`,
+    noMatchingType: type => type === 'stacks' ? 'NO MATCHING WORKFLOW STACKS' : `NO MATCHING ${type.toUpperCase()} ITEMS`,
     startBackend: 'START BACKEND TO LOAD DATABASE',
     login: 'LOG IN',
     register: 'REGISTER',
@@ -154,20 +157,23 @@ const I18N = {
     searchNodes: '搜索节点...',
     noMatchingNodes: '没有匹配节点',
     dbTitle: 'AI 技能数据库',
-    dbSub: '来自指南的完整 AI 技能库。核心技能会显示在星球轨道上。',
+    dbSub: '来自指南的完整 AI 技能库和工作流栈。核心技能会显示在星球轨道上。',
     skills: '技能',
-    combo: '组合',
+    stacks: '工作流栈',
+    integration: '工具组合',
+    combo: '工具组合',
     workflow: '工作流',
     searchSkills: '搜索所有 AI 技能...',
-    searchCombos: '搜索技能组合...',
-    searchWorkflows: '搜索工作流...',
+    searchStacks: '搜索工作流栈...',
+    searchCombos: '搜索工作流栈...',
+    searchWorkflows: '搜索工作流栈...',
     loadingDatabase: '正在加载数据库',
     noMatchingSkills: '没有匹配的 AI 技能',
     core: '核心',
     tool: '工具',
     stage: '阶段',
     aiLibrary: 'AI 资料库',
-    noMatchingType: type => type === 'workflow' ? '没有匹配的工作流' : '没有匹配的组合',
+    noMatchingType: type => type === 'stacks' ? '没有匹配的工作流栈' : '没有匹配项目',
     startBackend: '请先启动后端以加载数据库',
     login: '登录',
     register: '注册',
@@ -293,15 +299,869 @@ function titleCaseToken(token){
 
 function titleFromSlug(slug){
   return String(slug || '')
+    .replace(/^(combo|workflow)-aiw100-/, '')
     .replace(/^combo-|^workflow-/, '')
+    .replace(/^aiw100-/, '')
+    .replace(/^\d{3}-/, '')
     .split('-')
     .filter(Boolean)
     .map(titleCaseToken)
     .join(' ');
 }
 
+const CHINA_TOOL_NAMES_EN = {
+  '豆包': 'Doubao',
+  '豆包 Pro': 'Doubao Pro',
+  '豆包语音': 'Doubao Voice',
+  '豆包图片': 'Doubao Image',
+  '豆包模型': 'Doubao model',
+  '腾讯元宝': 'Tencent Yuanbao',
+  '讯飞星火': 'iFlytek Spark',
+  '星火': 'iFlytek Spark',
+  '通义': 'Qwen',
+  '通义千问': 'Qwen',
+  '通义万相': 'Tongyi Wanxiang',
+  '通义听悟': 'Tingwu',
+  '通义灵码': 'Tongyi Lingma',
+  '通义 AI': 'Qwen AI',
+  '通义 AI 助理': 'Qwen AI Assistant',
+  '文小言': 'Wenxiaoyan',
+  '百度文库 AI': 'Baidu Wenku AI',
+  '百度文库': 'Baidu Wenku',
+  '智谱清言': 'Zhipu Qingyan',
+  '飞书': 'Feishu',
+  '飞书 aily': 'Feishu aily',
+  '飞书知识库': 'Feishu Knowledge Base',
+  '飞书多维表格': 'Feishu Base',
+  '飞书多维表格 Agent': 'Feishu Base Agent',
+  '飞书妙搭': 'Feishu App Builder',
+  '飞书文档': 'Feishu Docs',
+  '飞书 CLI': 'Feishu CLI',
+  'OpenClaw 插件': 'OpenClaw plugin',
+  '钉钉': 'DingTalk',
+  '钉钉 AI 助理': 'DingTalk AI Assistant',
+  '钉钉多维表格': 'DingTalk Base',
+  '钉钉知识库': 'DingTalk Knowledge Base',
+  '钉钉酷应用': 'DingTalk Cool App',
+  '钉钉会议': 'DingTalk Meetings',
+  '宜搭': 'Yida',
+  '秘塔': 'Metaso',
+  '秘塔 AI 搜索': 'Metaso AI Search',
+  '纳米': 'Nami',
+  '纳米 AI 搜索': 'Nami AI Search',
+  '天工': 'Skywork',
+  '天工 Skywork': 'Skywork',
+  '天工表格': 'Skywork Sheets',
+  '即梦': 'Jimeng',
+  '即梦素材': 'Jimeng assets',
+  '可灵': 'Kling',
+  '可灵 AI': 'Kling AI',
+  '海螺 AI': 'Hailuo AI',
+  '小云雀': 'Xiaoyunque',
+  '剪映': 'Jianying',
+  '扣子': 'Coze CN',
+  '扣子工作流': 'Coze Workflow',
+  '扣子 Agent Skills': 'Coze Agent Skills',
+  '扣子 Agent Plan': 'Coze Agent Plan',
+  '扣子 Agent Coding': 'Coze Agent Coding',
+  '扣子视频 Agent': 'Coze Video Agent',
+  '小红书': 'Xiaohongshu',
+  '微信公众号': 'WeChat Official Account',
+  '公众号素材': 'WeChat article assets',
+  '抖音': 'Douyin',
+  '火山引擎': 'Volcengine',
+  '火山方舟': 'Volcengine Ark',
+  '美图设计室': 'Meitu Design Studio',
+  '创客贴': 'Chuangkit',
+  '可画': 'Canva China',
+  '稿定 AI': 'Gaoding AI',
+  '百度 AI 修图': 'Baidu AI Retouch',
+  '文心快码': 'Baidu Comate',
+  '阿里云': 'Alibaba Cloud',
+  '百度智能云': 'Baidu AI Cloud',
+  '巨量引擎': 'Ocean Engine',
+  '企业微信': 'WeCom',
+  '企业微信机器人': 'WeCom Bot',
+  '微信收藏': 'WeChat Favorites',
+  '微信资料': 'WeChat materials',
+  '微信私域': 'WeChat private traffic',
+  '企业制度库': 'company policy library',
+  '销售表格': 'sales spreadsheet',
+  '销售资料库': 'sales knowledge base',
+  '报价工具': 'quotation tool',
+  '竞品资料': 'competitor materials',
+  '客户访谈': 'customer interviews',
+  '淘宝素材': 'Taobao assets',
+  '小红书资料': 'Xiaohongshu research',
+  '本地模型': 'local models',
+  '本地电脑': 'local computer',
+  '法律检索技能': 'legal search skill',
+  '合同助手': 'contract assistant',
+  '定时任务': 'scheduled tasks',
+  '飞书机器人': 'Feishu bot',
+  '钉钉机器人': 'DingTalk bot',
+};
+
+const CHINA_SCENARIO_EN = {
+  'PPT/提案': 'Proposal deck',
+  '通用助手': 'General assistant',
+  '研究报告': 'Research report',
+  '研究': 'Research',
+  '写作': 'Writing',
+  '社媒': 'Social media',
+  '编程': 'Coding',
+  '数据': 'Data',
+  '会议': 'Meetings',
+  '设计': 'Design',
+  '音视频': 'Audio and video',
+  '商务': 'Business',
+  '个人效率': 'Personal productivity',
+  'PPT/办公': 'Presentations and office work',
+  '飞书工作流': 'Feishu workflow',
+  '钉钉工作流': 'DingTalk workflow',
+  '扣子/Agent': 'Coze and agent workflow',
+  '内容写作': 'Content writing',
+  '视频生成': 'Video generation',
+  '图像设计': 'Image design',
+  'AI 编程': 'AI coding',
+  '电商': 'E-commerce',
+  '教育': 'Education',
+  '财务/数据': 'Finance and data',
+  '销售/CRM': 'Sales and CRM',
+  '产品/需求': 'Product and requirements',
+  '知识库/RAG': 'Knowledge base and RAG',
+  '自动化': 'Automation',
+  '本地/开源': 'Local and open-source stack',
+  '法律/合同': 'Legal and contracts',
+  '组合总栈': 'Full workflow stack',
+};
+
+const GUIDE_WORKFLOW_TITLES_EN = {
+  '两周做一本可发布电子书': 'Publishable ebook in two weeks',
+  '72 小时做一个 SaaS': 'Build a SaaS in 72 hours',
+  '两周做原创歌曲 + MV': 'Original song and music video in two weeks',
+  '新品全平台上线': 'Cross-platform product launch',
+  '三个月做研究论文': 'Research paper in three months',
+  'B2B SDR 外呼流水线': 'B2B SDR outbound pipeline',
+  '每周 AI Newsletter': 'Weekly AI newsletter',
+  '房产研究与谈判策略': 'Real-estate research and negotiation strategy',
+  '四周拿到 3+ offer': 'Get three or more offers in four weeks',
+  '公开数据到生物研究投稿': 'Public data to biology research submission',
+  '合同从收件箱到签字归档': 'Contract intake, signing, and archive workflow',
+  '五天做 Brand Identity': 'Brand identity in five days',
+  '两周做可玩游戏 demo': 'Playable game demo in two weeks',
+  '三周做公司深度研报': 'Company deep-dive report in three weeks',
+  '客服 80% 工单 AI 自助解决': 'AI self-service for 80% of support tickets',
+};
+
+const CHINA_AUDIENCE_EN = {
+  '咨询、销售、课程、融资路演': 'consulting, sales, course creation, and fundraising roadshows',
+  '市场研究、行业报告转 PPT': 'market research and industry-report-to-PPT work',
+  '内容团队、轻量品牌提案': 'content teams and lightweight brand proposals',
+  '小团队快速出图出 deck': 'small teams that need quick visuals and decks',
+  '产品概念、设计汇报': 'product concepts and design reviews',
+  '学习型组织、课程制作': 'learning organizations and course production',
+  '企业内部周报/月报': 'internal weekly and monthly reports',
+  '客户成功、项目经理': 'customer success and project managers',
+  '研究员、创作者、顾问': 'researchers, creators, and consultants',
+  '深度报告、白皮书': 'deep reports and white papers',
+  '个人知识管理': 'personal knowledge management',
+  '团队研究沉淀': 'team research archives',
+  '学术/培训资料整理': 'academic and training-material organization',
+  '大公司知识检索': 'enterprise knowledge search',
+  '法务、运营、项目 PM': 'legal, operations, and project-management teams',
+  '科研、医学/政策研究': 'scientific, medical, and policy research',
+  '论文写作、证据型内容': 'paper writing and evidence-based content',
+  '趋势研究、社媒分析': 'trend research and social-media analysis',
+  '全栈开发者': 'full-stack developers',
+  '工程团队': 'engineering teams',
+  '产品工程': 'product engineering',
+  '复杂代码库': 'complex codebases',
+  '供应链安全': 'supply-chain security',
+  '产品研发闭环': 'product-development loops',
+  '数据工程': 'data engineering',
+  'SRE/DevOps': 'SRE and DevOps teams',
+  '生产自动化': 'production automation',
+  '产品/工程会议': 'product and engineering meetings',
+  '销售团队': 'sales teams',
+  '语音 agent 团队': 'voice-agent teams',
+  '业务自动化': 'business automation',
+  '企业 IT': 'enterprise IT',
+  'AI 治理团队': 'AI governance teams',
+  '创意工作室': 'creative studios',
+  '短视频': 'short-video teams',
+  '小企业财务': 'small-business finance',
+  '单人创业者': 'one-person founders',
+  '个人日常、学生、职场': 'individuals, students, and office workers',
+  '技术用户、研究用户': 'technical and research users',
+  '办公室用户': 'office users',
+  '公众号、微信生态团队': 'WeChat content and ecosystem teams',
+  '教育、培训': 'education and training teams',
+  '行政、学生': 'administrative staff and students',
+  '企业团队': 'enterprise teams',
+  '报告型用户': 'report-heavy users',
+  '内容运营': 'content operators',
+  '研究、写作': 'research and writing work',
+  '行业研究': 'industry research',
+  '知识整理': 'knowledge organization',
+  '咨询、学生': 'consultants and students',
+  '微信生态研究': 'WeChat ecosystem research',
+  '企业资料处理': 'enterprise document processing',
+  '报告到 PPT': 'report-to-presentation workflows',
+  '企业内部研究': 'internal enterprise research',
+  '钉钉团队': 'DingTalk teams',
+  '知识库运营': 'knowledge-base operations',
+  '工作汇报': 'work reporting',
+  '快速提案': 'fast proposals',
+  '综合办公': 'general office workflows',
+  '培训/路演': 'training and roadshows',
+  '市场活动': 'marketing campaigns',
+  '商务合同': 'business contracts',
+  '运营周报': 'operations weekly reports',
+  '销售管理': 'sales management',
+  '会议复盘': 'meeting reviews',
+  '行政材料': 'administrative materials',
+  '团队管理': 'team management',
+  '企业助手': 'enterprise assistants',
+  '运营/数据': 'operations and data teams',
+  '客服/咨询': 'customer support and consulting',
+  '私域运营': 'private traffic operations',
+  '抖音运营': 'Douyin operations',
+  '轻 SaaS': 'lightweight SaaS projects',
+  '法务助手': 'legal assistants',
+  '自媒体增长': 'creator growth',
+  '视频创作': 'video creators',
+  '博客/内容站': 'blogs and content sites',
+  '小红书运营': 'Xiaohongshu operations',
+  '公众号作者': 'WeChat writers',
+  '知识博主': 'knowledge creators',
+  '企业文案': 'enterprise copywriting',
+  '营销内容': 'marketing content',
+  '媒体/访谈': 'media and interview workflows',
+  '课程/培训': 'courses and training',
+  '短视频': 'short-video workflows',
+  '抖音/视频号': 'Douyin and Channels accounts',
+  '产品经理': 'product managers',
+  '企业知识库': 'enterprise knowledge bases',
+  '开发者': 'developers',
+  '中小企业': 'SMBs',
+  '个人研究': 'personal research',
+  '低成本自动化': 'low-cost automation',
+  '企业 AI 工作流': 'enterprise AI workflows',
+};
+
+function englishToolName(value){
+  const raw = String(value || '').trim();
+  if(!raw) return '';
+  const direct = CHINA_TOOL_NAMES_EN[raw];
+  if(direct) return direct;
+  if(raw.includes('+') || raw.includes('、') || raw.includes('，')){
+    return raw
+      .split(/\s*(?:\+|、|，|,)\s*/)
+      .filter(Boolean)
+      .map(englishToolName)
+      .join(' + ');
+  }
+  if(!hasCjk(raw)) return raw;
+  return titleFromSlug(raw.replace(/[^\w]+/g, '-')) || 'Chinese AI tool';
+}
+
+const CHINA_SCENARIO_PURPOSE_EN = {
+  'PPT/提案': 'turn research, interviews, documents, and positioning into proposal decks or presentation materials',
+  '通用助手': 'answer daily questions, draft short content, read long documents, and handle multimodal inputs',
+  '研究报告': 'collect sources, read long material, structure findings, and turn research into usable reports',
+  '研究': 'collect sources, verify evidence, structure findings, and turn them into reusable knowledge or reports',
+  '写作': 'turn ideas and source material into drafts, polished copy, newsletters, scripts, or long-form writing',
+  '社媒': 'monitor trends, create social posts or clips, schedule publishing, and review performance',
+  '编程': 'plan, implement, review, test, and maintain software with AI coding tools',
+  '数据': 'connect data systems, analyze incidents or metrics, and turn signals into decisions or actions',
+  '会议': 'capture conversations, summarize decisions, and turn meeting notes into follow-up work',
+  '设计': 'turn briefs into visual concepts, branded assets, designs, or creative production files',
+  '音视频': 'turn scripts, updates, images, or voice inputs into audio and video deliverables',
+  '商务': 'support sales, marketing, finance, support, and customer-facing business operations',
+  '个人效率': 'capture personal context, organize tasks, preserve project memory, and automate solo work',
+  'PPT/办公': 'convert documents, meetings, and business material into polished office deliverables',
+  '飞书工作流': 'connect Feishu documents, knowledge bases, tables, and bots into team workflows',
+  '钉钉工作流': 'connect DingTalk documents, meetings, knowledge bases, and internal apps into team workflows',
+  '扣子/Agent': 'build agents that collect information, call tools, execute steps, and return structured results',
+  '内容写作': 'plan topics, draft articles, refine copy, and adapt content for publishing channels',
+  '视频生成': 'turn scripts, images, voice, and briefs into short videos or presentation-ready clips',
+  '图像设计': 'create, retouch, and package visual assets for posts, ads, posters, and product pages',
+  'AI 编程': 'move from requirements to code, review, debugging, deployment, and technical documentation',
+  '电商': 'produce product copy, visual assets, customer replies, and operating reports for commerce teams',
+  '教育': 'prepare lesson plans, course materials, tutoring content, and assessment support',
+  '财务/数据': 'clean data, analyze tables, explain financial signals, and produce charts or reports',
+  '销售/CRM': 'organize leads, prepare outreach, summarize customer needs, and support sales follow-up',
+  '产品/需求': 'turn user feedback and business goals into requirements, prototypes, and delivery plans',
+  '知识库/RAG': 'ingest internal documents, organize knowledge, and answer questions from trusted sources',
+  '自动化': 'connect repetitive tasks, scheduled jobs, bots, and notifications into repeatable workflows',
+  '本地/开源': 'run lower-cost or private AI workflows on local and open-source models',
+  '法律/合同': 'search legal material, review clauses, compare contracts, and produce risk notes',
+  '组合总栈': 'combine multiple Chinese AI tools into an end-to-end stack for a complete business scenario',
+};
+
+function chinaScenarioFromTitle(title){
+  return String(title || '').split(/[：:]/)[0].trim();
+}
+
+function englishAudienceName(value){
+  const raw = String(value || '').trim();
+  if(!raw) return '';
+  if(CHINA_AUDIENCE_EN[raw]) return CHINA_AUDIENCE_EN[raw];
+  if(!hasCjk(raw)) return raw;
+  return displayCategoryLabel(raw).toLowerCase();
+}
+
+function cleanGuideTitle(title){
+  return String(title || '').replace(/^项目工作流\s*\d+\s*[：:]\s*/, '').trim();
+}
+
+function englishGuideTitle(title, fallbackId){
+  const clean = cleanGuideTitle(title);
+  if(GUIDE_WORKFLOW_TITLES_EN[clean]) return GUIDE_WORKFLOW_TITLES_EN[clean];
+  return titleFromSlug(fallbackId || clean);
+}
+
+function englishExpandedTitle(title, fallbackId){
+  const raw = String(title || '').trim();
+  const parts = raw.split(/[：:]/);
+  if(parts.length >= 2){
+    const scenario = parts.shift().trim();
+    const combo = parts.join(':').trim();
+    const scenarioEn = CHINA_SCENARIO_EN[scenario] || titleFromSlug(scenario);
+    return combo ? `${scenarioEn}: ${combo}` : scenarioEn;
+  }
+  return titleFromSlug(fallbackId || raw);
+}
+
+function englishChinaTitle(title, fallbackId){
+  const raw = String(title || '').trim();
+  const parts = raw.split(/[：:]/);
+  if(parts.length >= 2){
+    const scenario = parts.shift().trim();
+    const toolText = parts.join(':').trim();
+    const scenarioEn = CHINA_SCENARIO_EN[scenario] || titleFromSlug(scenario);
+    const toolsEn = toolText
+      .split(/\s*(?:\+|、|，|,|和|与)\s*/)
+      .filter(Boolean)
+      .map(englishToolName)
+      .filter(Boolean)
+      .join(' + ');
+    return toolsEn ? `${scenarioEn}: ${toolsEn}` : scenarioEn;
+  }
+  return titleFromSlug(fallbackId || raw);
+}
+
+function englishDeliverableName(value){
+  const raw = String(value || '').trim();
+  if(!raw) return '';
+  if(!hasCjk(raw)) return raw;
+  if(/PPT|汇报|演示|deck/i.test(raw)) return 'presentation materials';
+  if(/封面|海报|视觉|素材|产品图|配图|Logo/i.test(raw)) return 'visual assets';
+  if(/短视频|MV|视频|宣传/i.test(raw)) return 'video assets';
+  if(/论文|研报|报告|研究/i.test(raw)) return 'research report';
+  if(/合同|签字|风险/i.test(raw)) return 'contract review and signing records';
+  if(/客服|工单|Bot|知识库/i.test(raw)) return 'support knowledge base and bot workflow';
+  if(/简历|offer|面试|薪资/i.test(raw)) return 'career application materials';
+  if(/EPUB|电子书|有声/i.test(raw)) return 'ebook and publishing package';
+  if(/数据库|登录|全栈|应用|SaaS/i.test(raw)) return 'full-stack application deliverable';
+  if(/CRM|账户|外联|销售/i.test(raw)) return 'sales and CRM assets';
+  return 'deliverable package';
+}
+
+function englishChinaStepAction(step, tool){
+  const text = String(step || '');
+  const actor = englishToolName(tool) || 'AI';
+  if(/搜索|检索|资料|来源|联网/.test(text)) return `${actor} searches for sources, gathers references, and turns raw material into structured inputs`;
+  if(/长PDF|合同|报告|长文|总结|阅读|读取/.test(text)) return `${actor} reads long documents and extracts the decisions, risks, or key points`;
+  if(/PPT|幻灯|演示|路演|提案/.test(text)) return `${actor} converts the material into presentation-ready slides or proposal content`;
+  if(/会议|转写|纪要|复盘/.test(text)) return `${actor} transcribes meetings and turns discussion into notes, summaries, and follow-up actions`;
+  if(/知识库|RAG|问答|企业资料|制度库/.test(text)) return `${actor} organizes knowledge into a searchable base and answers questions against those materials`;
+  if(/代码|编程|审查|部署|调试|接口/.test(text)) return `${actor} supports coding, review, debugging, integration, or deployment work`;
+  if(/视频|剪辑|字幕|分镜|脚本/.test(text)) return `${actor} helps shape scripts, scenes, subtitles, and short-video production assets`;
+  if(/图像|海报|视觉|素材|修图|封面|配图/.test(text)) return `${actor} creates or refines visual assets for publishing, marketing, or product pages`;
+  if(/数据|表格|财务|图表|统计|周报/.test(text)) return `${actor} cleans tables, analyzes metrics, and turns data into reports or charts`;
+  if(/客服|FAQ|回复|咨询|客户/.test(text)) return `${actor} drafts customer-facing answers, FAQs, and follow-up messages`;
+  if(/文案|标题|文章|公众号|小红书|内容/.test(text)) return `${actor} plans, drafts, and adapts content for the target publishing channel`;
+  if(/自动|机器人|定时|推送|同步/.test(text)) return `${actor} automates the repetitive handoff, notification, or synchronization step`;
+  return `${actor} handles one concrete step in the workflow and passes structured output to the next tool`;
+}
+
+function stripCjk(value){
+  return String(value || '')
+    .replace(/[\u3400-\u9fff]+/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function englishAiw100StepAction(step){
+  const raw = String(step || '').trim();
+  if(!raw) return '';
+  let text = raw;
+  const replacements = [
+    [/先把访谈\/资料整理成叙事大纲、页标题、每页要点/g, 'turns interviews and source material into a narrative outline, page titles, and slide-level points'],
+    [/再做逻辑审稿和演讲稿/g, 'then reviews the logic and writes the speaker script'],
+    [/深研收集市场\/竞品\/引用/g, 'runs deep research on the market, competitors, and citations'],
+    [/输出结构化简报/g, 'outputs a structured brief'],
+    [/变成演示文稿/g, 'turns it into a presentation'],
+    [/人工补品牌视觉/g, 'adds brand visuals manually'],
+    [/找带来源的信息/g, 'finds sourced information'],
+    [/压成故事线/g, 'compresses it into a storyline'],
+    [/套品牌模板生成图文页/g, 'applies brand templates to create visual pages'],
+    [/沉淀定位、标语、页面结构/g, 'develops positioning, taglines, and page structure'],
+    [/调用 Canva app/g, 'calls the Canva app'],
+    [/直接生成宣传页或简报/g, 'directly generates a promo page or brief'],
+    [/快速探索界面\/产品概念/g, 'quickly explores interface and product concepts'],
+    [/导出到 Canva/g, 'exports to Canva'],
+    [/再做视觉统一和版式整理/g, 'then standardizes visuals and layout'],
+    [/汇总长资料和音视频/g, 'summarizes long documents and audio/video material'],
+    [/提炼核心观点/g, 'extracts the core arguments'],
+    [/生成培训\/分享 PPT/g, 'generates training or sharing slides'],
+    [/读取 Drive 内文档/g, 'reads documents from Drive'],
+    [/生成会议汇报结构/g, 'generates the meeting-report structure'],
+    [/再用 Slides 或 Canva 做版式/g, 'then lays it out in Slides or Canva'],
+    [/搜 Notion 项目资料/g, 'searches Notion project material'],
+    [/生成客户化方案/g, 'generates a customized client proposal'],
+    [/回写版本记录/g, 'writes version records back to Notion'],
+    [/让代理先做网页调研和资料收集/g, 'lets agents perform web research and source collection first'],
+    [/做去噪和观点排序/g, 'removes noise and ranks the arguments'],
+    [/出简报/g, 'creates the brief'],
+    [/从 Docs\/Sheets 摘要数据/g, 'summarizes data from Docs and Sheets'],
+    [/生成视觉稿/g, 'generates visual drafts'],
+    [/做文案润色/g, 'polishes the copy'],
+    [/搜索并给来源/g, 'searches and provides sources'],
+    [/长上下文吸收资料/g, 'absorbs source material with long-context reading'],
+    [/输出框架、洞察、反方观点和结论/g, 'outputs the framework, insights, counterarguments, and conclusions'],
+    [/先做广域多源研究/g, 'first performs broad multi-source research'],
+    [/负责压缩、重排、写成更有人味的报告/g, 'compresses, restructures, and rewrites it into a more human report'],
+    [/建引用清单/g, 'builds the citation list'],
+    [/做问答\/表格/g, 'handles Q&A and tables'],
+    [/保存知识库与复用模板/g, 'stores the knowledge base and reusable templates'],
+    [/做长文档理解和推理/g, 'handles long-document understanding and reasoning'],
+    [/把结果嵌入项目页、任务页、数据库/g, 'embeds the results into project pages, task pages, and databases'],
+    [/处理私有资料/g, 'processes private source material'],
+    [/补 Google 生态检索/g, 'adds Google-ecosystem search'],
+    [/输出最终观点/g, 'outputs the final point of view'],
+    [/从 SharePoint 找内部制度、历史报告、模板/g, 'finds internal policies, historical reports, and templates in SharePoint'],
+    [/生成带出处的内部问答/g, 'generates internal Q&A with citations'],
+    [/搜合同\/文档\/会议纪要/g, 'searches contracts, documents, and meeting notes'],
+    [/比较版本差异并生成行动项/g, 'compares version differences and creates action items'],
+    [/找现实资料/g, 'finds real-world sources'],
+    [/找论文/g, 'finds papers'],
+    [/做文献综述和研究假设/g, 'writes the literature review and research hypotheses'],
+    [/生成问题树/g, 'creates the question tree'],
+    [/查论文证据/g, 'checks paper evidence'],
+    [/管引用/g, 'manages citations'],
+    [/抓 X 实时舆情/g, 'captures real-time X sentiment'],
+    [/验证外部来源/g, 'verifies external sources'],
+    [/写洞察摘要/g, 'writes the insight summary'],
+    [/起草长文和结构/g, 'drafts long-form content and structure'],
+    [/做语法、语气、清晰度 QA/g, 'checks grammar, tone, and clarity'],
+    [/发散选题和角度/g, 'brainstorms topics and angles'],
+    [/统一成稳定语气、长文结构和精修稿/g, 'turns them into a consistent voice, long-form structure, and polished draft'],
+    [/找素材/g, 'finds source material'],
+    [/写 newsletter/g, 'writes the newsletter'],
+    [/发布并复盘数据/g, 'publishes and reviews performance data'],
+    [/学习个人写作样本/g, 'learns the personal writing samples'],
+    [/管选题库、草稿和发布状态/g, 'manages the topic library, drafts, and publishing status'],
+    [/快速起草/g, 'drafts quickly'],
+    [/控制可读性和错误/g, 'controls readability and errors'],
+    [/收集高亮信息/g, 'collects highlights'],
+    [/建本地知识库/g, 'builds the local knowledge base'],
+    [/生成文章\/脚本/g, 'generates articles or scripts'],
+    [/做定位和产品卖点/g, 'develops positioning and product selling points'],
+    [/批量生成广告版本/g, 'generates ad variants in bulk'],
+    [/负责结构和改写/g, 'handles structure and rewriting'],
+    [/负责协作评论、版本控制和交付/g, 'handles collaboration comments, version control, and delivery'],
+    [/语音记录想法/g, 'records ideas by voice'],
+    [/把口述内容重构成文章\/方案/g, 'restructures dictated ideas into articles or plans'],
+    [/做信息页雏形/g, 'creates the first information-page draft'],
+    [/改成观点型长文/g, 'turns it into opinionated long-form content'],
+    [/下载源视频/g, 'downloads the source video'],
+    [/下载/g, 'downloads'],
+    [/转写/g, 'transcribes'],
+    [/提炼/g, 'extracts'],
+    [/高光点/g, 'highlight moments'],
+    [/自动切片/g, 'automatically cuts clips'],
+    [/排序/g, 'ranks'],
+    [/加爆款字幕特效/g, 'adds viral subtitle effects'],
+    [/多语种配音/g, 'creates multilingual voiceovers'],
+    [/对口型/g, 'syncs lip movement'],
+    [/一键分发/g, 'distributes in one click to'],
+    [/写 PRD\+用户故事/g, 'writes the PRD and user stories'],
+    [/写 PRD 和功能规格/g, 'writes the PRD and feature specifications'],
+    [/生成 React\+Tailwind UI/g, 'generates the React and Tailwind UI'],
+    [/生成 React \+ Supabase 原型/g, 'generates the React and Supabase prototype'],
+    [/截图导入/g, 'imports screenshots into'],
+    [/接 Supabase 后端/g, 'connects the Supabase backend'],
+    [/写测试/g, 'writes tests'],
+    [/接支付/g, 'connects payments'],
+    [/部署/g, 'deploys'],
+    [/埋点/g, 'adds analytics tracking'],
+    [/修代码和补后端/g, 'fixes code and completes backend logic'],
+    [/生成组件/g, 'generates UI components'],
+    [/做增长和追踪/g, 'handles growth tracking and analytics'],
+    [/文档导出/g, 'exports documents'],
+    [/解析/g, 'parses'],
+    [/切块嵌入/g, 'chunks and embeds documents'],
+    [/向量库/g, 'stores vectors in the vector database'],
+    [/编排 RAG 工作流/g, 'orchestrates the RAG workflow'],
+    [/做检索答复/g, 'answers with retrieved context'],
+    [/出口/g, 'serves as the output channel'],
+    [/监控/g, 'monitors quality and traces'],
+    [/拉 ICP 名单/g, 'pulls the ICP lead list'],
+    [/做 enrichment/g, 'enriches lead data'],
+    [/按公司新闻写个性化首句/g, 'writes personalized opening lines from company news'],
+    [/实时打分优化/g, 'scores and optimizes messages in real time'],
+    [/多账号轮发/g, 'rotates sending across multiple accounts'],
+    [/自动入 CRM/g, 'syncs records into the CRM'],
+    [/录跟进电话/g, 'records follow-up calls'],
+    [/抓图/g, 'collects product images'],
+    [/放大/g, 'upscales images'],
+    [/去水印/g, 'removes watermarks'],
+    [/重绘场景/g, 'redraws product scenes'],
+    [/生成多语 slogan 海报/g, 'generates multilingual slogan posters'],
+    [/写 SEO 标题描述/g, 'writes SEO titles and descriptions'],
+    [/翻译 7 国语/g, 'translates into seven languages'],
+    [/批量上架/g, 'publishes listings in bulk'],
+    [/跑初轮/g, 'runs the first research pass'],
+    [/补多源/g, 'adds multi-source evidence'],
+    [/生成综述大纲/g, 'generates the review outline'],
+    [/上传 30 篇 PDF 抽要点/g, 'extracts key points from 30 uploaded PDFs'],
+    [/整合写正稿/g, 'integrates the material into the main draft'],
+    [/出 PPT 版/g, 'creates the slide version'],
+    [/录播客版/g, 'records the podcast version'],
+    [/找蓝海关键词/g, 'finds low-competition keywords'],
+    [/写脚本\+缩略图 prompt/g, 'writes the script and thumbnail prompt'],
+    [/出缩略图/g, 'creates thumbnails'],
+    [/做开场转场/g, 'creates openings and transitions'],
+    [/录制\+去停顿/g, 'records and removes pauses'],
+    [/加字幕/g, 'adds subtitles'],
+    [/优化标题/g, 'optimizes titles'],
+    [/市场调研/g, 'researches the market'],
+    [/找 KOL 和潜在合作/g, 'finds KOLs and potential partners'],
+    [/做商品图/g, 'creates product images'],
+    [/提升视觉和文字图/g, 'improves visuals and text images'],
+    [/做视频素材/g, 'creates video assets'],
+    [/写 landing page 和邮件/g, 'writes landing-page copy and emails'],
+    [/做自动化和 SEO/g, 'handles automation and SEO'],
+    [/找论文/g, 'finds papers'],
+    [/检查引用/g, 'checks citations'],
+    [/整理资料/g, 'organizes source material'],
+    [/管理文献/g, 'manages references'],
+    [/分析数据/g, 'analyzes data'],
+    [/写论文/g, 'writes the paper'],
+    [/校对/g, 'proofreads'],
+    [/排版/g, 'typesets'],
+    [/做答辩 PPT/g, 'creates the defense slides'],
+    [/定义 ICP/g, 'defines the ICP'],
+    [/拉取线索/g, 'pulls leads'],
+    [/做意图信号/g, 'detects intent signals'],
+    [/发送 A\/B 邮件/g, 'sends A/B outreach emails'],
+    [/回写 CRM/g, 'writes updates back to the CRM'],
+    [/生成 call prep/g, 'generates call-prep briefs'],
+    [/收集 50 条素材/g, 'collects 50 source items'],
+    [/做主题筛选和结构/g, 'selects topics and builds the structure'],
+    [/生成 brief/g, 'generates the brief'],
+    [/起草和改写/g, 'drafts and rewrites'],
+    [/做头图/g, 'creates the header image'],
+    [/发布/g, 'publishes'],
+    [/整理访谈材料/g, 'organizes interview material'],
+    [/搜集房源和区域信息/g, 'collects property and neighborhood data'],
+    [/整理对比表/g, 'builds the comparison table'],
+    [/做财务测算/g, 'runs financial calculations'],
+    [/做区域和政策研究/g, 'researches local area and policy context'],
+    [/生成谈判策略/g, 'generates negotiation strategy'],
+    [/处理合同/g, 'handles contracts'],
+    [/优化简历和定位/g, 'optimizes the resume and positioning'],
+    [/搜集公司和岗位/g, 'collects company and role information'],
+    [/定制 cover letter/g, 'customizes cover letters'],
+    [/找 hiring manager/g, 'finds hiring managers'],
+    [/做面试题和 STAR 框架/g, 'prepares interview questions and STAR stories'],
+    [/做口语模拟/g, 'runs spoken interview practice'],
+    [/做薪资谈判/g, 'prepares salary negotiation'],
+    [/科学问题选择/g, 'selects the research question'],
+    [/做文献检索/g, 'searches the literature'],
+    [/开发 Nextflow pipeline/g, 'develops the Nextflow pipeline'],
+    [/做单细胞 QC/g, 'runs single-cell QC'],
+    [/画图/g, 'creates figures'],
+    [/读取合同邮件/g, 'reads contract emails'],
+    [/检查条款/g, 'checks contract clauses'],
+    [/输出风险评估/g, 'outputs a risk assessment'],
+    [/发起签字/g, 'starts the signing flow'],
+    [/归档/g, 'archives files'],
+    [/记录元数据/g, 'records metadata'],
+    [/定义品牌策略/g, 'defines brand strategy'],
+    [/做方向探索/g, 'explores visual directions'],
+    [/做 logo\/vector/g, 'creates logos and vectors'],
+    [/做模板/g, 'builds templates'],
+    [/做延展素材/g, 'creates derivative brand assets'],
+    [/写 design doc 和关卡机制/g, 'writes the design doc and level mechanics'],
+    [/生成 3D 资产/g, 'generates 3D assets'],
+    [/做整理/g, 'organizes and cleans up assets'],
+    [/生成音频/g, 'generates audio'],
+    [/写 Unity\/Unreal 逻辑/g, 'writes Unity or Unreal logic'],
+    [/做预告片/g, 'creates the trailer'],
+    [/做商店视觉/g, 'creates store-page visuals'],
+    [/做行业资料/g, 'collects industry material'],
+    [/汇总数据/g, 'summarizes data'],
+    [/做 DCF 和敏感性分析/g, 'builds the DCF and sensitivity analysis'],
+    [/整理访谈/g, 'organizes interview notes'],
+    [/消化 PDF/g, 'digests PDFs'],
+    [/做图表和写作/g, 'creates charts and writes the report'],
+    [/生成汇报 PPT/g, 'creates the presentation deck'],
+    [/搭建客服 RAG Bot/g, 'builds the support RAG bot'],
+    [/整理 FAQ 和知识库/g, 'organizes the FAQ and knowledge base'],
+    [/接入对话/g, 'connects the chat channel'],
+    [/做复杂回复和总结/g, 'handles complex replies and summaries'],
+    [/回流产品缺陷/g, 'routes product defects back to engineering'],
+    [/持续优化召回和回答质量/g, 'continuously improves retrieval and answer quality'],
+    [/负责多文件编辑和 diff/g, 'handles multi-file edits and diffs'],
+    [/负责架构推理、复杂 bug、重构计划/g, 'handles architecture reasoning, complex bugs, and refactor plans'],
+    [/读 repo、改代码、跑测试/g, 'reads the repository, edits code, and runs tests'],
+    [/承载审查和合并/g, 'carries review and merge workflow'],
+    [/处理 issue 到 PR 的实现/g, 'implements issues through pull requests'],
+    [/帮忙解释方案、生成测试和文档/g, 'explains the plan and generates tests and documentation'],
+    [/在 IDE 补全和小改/g, 'handles IDE completion and small edits'],
+    [/处理大上下文设计和代码审稿/g, 'handles large-context design and code review'],
+    [/负责上下文编辑/g, 'handles context-aware edits'],
+    [/做困难算法、调试思路、单测用例/g, 'works through hard algorithms, debugging strategy, and unit-test cases'],
+    [/约束项目规则/g, 'constrains project rules'],
+    [/监控成本/g, 'monitors cost'],
+    [/执行任务/g, 'executes tasks'],
+    [/分解任务/g, 'breaks down tasks'],
+    [/并行查找\/实现\/审查/g, 'searches, implements, and reviews in parallel'],
+    [/做安全和质量门禁/g, 'acts as a safety and quality gate'],
+    [/做 OpenAI 生态\/桌面任务/g, 'handles OpenAI ecosystem and desktop tasks'],
+    [/处理长上下文和重构/g, 'handles long context and refactoring'],
+    [/互相审稿/g, 'cross-reviews the work'],
+    [/快速搭云端原型/g, 'quickly builds a cloud prototype'],
+    [/生成需求、调试和部署说明/g, 'generates requirements, debugging notes, and deployment instructions'],
+    [/生成前端原型/g, 'generates the frontend prototype'],
+    [/审查业务逻辑、状态和安全风险/g, 'reviews business logic, state, and security risks'],
+    [/出 UI/g, 'creates the UI'],
+    [/接入项目并改文件/g, 'connects it to the project and edits files'],
+    [/做产品逻辑和代码审查/g, 'handles product logic and code review'],
+    [/做 agentic IDE 流程/g, 'runs the agentic IDE workflow'],
+    [/负责解释、规划、复杂改造/g, 'handles explanation, planning, and complex changes'],
+    [/跑开源\/低成本模型/g, 'runs open-source or low-cost models'],
+    [/处理关键难题/g, 'handles critical hard problems'],
+    [/保留隐私和成本弹性/g, 'keeps privacy and cost flexibility'],
+    [/用容器和 git worktree 隔离多 agent/g, 'isolates multiple agents with containers and git worktrees'],
+    [/不同模型并行做功能/g, 'lets different models build features in parallel'],
+    [/统一管理多个 coding agent/g, 'manages multiple coding agents in one place'],
+    [/减少复制粘贴和上下文断裂/g, 'reduces copy-paste and context breaks'],
+    [/本地扫描 prompt\/tool\/secret 风险/g, 'locally scans prompt, tool, and secret risks'],
+    [/查漏洞、恶意包和许可证/g, 'checks vulnerabilities, malicious packages, and licenses'],
+    [/自动生成实现计划/g, 'automatically generates the implementation plan'],
+    [/生成验收标准/g, 'generates acceptance criteria'],
+    [/自然语言生成\/调试 Spark pipelines/g, 'generates and debugs Spark pipelines from natural language'],
+    [/写业务解释和数据质量报告/g, 'writes business explanations and data-quality reports'],
+    [/连接 60\\+ 工具做 incident 测试和诊断/g, 'connects 60+ tools for incident testing and diagnosis'],
+    [/分发修复建议/g, 'distributes remediation suggestions'],
+    [/统一 iMessage\/WhatsApp\/Telegram\/Slack\/SMS 入口/g, 'unifies iMessage, WhatsApp, Telegram, Slack, and SMS'],
+    [/分类、回复和路由/g, 'classifies, replies, and routes messages'],
+    [/本地私有 AI stack/g, 'runs a private local AI stack'],
+    [/避免云锁定/g, 'avoids cloud lock-in'],
+    [/用于摘要、分类、提取和内部问答/g, 'supports summarization, classification, extraction, and internal Q&A'],
+    [/做模型路由和成本控制/g, 'handles model routing and cost control'],
+    [/管 agent 状态/g, 'manages agent state'],
+    [/接业务系统/g, 'connects business systems'],
+    [/做轻量会议笔记/g, 'creates lightweight meeting notes'],
+    [/提炼需求/g, 'extracts requirements'],
+    [/建 issue/g, 'creates issues'],
+    [/转写销售电话/g, 'transcribes sales calls'],
+    [/生成摘要和风险/g, 'generates summaries and risk notes'],
+    [/更新字段/g, 'updates fields'],
+    [/把邮件\/更新转成视频或语音/g, 'turns emails or updates into video or voice'],
+    [/构建实时语音 agent/g, 'builds real-time voice agents'],
+    [/调试延迟、工具调用和流水线/g, 'debugs latency, tool calls, and pipelines'],
+    [/语音转文本/g, 'transcribes speech to text'],
+    [/跑模型/g, 'runs the model'],
+    [/做纪要\/行动项/g, 'creates minutes and action items'],
+    [/生成流程草稿和 JS\/JSON/g, 'generates workflow drafts and JS/JSON'],
+    [/负责 webhook、重试、鉴权、日志和人工调试/g, 'handles webhooks, retries, authentication, logs, and human debugging'],
+    [/解释数据结构并给修复表达式/g, 'explains the data structure and provides fixed expressions'],
+    [/处理简单跨 app 触发/g, 'handles simple cross-app triggers'],
+    [/复杂状态、循环、错误处理放 n8n/g, 'keeps complex state, loops, and error handling in n8n'],
+    [/管复杂自动化版图/g, 'maps complex automation systems'],
+    [/写节点逻辑、文档和异常处理说明/g, 'writes node logic, documentation, and exception-handling notes'],
+    [/写轻量 serverless workflow/g, 'writes lightweight serverless workflows'],
+    [/负责摘要、分类、回复/g, 'handles summarization, classification, and replies'],
+    [/触发多步骤链路/g, 'triggers a multi-step chain'],
+    [/生成每步文案和条件判断/g, 'generates copy and conditions for each step'],
+    [/搭多步骤 AI workflow/g, 'builds multi-step AI workflows'],
+    [/分别处理推理和通用输出/g, 'separately handle reasoning and general output'],
+    [/用自然语言构建企业 app\/workflow/g, 'builds enterprise apps and workflows in natural language'],
+    [/作为复杂推理和代码生成核心/g, 'acts as the core for complex reasoning and code generation'],
+    [/直接触发 ServiceNow onboarding、审批、工单等系统动作/g, 'directly triggers ServiceNow onboarding, approvals, tickets, and other system actions'],
+    [/由平台治理/g, 'is governed by the platform'],
+    [/统一发现、观测、治理和必要时关闭越权 agent/g, 'discovers, observes, governs, and can shut down overreaching agents'],
+    [/生成故事线和视觉 brief/g, 'generates the storyline and visual brief'],
+    [/生成图形和 deck/g, 'generates graphics and decks'],
+    [/做社媒和 deck/g, 'creates social posts and decks'],
+    [/做轻量图形补充/g, 'adds lightweight graphics'],
+    [/写文案/g, 'writes copy'],
+    [/在 Adobe 做素材\/视频批处理/g, 'batch-processes assets and video in Adobe'],
+    [/在 Blender 做 3D 场景脚本/g, 'scripts 3D scenes in Blender'],
+    [/连接跨媒体资产/g, 'connects cross-media assets'],
+    [/生成式设计后用物理仿真校验/g, 'validates generative design with physics simulation'],
+    [/解释约束和优化方向/g, 'explains constraints and optimization directions'],
+    [/出概念图/g, 'creates concept images'],
+    [/放大\/增强/g, 'upscales and enhances'],
+    [/写视觉规范/g, 'writes visual guidelines'],
+    [/写 HTML\/场景/g, 'writes HTML and scenes'],
+    [/渲染 MP4/g, 'renders MP4'],
+    [/把邮件更新、销售跟进、内部通知转成个性化视频\/语音/g, 'turns email updates, sales follow-ups, and internal notices into personalized video or voice'],
+    [/快速克隆并部署多语言语音/g, 'quickly clones and deploys multilingual voices'],
+    [/写脚本和对话流/g, 'writes scripts and conversation flows'],
+    [/生成基础图片/g, 'generates base images'],
+    [/写脚本\/标题/g, 'writes scripts and titles'],
+    [/剪辑发布/g, 'edits and publishes'],
+    [/监控社媒社区线索/g, 'monitors social and community leads'],
+    [/生成个性化触达和跟进策略/g, 'generates personalized outreach and follow-up strategy'],
+    [/做财务 admin/g, 'handles finance administration'],
+    [/解释现金流、异常和待办/g, 'explains cash flow, anomalies, and to-dos'],
+    [/追踪机会/g, 'tracks opportunities'],
+    [/写邮件和提案/g, 'writes emails and proposals'],
+    [/生成客户 deck/g, 'generates client decks'],
+    [/处理客服自动回复/g, 'handles automated support replies'],
+    [/管工单/g, 'manages tickets'],
+    [/做升级问题摘要/g, 'summarizes escalated issues'],
+    [/管多账号 LinkedIn 外联/g, 'manages multi-account LinkedIn outreach'],
+    [/写不同 persona 的跟进文案/g, 'writes follow-up copy for different personas'],
+    [/做邮件营销自动化/g, 'handles email marketing automation'],
+    [/写内容计划/g, 'writes the content plan'],
+    [/管 campaign/g, 'manages the campaign'],
+    [/语音输入想法/g, 'captures ideas by voice'],
+    [/整理为任务、邮件、文章或计划/g, 'organizes them into tasks, emails, articles, or plans'],
+    [/减少在浏览器工具间复制粘贴/g, 'reduces copying and pasting between browser tools'],
+    [/保持上下文/g, 'keeps context'],
+    [/做持久项目记忆/g, 'stores persistent project memory'],
+    [/读取上下文后执行任务/g, 'reads context and then executes tasks'],
+    [/把目标拆成任务和日程/g, 'breaks goals into tasks and calendar events'],
+    [/负责执行提醒/g, 'handles execution reminders'],
+    [/研究，/g, 'researches, '],
+    [/决策\/写作/g, 'handles decisions and writing'],
+    [/实现/g, 'implements'],
+    [/表达/g, 'presents the work'],
+    [/自动化/g, 'automates'],
+  ];
+  replacements.forEach(([pattern, replacement]) => {
+    text = text.replace(pattern, replacement);
+  });
+  text = text
+    .replace(/；/g, '; ')
+    .replace(/，/g, ', ')
+    .replace(/。/g, '.')
+    .replace(/做/g, 'handles ')
+    .replace(/写/g, 'writes ')
+    .replace(/生成/g, 'generates ')
+    .replace(/整理/g, 'organizes ')
+    .replace(/输出/g, 'outputs ')
+    .replace(/接/g, 'connects ')
+    .replace(/找/g, 'finds ')
+    .replace(/和/g, ' and ')
+    .replace(/资料/g, 'source material')
+    .replace(/文章/g, 'articles')
+    .replace(/报告/g, 'reports')
+    .replace(/文档/g, 'documents')
+    .replace(/表格/g, 'spreadsheets')
+    .replace(/图片/g, 'images')
+    .replace(/视频/g, 'videos')
+    .replace(/代码/g, 'code')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if(hasCjk(text)){
+    const toolMatch = raw.match(/^([A-Za-z0-9._/+\-\s]+|[\u3400-\u9fffA-Za-z0-9._/+\-\s]+?)(?:\s|做|写|生成|接|找|转写|下载|整理|输出)/);
+    const actor = englishToolName(toolMatch?.[1]?.trim() || '') || 'This tool';
+    return englishChinaStepAction(raw, actor);
+  }
+  return text;
+}
+
+function englishAiw100WorkflowOutline(item){
+  const steps = item?.steps || [];
+  if(!steps.length) return 'The source PDF only lists the tool combination for this item.';
+  return steps.slice(0, 8).map(englishAiw100StepAction).filter(Boolean).join('; ');
+}
+
+function englishChinaWorkflowOutline(item){
+  const tools = item?.tools || [];
+  const steps = item?.steps || [];
+  const pickedSteps = steps.length ? steps.slice(0, 4) : tools.slice(0, 4);
+  if(!pickedSteps.length) return 'The tools are arranged as a practical sequence from input, processing, review, and final delivery.';
+  return pickedSteps.map((step, idx) => englishChinaStepAction(step, tools[idx] || tools[0])).join('; ');
+}
+
+function englishChinaLibrarySummary(item){
+  const scenario = chinaScenarioFromTitle(item?.title);
+  const scenarioEn = CHINA_SCENARIO_EN[scenario] || displayCategoryLabel(item?.category_label || 'AI workflow');
+  const purpose = CHINA_SCENARIO_PURPOSE_EN[scenario] || `support ${scenarioEn.toLowerCase()} work with a repeatable AI process`;
+  const tools = (item?.tools || []).slice(0, 6).map(englishToolName).filter(Boolean);
+  const audience = (item?.outputs || []).slice(0, 3).map(englishAudienceName).filter(Boolean).join(', ');
+  const toolText = tools.length ? tools.join(' + ') : 'a focused AI tool stack';
+  const audienceText = audience || 'the target work scenario';
+  const outline = englishChinaWorkflowOutline(item);
+  if(item?.item_type === 'workflow'){
+    return `${scenarioEn} workflow for ${audienceText}. It combines ${toolText} to ${purpose}. Process: ${outline}.`;
+  }
+  return `${scenarioEn} combination for ${audienceText}. It is made of ${toolText} and is used to ${purpose}. Role split: ${outline}.`;
+}
+
+function englishGuideLibrarySummary(item){
+  const title = englishGuideTitle(item?.title, item?.id).toLowerCase();
+  const outputs = (item?.outputs || []).slice(0, 4).map(englishDeliverableName).filter(Boolean);
+  const outputText = outputs.length ? outputs.join(', ') : 'a usable project deliverable';
+  const outline = englishAiw100WorkflowOutline(item);
+  if(item?.item_type === 'combination'){
+    return `Tool combination for ${title}. Role split from the source workflow: ${outline}.`;
+  }
+  return `Workflow for ${title}. It produces ${outputText}. Process from the source workflow: ${outline}.`;
+}
+
+function englishExpandedLibrarySummary(item){
+  const title = englishExpandedTitle(item?.title, item?.id).toLowerCase();
+  const audience = (item?.outputs || []).slice(0, 3).map(englishAudienceName).filter(Boolean).join(', ');
+  const outline = englishAiw100WorkflowOutline(item);
+  const target = audience ? ` for ${audience}` : '';
+  if(item?.item_type === 'workflow'){
+    return `Workflow${target}: ${title}. Source workflow: ${outline}.`;
+  }
+  return `Integration${target}: ${title}. Tool roles from the source workflow: ${outline}.`;
+}
+
 function englishSkillName(skill){
   if(!hasCjk(skill?.name)) return skill?.name || '';
+  if(String(skill?.id || '').startsWith('expanded-tool-')){
+    return `Use ${englishToolName(skill.tool) || titleFromSlug(skill.id)} in AI workflow integrations`;
+  }
+  if(String(skill?.id || '').startsWith('china-tool-')){
+    const phraseByCategory = {
+      'ai-coding': 'AI coding and development',
+      'ai-media': 'video and media production',
+      'ai-visual': 'visual design',
+      'ai-office': 'office deliverables',
+      'ai-research': 'research and knowledge work',
+      'ai-agent': 'agentic workflow automation',
+      'ai-business': 'business operations',
+      'ai-models': 'Chinese AI assistance',
+    };
+    return `Use ${englishToolName(skill.tool) || titleFromSlug(skill.id)} for ${phraseByCategory[skill.category_id] || 'AI workflows'}`;
+  }
+  if(String(skill?.id || '').startsWith('aiw100-tool-')){
+    const phraseByCategory = {
+      'ai-coding': 'engineering delivery',
+      'ai-media': 'media production',
+      'ai-visual': 'visual asset creation',
+      'ai-office': 'office and knowledge work',
+      'ai-research': 'research and analysis',
+      'ai-agent': 'workflow automation',
+      'ai-business': 'business operations',
+      'ai-models': 'model workflows',
+    };
+    return `Use ${skill.tool || titleFromSlug(skill.id)} for ${phraseByCategory[skill.category_id] || 'AI tasks'}`;
+  }
   const tool = skill.tool || titleFromSlug(skill.id).split(' ')[0] || 'AI';
   const task = titleFromSlug(String(skill.id || '').replace(String(tool).toLowerCase().replace(/[^a-z0-9]+/g, '-'), ''))
     .replace(/^Ai /, '')
@@ -312,7 +1172,24 @@ function englishSkillName(skill){
 
 function englishSkillDescription(skill){
   if(!hasCjk(skill?.description)) return skill?.description || '';
-  const tags = (skill.tags || []).filter(Boolean).slice(0, 4);
+  if(String(skill?.id || '').startsWith('expanded-tool-')){
+    const tool = englishToolName(skill.tool) || englishSkillName(skill);
+    const examples = (skill.examples || []).slice(0, 1).map(englishAiw100StepAction).filter(Boolean);
+    const sourceUse = examples.length ? examples[0] : 'supports one source-defined workflow step';
+    return `${tool} appears in the expanded 2026 AI workflow stack. Source-defined use: ${sourceUse}.`;
+  }
+  if(String(skill?.id || '').startsWith('china-tool-')){
+    const scenario = displayCategoryLabel(skill.category_label || 'AI workflow').toLowerCase();
+    const tool = englishToolName(skill.tool) || englishSkillName(skill);
+    const examples = (skill.examples || []).slice(0, 2).map(x => englishChinaStepAction(x, skill.tool));
+    const exampleText = examples.length ? ` Typical use: ${examples.join('; ')}.` : '';
+    return `${tool} is used in ${scenario} workflows to handle a specific production, analysis, communication, or automation step.${exampleText}`;
+  }
+  const examples = (skill.examples || []).filter(Boolean).slice(0, 2).map(x => englishChinaStepAction(x, skill.tool));
+  if(examples.length){
+    return `${englishSkillName(skill)} helps turn a task brief into concrete AI-assisted output. Typical use: ${examples.join('; ')}.`;
+  }
+  const tags = (skill.tags || []).filter(Boolean).filter(x => !hasCjk(x)).slice(0, 4);
   if(tags.length){
     return `Best for ${tags.join(', ')} workflows.`;
   }
@@ -341,18 +1218,38 @@ function displayNodeName(node){
 }
 
 function displayLibraryTitle(item){
-  if(currentLang === 'en' && hasCjk(item?.title)) return titleFromSlug(item.id);
+  if(currentLang === 'en' && hasCjk(item?.title)){
+    const source = String(item?.source_section || '');
+    if(source.includes('ai_tool_workflow_stacks_2026_recent_3_months_expanded')) return englishExpandedTitle(item.title, item.id);
+    if(source.includes('2026_AI_工具实战指南') || source.includes('AI工作流100条')) return englishGuideTitle(item.title, item.id);
+    return englishChinaTitle(item.title, item.id);
+  }
   return currentLang === 'zh' ? translateText(item?.title || '') : (item?.title || '');
 }
 
 function displayLibrarySummary(item){
   if(currentLang === 'en' && hasCjk(item?.summary)){
-    const tools = (item.tools || []).slice(0, 4).join(', ');
-    return item.item_type === 'workflow'
-      ? `A reusable project workflow built around ${tools || 'AI tools'}.`
-      : `A reusable AI tool combination for ${displayCategoryLabel(item.category_label || 'AI').toLowerCase()} work.`;
+    const source = String(item?.source_section || '');
+    if(source.includes('ai_tool_workflow_stacks_2026_recent_3_months_expanded')) return englishExpandedLibrarySummary(item);
+    if(source.includes('2026_AI_工具实战指南') || source.includes('AI工作流100条')) return englishGuideLibrarySummary(item);
+    return englishChinaLibrarySummary(item);
   }
   return currentLang === 'zh' ? translateText(item?.summary || '') : (item?.summary || '');
+}
+
+function displayLibraryChip(value){
+  if(currentLang !== 'en') return translateText(value);
+  return CHINA_AUDIENCE_EN[value] || englishToolName(value);
+}
+
+function displaySourceSection(value){
+  const raw = String(value || 'PDF');
+  if(currentLang !== 'en') return translateText(raw);
+  if(raw.includes('ai_tool_workflow_stacks_2026_recent_3_months_expanded')) return 'Expanded AI tool workflow stacks';
+  if(raw.includes('AI工作流100条')) return 'AI Workflow 100';
+  if(raw.includes('china_ai_tool_workflow')) return 'China AI tool workflow stacks';
+  if(hasCjk(raw)) return titleFromSlug(raw.replace(/[^\w]+/g, '-')) || 'PDF source';
+  return raw;
 }
 
 // ---------------- scene ----------------
@@ -1297,6 +2194,32 @@ const AI_CATEGORY_FILTERS_ZH = [
   ['ai-agent', '智能体'],
   ['ai-business', '商业'],
 ];
+const AI_STACK_FILTERS = [
+  ['all', 'ALL'],
+  ['creation', 'CREATION'],
+  ['research', 'RESEARCH'],
+  ['coding', 'CODING'],
+  ['business', 'BUSINESS'],
+  ['automation', 'AUTOMATION'],
+  ['data-meeting', 'DATA/MEET'],
+];
+const AI_STACK_FILTERS_ZH = [
+  ['all', '全部'],
+  ['creation', '创作交付'],
+  ['research', '研究知识'],
+  ['coding', '编程开发'],
+  ['business', '商务运营'],
+  ['automation', '自动化'],
+  ['data-meeting', '数据会议'],
+];
+const AI_STACK_GROUPS = {
+  creation: new Set(['ai-office', 'ai-visual', 'ai-media']),
+  research: new Set(['ai-research', 'ai-models']),
+  coding: new Set(['ai-coding']),
+  business: new Set(['ai-business']),
+  automation: new Set(['ai-agent']),
+  'data-meeting': new Set(['ai-business', 'ai-office']),
+};
 
 function colorForCat(cat){
   const cfg = RINGS.find(r=>r.id===cat);
@@ -1440,8 +2363,7 @@ function applyLanguage(){
   setText('#ai-db h2', t('dbTitle'));
   setText('#ai-db .sub', t('dbSub'));
   setText('[data-db-type="skills"]', t('skills'));
-  setText('[data-db-type="combination"]', t('combo'));
-  setText('[data-db-type="workflow"]', t('workflow'));
+  setText('[data-db-type="stacks"]', t('stacks'));
   const dbEmpty = document.querySelector('#ai-db-list .db-empty');
   if(dbEmpty && dbEmpty.textContent.includes('LOADING')) dbEmpty.textContent = t('loadingDatabase');
   setText('#auth-title', authMode === 'register' ? t('register') : t('login'));
@@ -1709,6 +2631,32 @@ let aiDbCategory = 'all';
 let aiDbSkills = [];
 let aiDbLibraryItems = [];
 
+function isStackType(){
+  return aiDbType === 'stacks' || aiDbType === 'combination' || aiDbType === 'workflow';
+}
+
+function stackGroupForItem(item){
+  const source = String(item?.source_section || '').toLowerCase();
+  const title = String(item?.title || '');
+  const hay = `${title} ${(item?.tags || []).join(' ')} ${(item?.steps || []).join(' ')} ${(item?.outputs || []).join(' ')}`.toLowerCase();
+  if(/编程|coding|code|cursor|github|repo|agentaudit|swe-ci|codex|claude code/.test(hay)) return 'coding';
+  if(/研究|research|report|paper|论文|知识|notebook|perplexity|elicit|zotero/.test(hay)) return 'research';
+  if(/自动化|automation|workflow|n8n|zapier|make|servicenow|agent|bot|mcp/.test(hay)) return 'automation';
+  if(/数据|会议|meeting|sales call|granola|tactiq|hubspot|crm|finance|财务|客服|销售|商务|business|support/.test(hay)) return 'data-meeting';
+  if(/社媒|写作|设计|音视频|ppt|提案|deck|video|audio|canva|gamma|media|visual|office/.test(hay)) return 'creation';
+  if(source.includes('china_ai_tool') && item?.category_id === 'ai-business') return 'business';
+  if(AI_STACK_GROUPS.business.has(item?.category_id)) return 'business';
+  if(AI_STACK_GROUPS.creation.has(item?.category_id)) return 'creation';
+  if(AI_STACK_GROUPS.research.has(item?.category_id)) return 'research';
+  if(AI_STACK_GROUPS.automation.has(item?.category_id)) return 'automation';
+  return 'business';
+}
+
+function stackCategoryMatches(item){
+  if(aiDbCategory === 'all') return true;
+  return stackGroupForItem(item) === aiDbCategory;
+}
+
 function renderAiDbTypeTabs(){
   if(!aiDbTypeTabs) return;
   aiDbTypeTabs.querySelectorAll('[data-db-type]').forEach(btn => {
@@ -1717,15 +2665,15 @@ function renderAiDbTypeTabs(){
   if(aiDbSearch){
     aiDbSearch.placeholder = aiDbType === 'skills'
       ? t('searchSkills')
-      : aiDbType === 'combination'
-        ? t('searchCombos')
-        : t('searchWorkflows');
+      : t('searchStacks');
   }
 }
 
 function renderAiDbFilters(){
   if(!aiDbFilter) return;
-  const filters = currentLang === 'zh' ? AI_CATEGORY_FILTERS_ZH : AI_CATEGORY_FILTERS;
+  const filters = aiDbType === 'skills'
+    ? (currentLang === 'zh' ? AI_CATEGORY_FILTERS_ZH : AI_CATEGORY_FILTERS)
+    : (currentLang === 'zh' ? AI_STACK_FILTERS_ZH : AI_STACK_FILTERS);
   aiDbFilter.innerHTML = filters.map(([id, label]) =>
     `<button type="button" data-ai-cat="${id}" class="${aiDbCategory === id ? 'active' : ''}">${label}</button>`
   ).join('');
@@ -1760,7 +2708,7 @@ function renderAiDbList(){
   }
 
   const filtered = aiDbLibraryItems.filter(item => {
-    const catOk = aiDbCategory === 'all' || item.category_id === aiDbCategory;
+    const catOk = stackCategoryMatches(item);
     if(!catOk) return false;
     if(!q) return true;
     const hay = `${item.title} ${item.category_label} ${item.summary} ${(item.tools||[]).join(' ')} ${(item.steps||[]).join(' ')} ${(item.outputs||[]).join(' ')} ${(item.tags||[]).join(' ')}`.toLowerCase();
@@ -1776,11 +2724,11 @@ function renderAiDbList(){
       <article class="db-skill" data-ai-library="${escapeHtml(item.id)}">
         <div class="top">
           <span>${escapeHtml(displayLibraryTitle(item))}</span>
-          <span class="core">${escapeHtml(item.item_type === 'workflow' ? t('workflow') : t('combo'))}</span>
+          <span class="core">${escapeHtml(t('stacks'))}</span>
         </div>
-        <div class="meta">${escapeHtml(displayCategoryLabel(item.category_label || t('aiLibrary')))} · ${escapeHtml(translateText(item.source_section || 'PDF'))}</div>
+        <div class="meta">${escapeHtml(displayCategoryLabel(item.category_label || t('aiLibrary')))} · ${escapeHtml(item.item_type === 'workflow' ? t('workflow') : t('integration'))} · ${escapeHtml(displaySourceSection(item.source_section || 'PDF'))}</div>
         <div class="desc">${escapeHtml(displayLibrarySummary(item))}</div>
-        <div class="chips">${primary.slice(0, 8).map(x => `<span>${escapeHtml(translateText(x))}</span>`).join('')}</div>
+        <div class="chips">${primary.slice(0, 8).map(x => `<span>${escapeHtml(displayLibraryChip(x))}</span>`).join('')}</div>
       </article>
     `;
   }).join('');
@@ -1799,9 +2747,9 @@ async function loadAiDatabase(){
   try{
     renderAiDbTypeTabs();
     if(aiDbType === 'skills'){
-      aiDbSkills = await fetchJson('/ai-skills?limit=1000');
+      aiDbSkills = await fetchJson('/ai-skills?limit=2000');
     }else{
-      aiDbLibraryItems = await fetchJson(`/ai-skills/library?type=${encodeURIComponent(aiDbType)}&limit=1000`);
+      aiDbLibraryItems = await fetchJson('/ai-skills/library?limit=2000');
     }
     renderAiDbFilters();
     renderAiDbList();

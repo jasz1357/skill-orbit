@@ -19,7 +19,7 @@ async def list_ai_skills(
     q: Optional[str] = None,
     category_id: Optional[str] = None,
     core: Optional[bool] = None,
-    limit: int = Query(default=500, ge=1, le=1000),
+    limit: int = Query(default=500, ge=1, le=2000),
     db: Session = Depends(get_db),
 ) -> list[AISkillRead]:
     return ai_skills.list_ai_skills(db, query=q, category_id=category_id, core=core, limit=limit)
@@ -35,7 +35,7 @@ async def list_ai_library(
     type: Optional[str] = Query(default=None, pattern="^(combination|workflow)$"),
     q: Optional[str] = None,
     category_id: Optional[str] = None,
-    limit: int = Query(default=500, ge=1, le=1000),
+    limit: int = Query(default=500, ge=1, le=2000),
     db: Session = Depends(get_db),
 ) -> list[AILibraryItemRead]:
     return ai_library.list_ai_library_items(db, item_type=type, query=q, category_id=category_id, limit=limit)
