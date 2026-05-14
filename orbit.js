@@ -1791,7 +1791,7 @@ function oklchToHex(L, C, hDeg){
 // Default rings come from the active theme
 const DEFAULT_RING_DEFS = THEMES[currentTheme].defaultRings;
 
-const RINGS_KEY_BASE = 'skill-orbit-rings-v7';
+const RINGS_KEY_BASE = 'skill-orbit-rings-v9';
 const ringsKey = () => `${RINGS_KEY_BASE}:${currentTheme}`;
 // one-time cleanup of legacy keys (Chinese labels & seeds, pre-theme storage)
 try{
@@ -1833,7 +1833,7 @@ function saveRingDefs(){
     const data = RINGS.map(r => ({
       id: r.id, mainId: r.mainId || r.id, label: r.label, labelCn: r.labelCn,
       color: '#' + new THREE.Color(r.color).getHexString(),
-      r: r.r, tilt: [r.tilt.x, r.tilt.y, r.tilt.z], center: [r.center.x, r.center.y, r.center.z], speed: r.speed,
+      r: r.r, tilt: [r.tilt.x, r.tilt.y, r.tilt.z], speed: r.speed,
     }));
     localStorage.setItem(ringsKey(), JSON.stringify(data));
   }catch(e){}
@@ -1849,37 +1849,22 @@ function layoutOrbitRingDefs(defs){
     bucket.push(def);
   });
 
-  const mainLayouts = {
-    'ai-models':   { r:1.50, base:[ 1.06,-0.70, 0.30], fan:[-0.26, 0.34,-0.20], center:[-0.10, 0.04, 0.10], spread:[ 0.18, 0.10, 0.28] },
-    'ai-coding':   { r:1.93, base:[ 0.60, 0.88,-0.38], fan:[ 0.30,-0.18, 0.28], center:[ 0.08, 0.02,-0.06], spread:[-0.16, 0.14, 0.30] },
-    'ai-visual':   { r:2.36, base:[-0.70, 0.62, 0.46], fan:[ 0.22, 0.30,-0.24], center:[ 0.06,-0.05, 0.02], spread:[ 0.20,-0.10, 0.26] },
-    'ai-media':    { r:2.79, base:[-1.02,-0.28,-0.34], fan:[-0.18, 0.36, 0.22], center:[-0.06, 0.02,-0.04], spread:[-0.18,-0.12, 0.28] },
-    'ai-office':   { r:3.22, base:[ 0.26,-1.02, 0.52], fan:[ 0.36, 0.22,-0.18], center:[ 0.04, 0.06, 0.08], spread:[ 0.14, 0.16,-0.30] },
-    'ai-research': { r:3.65, base:[-0.42,-0.86,-0.52], fan:[-0.28, 0.24, 0.26], center:[-0.02,-0.04, 0.04], spread:[-0.20, 0.12,-0.26] },
-    'ai-agent':    { r:4.08, base:[ 1.12, 0.22,-0.62], fan:[-0.22,-0.34, 0.24], center:[ 0.10,-0.02,-0.10], spread:[ 0.18,-0.14,-0.28] },
-    'ai-business': { r:4.52, base:[-0.82, 0.96, 0.12], fan:[ 0.24,-0.26,-0.30], center:[-0.08, 0.06, 0.02], spread:[-0.16, 0.14, 0.24] },
-  };
+  const mainLayout = { r:1.46, base:[ 0.54, 1.02,-0.46], fan:[ 0.34,-0.24, 0.30] };
 
   const laidOut = [];
   AI_MAIN_CATEGORIES.forEach((main, mainIndex) => {
     const subs = byMain.get(main.id) || [];
-    const layout = mainLayouts[main.id] || { r:1.55 + mainIndex * 0.46, base:tiltFromId(main.id), fan:[0.24, -0.22, 0.18] };
     const centeredOffset = (subs.length - 1) / 2;
     subs.forEach((def, subIndex) => {
       const subOffset = subIndex - centeredOffset;
-      const radius = layout.r + subIndex * 0.22 + Math.abs(subOffset) * 0.025;
-      const tiltX = layout.base[0] + layout.fan[0] * subOffset;
-      const tiltY = layout.base[1] + layout.fan[1] * subOffset;
-      const tiltZ = layout.base[2] + layout.fan[2] * subOffset;
+      const radius = mainLayout.r + subIndex * 0.09 + Math.abs(subOffset) * 0.012;
+      const tiltX = mainLayout.base[0] + mainLayout.fan[0] * subOffset;
+      const tiltY = mainLayout.base[1] + mainLayout.fan[1] * subOffset;
+      const tiltZ = mainLayout.base[2] + mainLayout.fan[2] * subOffset;
       laidOut.push({
         ...def,
         r: radius,
         tilt: [tiltX, tiltY, tiltZ],
-        center: [
-          layout.center[0] + layout.spread[0] * subOffset,
-          layout.center[1] + layout.spread[1] * subOffset,
-          layout.center[2] + layout.spread[2] * subOffset,
-        ],
         speed: RING_BASE_SPEED * Math.pow(RING_BASE_R / radius, 1.38),
       });
     });
@@ -1899,6 +1884,7 @@ function makeArcLine(radius, start, end, segments, color, opacity){
     transparent: true,
     opacity,
     blending: THREE.AdditiveBlending,
+    depthTest: true,
     depthWrite: false,
   });
   return { line: new THREE.Line(geo, mat), mat };
@@ -1913,12 +1899,10 @@ function buildRing(def){
     r: def.r,
     color: new THREE.Color(def.color),
     tilt: new THREE.Euler(def.tilt[0], def.tilt[1], def.tilt[2]),
-    center: new THREE.Vector3(...(def.center || [0, 0, 0])),
     speed: def.speed,
   };
   const grp = new THREE.Group();
   grp.rotation.copy(cfg.tilt);
-  grp.position.copy(cfg.center);
   // attach to whichever planet group is currently active so rings slide with the planet
   (currentTheme === 'bloom' ? groupBloom : groupOrbit).add(grp);
   ringGroups[cfg.id] = grp;
@@ -1939,13 +1923,13 @@ function buildRing(def){
   }
 
   const glowGeo = new THREE.RingGeometry(cfg.r-0.003, cfg.r+0.003, 256);
-  const glowMat = new THREE.MeshBasicMaterial({ color: cfg.color, transparent:true, opacity: 0.004, side:THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite:false });
+  const glowMat = new THREE.MeshBasicMaterial({ color: cfg.color, transparent:true, opacity: 0.003, side:THREE.DoubleSide, blending: THREE.AdditiveBlending, depthTest:true, depthWrite:false });
   const glow = new THREE.Mesh(glowGeo, glowMat);
   glow.rotation.x = Math.PI/2;
   grp.add(glow);
 
   const hlGeo = new THREE.RingGeometry(cfg.r-0.012, cfg.r+0.012, 256);
-  const hlMat = new THREE.MeshBasicMaterial({ color: cfg.color, transparent:true, opacity: 0, side:THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite:false });
+  const hlMat = new THREE.MeshBasicMaterial({ color: cfg.color, transparent:true, opacity: 0, side:THREE.DoubleSide, blending: THREE.AdditiveBlending, depthTest:true, depthWrite:false });
   const hl = new THREE.Mesh(hlGeo, hlMat);
   hl.rotation.x = Math.PI/2;
   grp.add(hl);
@@ -3647,9 +3631,9 @@ function animate(now){
   for(const cfg of RINGS){
     const isActive = activeCatSet ? activeCatSet.has(cfg.id) : false;
     const isOther  = activeCatSet && !isActive;
-    const targLine = isActive ? 0.48 : isOther ? 0.014 : 0.032;
-    const targGlow = isActive ? 0.11 : isOther ? 0.003 : 0.005;
-    const targHl   = isActive ? 0.26 : 0.0;
+    const targLine = isActive ? 0.38 : isOther ? 0.012 : 0.030;
+    const targGlow = isActive ? 0.065 : isOther ? 0.002 : 0.004;
+    const targHl   = isActive ? 0.16 : 0.0;
     const k = 1 - Math.pow(0.001, dt); // smooth lerp
     const lineMats = cfg._lineMats || [cfg._lineMat];
     lineMats.forEach((mat, i)=>{
