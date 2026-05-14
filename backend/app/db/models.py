@@ -73,6 +73,7 @@ class AISkillRecord(Base):
     __tablename__ = "ai_skills"
     __table_args__ = (
         Index("ix_ai_skills_category_id", "category_id"),
+        Index("ix_ai_skills_sub_skill_id", "sub_skill_id"),
         Index("ix_ai_skills_is_core", "is_core"),
         Index("ix_ai_skills_importance", "importance"),
     )
@@ -81,6 +82,8 @@ class AISkillRecord(Base):
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     category_id: Mapped[str] = mapped_column(String(48), nullable=False)
     category_label: Mapped[str] = mapped_column(String(80), nullable=False)
+    sub_skill_id: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    sub_skill_label: Mapped[str] = mapped_column(String(80), nullable=False, default="")
     tool: Mapped[str] = mapped_column(String(80), nullable=False, default="")
     stage: Mapped[str] = mapped_column(String(40), nullable=False, default="")
     description: Mapped[str] = mapped_column(Text, nullable=False, default="")
@@ -96,11 +99,28 @@ class AISkillRecord(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)
 
 
+class AISubSkillRecord(Base):
+    __tablename__ = "ai_subskills"
+    __table_args__ = (
+        Index("ix_ai_subskills_category_id", "category_id"),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    category_id: Mapped[str] = mapped_column(String(48), nullable=False)
+    category_label: Mapped[str] = mapped_column(String(80), nullable=False)
+    label: Mapped[str] = mapped_column(String(80), nullable=False)
+    label_cn: Mapped[str] = mapped_column(String(80), nullable=False, default="")
+    sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)
+
+
 class AILibraryItemRecord(Base):
     __tablename__ = "ai_library_items"
     __table_args__ = (
         Index("ix_ai_library_items_item_type", "item_type"),
         Index("ix_ai_library_items_category_id", "category_id"),
+        Index("ix_ai_library_items_sub_skill_id", "sub_skill_id"),
         Index("ix_ai_library_items_importance", "importance"),
     )
 
@@ -109,6 +129,8 @@ class AILibraryItemRecord(Base):
     title: Mapped[str] = mapped_column(String(180), nullable=False)
     category_id: Mapped[str] = mapped_column(String(48), nullable=False, default="")
     category_label: Mapped[str] = mapped_column(String(80), nullable=False, default="")
+    sub_skill_id: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    sub_skill_label: Mapped[str] = mapped_column(String(80), nullable=False, default="")
     summary: Mapped[str] = mapped_column(Text, nullable=False, default="")
     tools_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
     steps_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")

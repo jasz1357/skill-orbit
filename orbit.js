@@ -12,14 +12,46 @@ const THEMES = {
     brandName: 'AI Skill & Orbit',
     tagline: 'A LIVING MAP OF AI CAPABILITIES',
     defaultRings: [
-      { id:'ai-models',   label:'AI MODELS',   labelCn:'', color:'#ffb066', r:1.45, tilt:[ 0.26, 0.10, 0.04], speed:0.060 },
-      { id:'ai-coding',   label:'AI CODING',   labelCn:'', color:'#7ed6e6', r:1.78, tilt:[-0.38, 0.34, 0.12], speed:0.044 },
-      { id:'ai-visual',   label:'AI VISUAL',   labelCn:'', color:'#e69aa3', r:2.11, tilt:[ 0.62,-0.22, 0.10], speed:0.034 },
-      { id:'ai-media',    label:'AI MEDIA',    labelCn:'', color:'#b99cff', r:2.44, tilt:[-0.70,-0.10,-0.15], speed:0.027 },
-      { id:'ai-office',   label:'AI OFFICE',   labelCn:'', color:'#ffe27a', r:2.77, tilt:[ 0.14, 0.52,-0.08], speed:0.022 },
-      { id:'ai-research', label:'AI RESEARCH', labelCn:'', color:'#91e6a7', r:3.10, tilt:[-0.18,-0.46, 0.18], speed:0.018 },
-      { id:'ai-agent',    label:'AI AGENT',    labelCn:'', color:'#ff8ed1', r:3.43, tilt:[ 0.78, 0.22,-0.18], speed:0.015 },
-      { id:'ai-business', label:'AI BUSINESS', labelCn:'', color:'#9fb7ff', r:3.76, tilt:[-0.58, 0.58, 0.22], speed:0.013 },
+      { id:'models-general-assistants',      mainId:'ai-models',   label:'GENERAL AI',       labelCn:'通用助手',       color:'#ffb066', r:1.32, tilt:[ 0.24, 0.10, 0.04], speed:0.064 },
+      { id:'models-reasoning-long-context',  mainId:'ai-models',   label:'REASONING',        labelCn:'推理长上下文',   color:'#ffc47d', r:1.42, tilt:[ 0.32, 0.03, 0.12], speed:0.057 },
+      { id:'models-chinese-ecosystem',       mainId:'ai-models',   label:'CHINESE MODELS',   labelCn:'中文模型',       color:'#ffd28f', r:1.52, tilt:[ 0.18, 0.18,-0.06], speed:0.051 },
+      { id:'models-local-open-source',       mainId:'ai-models',   label:'LOCAL MODELS',     labelCn:'本地开源',       color:'#ffdfaa', r:1.62, tilt:[ 0.38,-0.05, 0.09], speed:0.046 },
+
+      { id:'coding-app-prototype',           mainId:'ai-coding',   label:'APP PROTOTYPE',    labelCn:'应用原型',       color:'#7ed6e6', r:1.76, tilt:[-0.38, 0.34, 0.12], speed:0.041 },
+      { id:'coding-code-edit-review',        mainId:'ai-coding',   label:'CODE REVIEW',      labelCn:'代码审查',       color:'#8ce2f0', r:1.86, tilt:[-0.46, 0.24, 0.22], speed:0.038 },
+      { id:'coding-devops-testing',          mainId:'ai-coding',   label:'DEVOPS QA',        labelCn:'部署测试',       color:'#a2e8f4', r:1.96, tilt:[-0.26, 0.42,-0.02], speed:0.035 },
+      { id:'coding-data-backend',            mainId:'ai-coding',   label:'BACKEND API',      labelCn:'后端数据',       color:'#b8eef7', r:2.06, tilt:[-0.54, 0.16,-0.12], speed:0.032 },
+
+      { id:'visual-image-generation',        mainId:'ai-visual',   label:'IMAGE EDIT',       labelCn:'图像修图',       color:'#e69aa3', r:2.20, tilt:[ 0.62,-0.22, 0.10], speed:0.030 },
+      { id:'visual-brand-design',            mainId:'ai-visual',   label:'BRAND DESIGN',     labelCn:'品牌设计',       color:'#eda8b1', r:2.30, tilt:[ 0.52,-0.34, 0.18], speed:0.028 },
+      { id:'visual-ui-prototype',            mainId:'ai-visual',   label:'UI MOCKUP',        labelCn:'UI 产品稿',      color:'#f0b5bd', r:2.40, tilt:[ 0.74,-0.12,-0.04], speed:0.026 },
+      { id:'visual-3d-assets',               mainId:'ai-visual',   label:'3D ASSETS',        labelCn:'3D 资产',        color:'#f5c2c9', r:2.50, tilt:[ 0.44,-0.42, 0.04], speed:0.024 },
+
+      { id:'media-video-editing',            mainId:'ai-media',    label:'VIDEO EDIT',       labelCn:'视频剪辑',       color:'#b99cff', r:2.64, tilt:[-0.70,-0.10,-0.15], speed:0.023 },
+      { id:'media-audio-voice-music',        mainId:'ai-media',    label:'AUDIO VOICE',      labelCn:'音频语音',       color:'#c5aaff', r:2.74, tilt:[-0.58,-0.24,-0.04], speed:0.021 },
+      { id:'media-avatar-livestream',        mainId:'ai-media',    label:'AVATAR LIVE',      labelCn:'数字人直播',     color:'#d1b8ff', r:2.84, tilt:[-0.78, 0.02,-0.22], speed:0.020 },
+      { id:'media-social-publishing',        mainId:'ai-media',    label:'SOCIAL PUBLISH',   labelCn:'社媒发布',       color:'#dcc8ff', r:2.94, tilt:[-0.50,-0.36, 0.10], speed:0.019 },
+
+      { id:'office-ppt-decks',               mainId:'ai-office',   label:'PPT DECKS',        labelCn:'PPT 汇报',       color:'#ffe27a', r:3.08, tilt:[ 0.14, 0.52,-0.08], speed:0.018 },
+      { id:'office-doc-writing',             mainId:'ai-office',   label:'DOC WRITING',      labelCn:'文档写作',       color:'#ffea96', r:3.18, tilt:[ 0.26, 0.42, 0.08], speed:0.017 },
+      { id:'office-sheets-data',             mainId:'ai-office',   label:'SHEETS DATA',      labelCn:'表格数据',       color:'#fff0ad', r:3.28, tilt:[ 0.02, 0.62,-0.16], speed:0.016 },
+      { id:'office-meetings-knowledge',      mainId:'ai-office',   label:'MEETING NOTES',    labelCn:'会议知识库',     color:'#fff5c2', r:3.38, tilt:[ 0.34, 0.30, 0.14], speed:0.015 },
+
+      { id:'research-web-search',            mainId:'ai-research', label:'SOURCE SEARCH',    labelCn:'来源搜索',       color:'#91e6a7', r:3.52, tilt:[-0.18,-0.46, 0.18], speed:0.014 },
+      { id:'research-academic-literature',   mainId:'ai-research', label:'PAPERS',           labelCn:'论文文献',       color:'#a3ebb5', r:3.62, tilt:[-0.30,-0.36, 0.04], speed:0.013 },
+      { id:'research-market-competitive',    mainId:'ai-research', label:'MARKET INTEL',     labelCn:'市场竞品',       color:'#b6f0c4', r:3.72, tilt:[-0.06,-0.56, 0.26], speed:0.012 },
+      { id:'research-data-reports',          mainId:'ai-research', label:'DATA REPORTS',     labelCn:'数据报告',       color:'#c8f5d2', r:3.82, tilt:[-0.36,-0.24, 0.16], speed:0.011 },
+
+      { id:'agent-workflow-automation',      mainId:'ai-agent',    label:'WORKFLOW AUTO',    labelCn:'工作流自动化',   color:'#ff8ed1', r:3.96, tilt:[ 0.78, 0.22,-0.18], speed:0.0105 },
+      { id:'agent-browser-task',             mainId:'ai-agent',    label:'BROWSER AGENT',    labelCn:'浏览器任务',     color:'#ff9ed9', r:4.06, tilt:[ 0.66, 0.34,-0.06], speed:0.0100 },
+      { id:'agent-bots-rag',                 mainId:'ai-agent',    label:'BOT RAG',          labelCn:'Bot 与 RAG',     color:'#ffafe1', r:4.16, tilt:[ 0.88, 0.08,-0.26], speed:0.0095 },
+      { id:'agent-api-mcp-integrations',     mainId:'ai-agent',    label:'API MCP',          labelCn:'API 与 MCP',     color:'#ffc0e8', r:4.26, tilt:[ 0.58, 0.44, 0.02], speed:0.0090 },
+
+      { id:'business-marketing-growth',      mainId:'ai-business', label:'MARKETING SEO',    labelCn:'营销增长',       color:'#9fb7ff', r:4.40, tilt:[-0.58, 0.58, 0.22], speed:0.0086 },
+      { id:'business-sales-crm',             mainId:'ai-business', label:'SALES CRM',        labelCn:'销售 CRM',       color:'#aec3ff', r:4.50, tilt:[-0.70, 0.44, 0.10], speed:0.0082 },
+      { id:'business-support-community',     mainId:'ai-business', label:'SUPPORT',          labelCn:'客服社群',       color:'#bdceff', r:4.60, tilt:[-0.46, 0.68, 0.30], speed:0.0078 },
+      { id:'business-ops-finance-legal',     mainId:'ai-business', label:'OPS LEGAL',        labelCn:'运营法务',       color:'#ccd9ff', r:4.70, tilt:[-0.76, 0.34, 0.24], speed:0.0074 },
+      { id:'business-ecommerce-product',     mainId:'ai-business', label:'ECOM PRODUCT',     labelCn:'电商产品',       color:'#dbe4ff', r:4.80, tilt:[-0.50, 0.76, 0.12], speed:0.0070 },
     ],
   },
   bloom: {
@@ -34,6 +66,17 @@ const THEMES = {
     ],
   },
 };
+
+const AI_MAIN_CATEGORIES = [
+  { id:'ai-models', label:'AI MODELS', labelCn:'AI 模型', color:'#ffb066' },
+  { id:'ai-coding', label:'AI CODING', labelCn:'AI 编程', color:'#7ed6e6' },
+  { id:'ai-visual', label:'AI VISUAL', labelCn:'AI 视觉', color:'#e69aa3' },
+  { id:'ai-media', label:'AI MEDIA', labelCn:'AI 媒体', color:'#b99cff' },
+  { id:'ai-office', label:'AI OFFICE', labelCn:'AI 办公', color:'#ffe27a' },
+  { id:'ai-research', label:'AI RESEARCH', labelCn:'AI 研究', color:'#91e6a7' },
+  { id:'ai-agent', label:'AI AGENT', labelCn:'AI 智能体', color:'#ff8ed1' },
+  { id:'ai-business', label:'AI BUSINESS', labelCn:'AI 商业', color:'#9fb7ff' },
+];
 
 let currentTheme = (() => {
   try{ return localStorage.getItem('skill-current-theme') || 'orbit'; }
@@ -1748,7 +1791,7 @@ function oklchToHex(L, C, hDeg){
 // Default rings come from the active theme
 const DEFAULT_RING_DEFS = THEMES[currentTheme].defaultRings;
 
-const RINGS_KEY_BASE = 'skill-orbit-rings-v3';
+const RINGS_KEY_BASE = 'skill-orbit-rings-v7';
 const ringsKey = () => `${RINGS_KEY_BASE}:${currentTheme}`;
 // one-time cleanup of legacy keys (Chinese labels & seeds, pre-theme storage)
 try{
@@ -1782,14 +1825,15 @@ function loadRingDefs(){
       if(Array.isArray(arr) && arr.length >= 1) return arr;
     }
   }catch(e){}
-  return THEMES[currentTheme].defaultRings.map(d => ({ ...d }));
+  const defs = THEMES[currentTheme].defaultRings.map(d => ({ ...d }));
+  return currentTheme === 'orbit' ? layoutOrbitRingDefs(defs) : defs;
 }
 function saveRingDefs(){
   try{
     const data = RINGS.map(r => ({
-      id: r.id, label: r.label, labelCn: r.labelCn,
+      id: r.id, mainId: r.mainId || r.id, label: r.label, labelCn: r.labelCn,
       color: '#' + new THREE.Color(r.color).getHexString(),
-      r: r.r, tilt: [r.tilt.x, r.tilt.y, r.tilt.z], speed: r.speed,
+      r: r.r, tilt: [r.tilt.x, r.tilt.y, r.tilt.z], center: [r.center.x, r.center.y, r.center.z], speed: r.speed,
     }));
     localStorage.setItem(ringsKey(), JSON.stringify(data));
   }catch(e){}
@@ -1797,6 +1841,51 @@ function saveRingDefs(){
 
 const RINGS = [];
 const ringGroups = {};
+
+function layoutOrbitRingDefs(defs){
+  const byMain = new Map(AI_MAIN_CATEGORIES.map(cat => [cat.id, []]));
+  defs.forEach(def => {
+    const bucket = byMain.get(def.mainId) || byMain.get(AI_MAIN_CATEGORIES[0].id);
+    bucket.push(def);
+  });
+
+  const mainLayouts = {
+    'ai-models':   { r:1.50, base:[ 1.06,-0.70, 0.30], fan:[-0.26, 0.34,-0.20], center:[-0.10, 0.04, 0.10], spread:[ 0.18, 0.10, 0.28] },
+    'ai-coding':   { r:1.93, base:[ 0.60, 0.88,-0.38], fan:[ 0.30,-0.18, 0.28], center:[ 0.08, 0.02,-0.06], spread:[-0.16, 0.14, 0.30] },
+    'ai-visual':   { r:2.36, base:[-0.70, 0.62, 0.46], fan:[ 0.22, 0.30,-0.24], center:[ 0.06,-0.05, 0.02], spread:[ 0.20,-0.10, 0.26] },
+    'ai-media':    { r:2.79, base:[-1.02,-0.28,-0.34], fan:[-0.18, 0.36, 0.22], center:[-0.06, 0.02,-0.04], spread:[-0.18,-0.12, 0.28] },
+    'ai-office':   { r:3.22, base:[ 0.26,-1.02, 0.52], fan:[ 0.36, 0.22,-0.18], center:[ 0.04, 0.06, 0.08], spread:[ 0.14, 0.16,-0.30] },
+    'ai-research': { r:3.65, base:[-0.42,-0.86,-0.52], fan:[-0.28, 0.24, 0.26], center:[-0.02,-0.04, 0.04], spread:[-0.20, 0.12,-0.26] },
+    'ai-agent':    { r:4.08, base:[ 1.12, 0.22,-0.62], fan:[-0.22,-0.34, 0.24], center:[ 0.10,-0.02,-0.10], spread:[ 0.18,-0.14,-0.28] },
+    'ai-business': { r:4.52, base:[-0.82, 0.96, 0.12], fan:[ 0.24,-0.26,-0.30], center:[-0.08, 0.06, 0.02], spread:[-0.16, 0.14, 0.24] },
+  };
+
+  const laidOut = [];
+  AI_MAIN_CATEGORIES.forEach((main, mainIndex) => {
+    const subs = byMain.get(main.id) || [];
+    const layout = mainLayouts[main.id] || { r:1.55 + mainIndex * 0.46, base:tiltFromId(main.id), fan:[0.24, -0.22, 0.18] };
+    const centeredOffset = (subs.length - 1) / 2;
+    subs.forEach((def, subIndex) => {
+      const subOffset = subIndex - centeredOffset;
+      const radius = layout.r + subIndex * 0.22 + Math.abs(subOffset) * 0.025;
+      const tiltX = layout.base[0] + layout.fan[0] * subOffset;
+      const tiltY = layout.base[1] + layout.fan[1] * subOffset;
+      const tiltZ = layout.base[2] + layout.fan[2] * subOffset;
+      laidOut.push({
+        ...def,
+        r: radius,
+        tilt: [tiltX, tiltY, tiltZ],
+        center: [
+          layout.center[0] + layout.spread[0] * subOffset,
+          layout.center[1] + layout.spread[1] * subOffset,
+          layout.center[2] + layout.spread[2] * subOffset,
+        ],
+        speed: RING_BASE_SPEED * Math.pow(RING_BASE_R / radius, 1.38),
+      });
+    });
+  });
+  return laidOut;
+}
 
 function makeArcLine(radius, start, end, segments, color, opacity){
   const pts = [];
@@ -1818,15 +1907,18 @@ function makeArcLine(radius, start, end, segments, color, opacity){
 function buildRing(def){
   const cfg = {
     id: def.id,
+    mainId: def.mainId || def.id,
     label: def.label || def.id.toUpperCase(),
     labelCn: def.labelCn || '',
     r: def.r,
     color: new THREE.Color(def.color),
     tilt: new THREE.Euler(def.tilt[0], def.tilt[1], def.tilt[2]),
+    center: new THREE.Vector3(...(def.center || [0, 0, 0])),
     speed: def.speed,
   };
   const grp = new THREE.Group();
   grp.rotation.copy(cfg.tilt);
+  grp.position.copy(cfg.center);
   // attach to whichever planet group is currently active so rings slide with the planet
   (currentTheme === 'bloom' ? groupBloom : groupOrbit).add(grp);
   ringGroups[cfg.id] = grp;
@@ -1961,6 +2053,7 @@ function performThemeSwap(toTheme){
   }
   RINGS.length = 0;
   activeCat = null;
+  activeCatSet = null;
 
   currentTheme = toTheme;
   try{ localStorage.setItem('skill-current-theme', toTheme); }catch(e){}
@@ -1998,14 +2091,30 @@ function generateNewRingDef(label, labelCn){
 }
 
 // ---- category focus state ----
-let activeCat = null; // 'craft' | 'theory' | 'life' | null
+let activeCat = null;
+let activeCatSet = null;
+function focusRingIds(id){
+  if(!id) return null;
+  const main = AI_MAIN_CATEGORIES.find(cat => cat.id === id);
+  if(currentTheme === 'orbit' && main){
+    return RINGS.filter(r => r.mainId === id).map(r => r.id);
+  }
+  return RINGS.find(r => r.id === id) ? [id] : null;
+}
+function isRingFocused(id){
+  return !activeCatSet || activeCatSet.has(id);
+}
 function setActiveCategory(cat){
   activeCat = (activeCat === cat) ? null : cat;
+  const ids = focusRingIds(activeCat);
+  activeCatSet = ids ? new Set(ids) : null;
   // sync UI stat rows
   document.querySelectorAll('.panel .stat.cat').forEach(el=>{
-    const c = el.dataset.cat;
-    el.classList.toggle('active', activeCat === c);
-    el.classList.toggle('dimmed', activeCat && activeCat !== c);
+    const c = el.dataset.focusCat || el.dataset.cat;
+    const ringId = el.dataset.cat;
+    const rowFocusesRing = ringId && activeCatSet?.has(ringId);
+    el.classList.toggle('active', activeCat === c || rowFocusesRing);
+    el.classList.toggle('dimmed', !!activeCat && !rowFocusesRing && activeCat !== c);
   });
 }
 window.__setActiveCategory = setActiveCategory;
@@ -2037,7 +2146,7 @@ const memoryNodes = []; // { mesh, ring, angle, speed, name, cat, day, color, id
 let _idCounter = 0;
 function genId(){ return 'n_' + Date.now().toString(36) + '_' + (_idCounter++).toString(36); }
 
-function addNode({ id, name, cat='craft', day=0, animateBirth=true, note='', created=Date.now(), angle }){
+function addNode({ id, name, cat='craft', day=0, animateBirth=true, note='', created=Date.now(), angle, suppressSave=false }){
   const cfg = RINGS.find(r=>r.id===cat) || RINGS[0];
   if(!cfg) return null;
   const grp = ringGroups[cfg.id];
@@ -2071,8 +2180,10 @@ function addNode({ id, name, cat='craft', day=0, animateBirth=true, note='', cre
     created,
   };
   memoryNodes.push(node);
-  refreshUI();
-  saveState();
+  if(!suppressSave){
+    refreshUI();
+    saveState();
+  }
   return node;
 }
 
@@ -2130,7 +2241,7 @@ function removeNode(id){
 }
 
 // ---------------- persistence ----------------
-const STORE_KEY_BASE = 'skill-orbit-v3';
+const STORE_KEY_BASE = 'skill-orbit-v5';
 const storeKey = () => `${STORE_KEY_BASE}:${currentTheme}`;
 function saveState(){
   try{
@@ -2230,31 +2341,54 @@ function colorForCat(cat){
 function renderCategoryRows(counts){
   const list = document.getElementById('cat-list');
   if(!list) return;
-  // build rows for each ring in order
-  list.innerHTML = RINGS.map(r => {
-    const hex = '#' + r.color.getHexString();
-    const label = currentLang === 'zh' ? displayCategoryLabel(r.label) : r.label;
-    const title = currentLang === 'zh' ? `点击聚焦 ${label} 轨道` : `Click to focus the ${r.label} ring`;
-    return `<div class="stat cat" data-cat="${r.id}" title="${escapeHtml(title)}">
-      <span class="k" style="color:${hex}">${escapeHtml(label)}</span>
-      <span class="right" style="display:flex; align-items:center; gap:4px;">
-        <span class="v">${String(counts[r.id]||0).padStart(2,'0')}</span>
-        ${RINGS.length > 1 ? `<button class="del-cat" data-del-cat="${r.id}" aria-label="delete category" title="${escapeHtml(currentLang === 'zh' ? '删除分类及其中所有节点' : 'Delete category and all its nodes')}">×</button>` : ''}
-      </span>
-    </div>`;
-  }).join('');
+  if(currentTheme === 'orbit'){
+    list.innerHTML = AI_MAIN_CATEGORIES.map(main => {
+      const subs = RINGS.filter(r => r.mainId === main.id);
+      const mainLabel = currentLang === 'zh' ? main.labelCn : main.label;
+      const mainTitle = currentLang === 'zh'
+        ? `点击聚焦 ${mainLabel} 下的 ${subs.length} 个小技能光环`
+        : `Click to focus ${subs.length} ${main.label} sub-skill rings`;
+      const subRows = subs.map(r => {
+        const hex = '#' + r.color.getHexString();
+        const label = currentLang === 'zh' ? (r.labelCn || displayCategoryLabel(r.label)) : r.label;
+        const title = currentLang === 'zh' ? `点击只显示 ${label} 光环` : `Click to isolate the ${r.label} ring`;
+        return `<div class="stat cat subcat" data-cat="${r.id}" data-focus-cat="${r.id}" title="${escapeHtml(title)}">
+          <span class="k" style="color:${hex}">${escapeHtml(label)}</span>
+        </div>`;
+      }).join('');
+      return `<div class="stat cat maincat" data-main-cat="${main.id}" data-focus-cat="${main.id}" title="${escapeHtml(mainTitle)}">
+        <span class="k" style="color:${main.color}">${escapeHtml(mainLabel)}</span>
+      </div>${subRows}`;
+    }).join('');
+  }else{
+    // build rows for each ring in order
+    list.innerHTML = RINGS.map(r => {
+      const hex = '#' + r.color.getHexString();
+      const label = currentLang === 'zh' ? displayCategoryLabel(r.label) : r.label;
+      const title = currentLang === 'zh' ? `点击聚焦 ${label} 轨道` : `Click to focus the ${r.label} ring`;
+      return `<div class="stat cat" data-cat="${r.id}" data-focus-cat="${r.id}" title="${escapeHtml(title)}">
+        <span class="k" style="color:${hex}">${escapeHtml(label)}</span>
+        <span class="right" style="display:flex; align-items:center; gap:4px;">
+          <span class="v">${String(counts[r.id]||0).padStart(2,'0')}</span>
+          ${RINGS.length > 1 ? `<button class="del-cat" data-del-cat="${r.id}" aria-label="delete category" title="${escapeHtml(currentLang === 'zh' ? '删除分类及其中所有节点' : 'Delete category and all its nodes')}">×</button>` : ''}
+        </span>
+      </div>`;
+    }).join('');
+  }
   // restore active state
   list.querySelectorAll('.stat.cat').forEach(el=>{
-    const c = el.dataset.cat;
-    el.classList.toggle('active', activeCat === c);
-    el.classList.toggle('dimmed', activeCat && activeCat !== c);
+    const c = el.dataset.focusCat || el.dataset.cat;
+    const ringId = el.dataset.cat;
+    const rowFocusesRing = ringId && activeCatSet?.has(ringId);
+    el.classList.toggle('active', activeCat === c || rowFocusesRing);
+    el.classList.toggle('dimmed', !!activeCat && !rowFocusesRing && activeCat !== c);
   });
 }
 
 function refreshUI(){
   const counts = {};
   memoryNodes.forEach(n => counts[n.cat] = (counts[n.cat]||0)+1 );
-  setStat('stat-total', memoryNodes.length);
+  setStat('stat-total', currentTheme === 'orbit' ? AI_MAIN_CATEGORIES.length : memoryNodes.length);
   renderCategoryRows(counts);
   const tc = document.getElementById('ticker-count');
   if(tc) tc.textContent = String(memoryNodes.length).padStart(2,'0');
@@ -2588,32 +2722,114 @@ async function fetchJson(path, options={}){
 }
 
 function normalizeAiSkillToNode(skill){
+  const subLabel = skill.sub_skill_label || skill.category_label || '';
   return {
     id: skill.id,
     name: skill.name,
-    cat: skill.category_id,
-    note: `${skill.tool || skill.category_label || ''}${skill.description ? ' · ' + skill.description : ''}`.trim(),
+    cat: skill.sub_skill_id || skill.category_id,
+    note: `${skill.tool || subLabel}${skill.description ? ' · ' + descriptionWithSubSkill(skill) : ''}`.trim(),
     created: skill.created_at ? Date.parse(skill.created_at) : Date.now(),
     animateBirth: false,
   };
 }
 
-function replaceOrbitWithCoreSkills(skills){
-  if(currentTheme !== 'orbit' || !Array.isArray(skills) || !skills.length) return;
+function normalizeAiLibraryItemToNode(item){
+  const ring = item?.sub_skill_id ? RINGS.find(r => r.id === item.sub_skill_id) : null;
+  const subLabel = ring?.labelCn || item?.sub_skill_label || item?.category_label || '';
+  const tools = Array.isArray(item?.tools) ? item.tools.slice(0, 3).join(' + ') : '';
+  return {
+    id: `library-${item.id}`,
+    name: item.title,
+    cat: item.sub_skill_id || item.category_id,
+    note: `${tools || subLabel}${item.summary ? ' · ' + item.summary : ''}`.trim(),
+    created: item.created_at ? Date.parse(item.created_at) : Date.now(),
+    animateBirth: false,
+  };
+}
+
+function practicalSkillScore(skill){
+  const text = `${skill.name || ''} ${skill.tool || ''} ${skill.stage || ''} ${skill.description || ''} ${(skill.tags || []).join(' ')}`.toLowerCase();
+  let score = Number(skill.importance || 0);
+  if(skill.is_core) score += 140;
+  if(skill.tool) score += 18;
+  if(/workflow|automation|agent|mcp|api|ppt|deck|report|data|code|review|meeting|search|video|image|crm|rag/i.test(text)) score += 12;
+  if(/入门|概念|theory|principle|overview/i.test(text)) score -= 8;
+  return score;
+}
+
+function practicalLibraryScore(item){
+  const text = `${item.title || ''} ${item.summary || ''} ${(item.tools || []).join(' ')} ${(item.steps || []).join(' ')} ${(item.outputs || []).join(' ')} ${(item.tags || []).join(' ')}`.toLowerCase();
+  let score = Number(item.importance || 0);
+  if(item.item_type === 'workflow') score += 28;
+  if(/workflow|流程|组合|sop|mcp|rag|ppt|report|dashboard|automation|agent|code|video|image|crm|meeting/i.test(text)) score += 14;
+  return score;
+}
+
+function representativeItemsBySubSkill(skills, libraryItems=[]){
+  const grouped = new Map(RINGS.map(r => [r.id, { skills: [], library: [] }]));
+  for(const skill of skills || []){
+    const subId = skill.sub_skill_id || skill.category_id;
+    if(grouped.has(subId)) grouped.get(subId).skills.push(skill);
+  }
+  for(const item of libraryItems || []){
+    const subId = item.sub_skill_id || item.category_id;
+    if(grouped.has(subId)) grouped.get(subId).library.push(item);
+  }
+  const selected = [];
+  for(const ring of RINGS){
+    const bucket = grouped.get(ring.id) || { skills: [], library: [] };
+    const skillNodes = bucket.skills
+      .sort((a, b) => practicalSkillScore(b) - practicalSkillScore(a) || String(a.name || '').localeCompare(String(b.name || '')))
+      .slice(0, 3)
+      .map(normalizeAiSkillToNode);
+    const libraryNodes = bucket.library
+      .sort((a, b) => practicalLibraryScore(b) - practicalLibraryScore(a) || String(a.title || '').localeCompare(String(b.title || '')))
+      .slice(0, Math.max(0, 3 - skillNodes.length))
+      .map(normalizeAiLibraryItemToNode);
+    const chosen = [...skillNodes, ...libraryNodes].slice(0, 3);
+    chosen.forEach((node, index) => {
+      const base = strHash01(`${ring.id}:anchor`) * Math.PI * 2;
+      const spread = chosen.length === 1 ? 0 : (Math.PI * 2) / chosen.length;
+      selected.push({ ...node, angle: base + index * spread });
+    });
+  }
+  return selected;
+}
+
+function categoryMetaLabel(item){
+  const main = displayCategoryLabel(item?.category_label || '');
+  const ring = item?.sub_skill_id ? RINGS.find(r => r.id === item.sub_skill_id) : null;
+  const sub = currentLang === 'zh'
+    ? (ring?.labelCn || item?.sub_skill_label || '')
+    : (item?.sub_skill_label || ring?.label || '');
+  return sub ? `${main} · ${sub}` : main;
+}
+
+function descriptionWithSubSkill(skill){
+  if(!skill?.sub_skill_label) return skill?.description || '';
+  return `${skill.sub_skill_label} · ${skill.description || ''}`.trim();
+}
+
+function replaceOrbitWithRepresentativeItems(skills, libraryItems=[]){
+  if(currentTheme !== 'orbit') return;
+  if((!Array.isArray(skills) || !skills.length) && (!Array.isArray(libraryItems) || !libraryItems.length)) return;
   memoryNodes.slice().forEach(n => {
     if(n.mesh.parent) n.mesh.parent.remove(n.mesh);
     n.mesh.material.dispose();
   });
   memoryNodes.length = 0;
-  skills.forEach(skill => addNode(normalizeAiSkillToNode(skill)));
+  representativeItemsBySubSkill(skills, libraryItems).forEach(node => addNode({ ...node, suppressSave: true }));
   saveState();
   refreshUI();
 }
 
 async function loadCoreSkillsFromBackend(){
   try{
-    const skills = await fetchJson('/ai-skills/core');
-    replaceOrbitWithCoreSkills(skills);
+    const [skills, libraryItems] = await Promise.all([
+      fetchJson('/ai-skills?limit=2000'),
+      fetchJson('/ai-skills/library?limit=2000'),
+    ]);
+    replaceOrbitWithRepresentativeItems(skills, libraryItems);
   }catch(e){
     // Static seed keeps the globe usable when the backend is not running.
   }
@@ -2700,7 +2916,7 @@ function renderAiDbList(){
           <span>${escapeHtml(displaySkillName(skill))}</span>
           ${skill.is_core ? `<span class="core">${escapeHtml(t('core'))}</span>` : ''}
         </div>
-        <div class="meta">${escapeHtml(displayCategoryLabel(skill.category_label))} · ${escapeHtml(skill.tool || t('tool'))} · ${escapeHtml(translateText(skill.stage || t('stage')))}</div>
+        <div class="meta">${escapeHtml(categoryMetaLabel(skill))} · ${escapeHtml(skill.tool || t('tool'))} · ${escapeHtml(translateText(skill.stage || t('stage')))}</div>
         <div class="desc">${escapeHtml(displaySkillDescription(skill))}</div>
       </article>
     `).join('');
@@ -2726,7 +2942,7 @@ function renderAiDbList(){
           <span>${escapeHtml(displayLibraryTitle(item))}</span>
           <span class="core">${escapeHtml(t('stacks'))}</span>
         </div>
-        <div class="meta">${escapeHtml(displayCategoryLabel(item.category_label || t('aiLibrary')))} · ${escapeHtml(item.item_type === 'workflow' ? t('workflow') : t('integration'))} · ${escapeHtml(displaySourceSection(item.source_section || 'PDF'))}</div>
+        <div class="meta">${escapeHtml(categoryMetaLabel(item) || displayCategoryLabel(item.category_label || t('aiLibrary')))} · ${escapeHtml(item.item_type === 'workflow' ? t('workflow') : t('integration'))} · ${escapeHtml(displaySourceSection(item.source_section || 'PDF'))}</div>
         <div class="desc">${escapeHtml(displayLibrarySummary(item))}</div>
         <div class="chips">${primary.slice(0, 8).map(x => `<span>${escapeHtml(displayLibraryChip(x))}</span>`).join('')}</div>
       </article>
@@ -2763,6 +2979,7 @@ function openAiDatabase(){
   if(currentTheme !== 'orbit') return;
   if(!aiDbDrawer) return;
   aiDbDrawer.classList.add('show');
+  document.body.classList.add('ai-db-open');
   aiDbDrawer.setAttribute('aria-hidden', 'false');
   loadAiDatabase();
   setTimeout(()=>aiDbSearch?.focus(), 80);
@@ -2771,6 +2988,7 @@ function openAiDatabase(){
 function closeAiDatabase(){
   if(!aiDbDrawer) return;
   aiDbDrawer.classList.remove('show');
+  document.body.classList.remove('ai-db-open');
   aiDbDrawer.setAttribute('aria-hidden', 'true');
 }
 
@@ -3164,13 +3382,14 @@ if(chatToggle && chatEl){
     if(catClickTimer.id) return;
     catClickTimer.id = setTimeout(()=>{
       catClickTimer.id = null;
-      const cat = row.dataset.cat;
+      const cat = row.dataset.focusCat || row.dataset.cat;
       if(typeof window.__setActiveCategory === 'function') window.__setActiveCategory(cat);
     }, 220);
   });
 
   list.addEventListener('dblclick', (e)=>{
     const row = e.target.closest('.stat.cat'); if(!row) return;
+    if(currentTheme === 'orbit') return;
     if(catClickTimer.id){ clearTimeout(catClickTimer.id); catClickTimer.id = null; }
     e.preventDefault();
     const k = row.querySelector('.k'); if(!k) return;
@@ -3237,7 +3456,10 @@ async function deleteCategory(catId){
   if(ringGroups[catId]) delete ringGroups[catId];
   const idx = RINGS.indexOf(cfg);
   if(idx >= 0) RINGS.splice(idx, 1);
-  if(activeCat === catId) activeCat = null;
+  if(activeCat === catId){
+    activeCat = null;
+    activeCatSet = null;
+  }
   saveRingDefs();
   saveState();
   refreshUI();
@@ -3423,11 +3645,11 @@ function animate(now){
 
   // animate ring opacity toward target based on activeCat
   for(const cfg of RINGS){
-    const isActive = activeCat === cfg.id;
-    const isOther  = activeCat && !isActive;
-    const targLine = isActive ? 0.72 : isOther ? 0.018 : 0.035;
-    const targGlow = isActive ? 0.18 : isOther ? 0.004 : 0.006;
-    const targHl   = isActive ? 0.55 : 0.0;
+    const isActive = activeCatSet ? activeCatSet.has(cfg.id) : false;
+    const isOther  = activeCatSet && !isActive;
+    const targLine = isActive ? 0.48 : isOther ? 0.014 : 0.032;
+    const targGlow = isActive ? 0.11 : isOther ? 0.003 : 0.005;
+    const targHl   = isActive ? 0.26 : 0.0;
     const k = 1 - Math.pow(0.001, dt); // smooth lerp
     const lineMats = cfg._lineMats || [cfg._lineMat];
     lineMats.forEach((mat, i)=>{
@@ -3445,7 +3667,7 @@ function animate(now){
   for(const n of memoryNodes){
     // motion: pause non-active categories when one is solo'd, and apply
     // global motionScale (pause / hover-slowdown).
-    const isActiveCat = !activeCat || n.cat === activeCat;
+    const isActiveCat = !activeCatSet || activeCatSet.has(n.cat);
     const moveK = motionScale * (isActiveCat ? 1 : 0);
     n.angle += n.speed * dt * moveK;
 
@@ -3458,7 +3680,7 @@ function animate(now){
 
     // twinkle scale: default nodes sit back like a quiet starfield.
     const tw = 0.82 + 0.14*Math.sin(now*0.003 + n.twinklePhase);
-    const isFocusedNode = n._selected || hovered === n || (activeCat && n.cat === activeCat);
+    const isFocusedNode = n._selected || hovered === n || (activeCatSet && activeCatSet.has(n.cat));
     let s = (isFocusedNode ? 0.15 : 0.085) * tw;
     if(n._selected) s = 0.28 * (0.9 + 0.15*Math.sin(now*0.012));
 
@@ -3478,8 +3700,8 @@ function animate(now){
 
     // category focus: boost active cat nodes, dim others
     let targetOpacity = depthOpacity;
-    if(activeCat){
-      if(n.cat === activeCat){ s *= 1.35; targetOpacity = THREE.MathUtils.lerp(0.92, 0.38, depthT); }
+    if(activeCatSet){
+      if(activeCatSet.has(n.cat)){ s *= 1.35; targetOpacity = THREE.MathUtils.lerp(0.92, 0.38, depthT); }
       else { s *= 0.48; targetOpacity = 0.045; }
     }
     if(hovered === n){
@@ -3518,8 +3740,11 @@ function animate(now){
       hovered = node;
       tooltipEl.classList.add('show');
       document.getElementById('tt-name').textContent = displayNodeName(node);
+      const ringLabel = currentLang === 'zh'
+        ? (node.ring.labelCn || displayCategoryLabel(node.ring.label))
+        : node.ring.label;
       document.getElementById('tt-meta').textContent =
-        `${displayCategoryLabel(node.cat.toUpperCase())} · ${currentLang === 'zh' ? '节点' : 'NODE'} ${String(node.idx).padStart(3,'0')}`;
+        `${ringLabel} · ${currentLang === 'zh' ? '节点' : 'NODE'} ${String(node.idx).padStart(3,'0')}`;
       document.body.style.cursor = 'pointer';
     }
   } else {

@@ -10,6 +10,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.db.ai_skill_seed import AI_SKILLS
+from app.db.ai_subskill_taxonomy import classify_subskill
 from app.db.models import AISkillRecord
 from app.models.ai_skill import AISkillCreate, AISkillRead, AISkillUpdate
 
@@ -27,6 +28,7 @@ def ensure_ai_skill_seed(db: Session) -> None:
     }
     now = datetime.now(timezone.utc)
     for item in AI_SKILLS:
+        item = _with_subskill(item)
         signature = (item["name"], item["category_id"], item.get("tool", ""))
         tool_key = (item.get("tool") or "").strip().lower()
         if item["id"] in existing_ids or signature in existing_signatures or tool_key in existing_tools:
@@ -36,6 +38,23 @@ def ensure_ai_skill_seed(db: Session) -> None:
         existing_signatures.add(signature)
         if tool_key:
             existing_tools.add(tool_key)
+    for record in db.scalars(select(AISkillRecord).where(AISkillRecord.sub_skill_id == "")).all():
+        sub_skill_id, sub_skill_label = classify_subskill(
+            {
+                "id": record.id,
+                "name": record.name,
+                "category_id": record.category_id,
+                "category_label": record.category_label,
+                "tool": record.tool,
+                "stage": record.stage,
+                "description": record.description,
+                "tags": _loads(record.tags_json),
+                "examples": _loads(record.examples_json),
+            }
+        )
+        record.sub_skill_id = sub_skill_id
+        record.sub_skill_label = sub_skill_label
+        record.updated_at = now
     db.commit()
 
 
@@ -121,11 +140,14 @@ def delete_ai_skill(db: Session, skill_id: str) -> bool:
 
 
 def _create_record(data: dict, now: datetime) -> AISkillRecord:
+    data = _with_subskill(data)
     return AISkillRecord(
         id=data["id"],
         name=data["name"],
         category_id=data["category_id"],
         category_label=data["category_label"],
+        sub_skill_id=data.get("sub_skill_id", ""),
+        sub_skill_label=data.get("sub_skill_label", ""),
         tool=data.get("tool", ""),
         stage=data.get("stage", ""),
         description=data.get("description", ""),
@@ -142,12 +164,19 @@ def _create_record(data: dict, now: datetime) -> AISkillRecord:
     )
 
 
+def _with_subskill(data: dict) -> dict:
+    sub_skill_id, sub_skill_label = classify_subskill(data)
+    return {**data, "sub_skill_id": sub_skill_id, "sub_skill_label": sub_skill_label}
+
+
 def _to_read(record: AISkillRecord) -> AISkillRead:
     return AISkillRead(
         id=record.id,
         name=record.name,
         category_id=record.category_id,
         category_label=record.category_label,
+        sub_skill_id=record.sub_skill_id,
+        sub_skill_label=record.sub_skill_label,
         tool=record.tool,
         stage=record.stage,
         description=record.description,

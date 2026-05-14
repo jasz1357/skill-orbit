@@ -10,6 +10,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.db.ai_library_seed import AI_LIBRARY_ITEMS
+from app.db.ai_subskill_taxonomy import classify_subskill
 from app.db.models import AILibraryItemRecord
 from app.models.ai_library import AILibraryItemCreate, AILibraryItemRead, AILibraryItemUpdate
 from app.repositories.ai_skills import _search_terms
@@ -29,6 +30,7 @@ def ensure_ai_library_seed(db: Session) -> None:
     }
     now = datetime.now(timezone.utc)
     for item in AI_LIBRARY_ITEMS:
+        item = _with_subskill(item)
         signature = (
             item["item_type"],
             item["title"],
@@ -41,6 +43,25 @@ def ensure_ai_library_seed(db: Session) -> None:
         db.add(_create_record(item, now))
         existing_ids.add(item["id"])
         existing_signatures.add(signature)
+    for record in db.scalars(select(AILibraryItemRecord).where(AILibraryItemRecord.sub_skill_id == "")).all():
+        sub_skill_id, sub_skill_label = classify_subskill(
+            {
+                "id": record.id,
+                "item_type": record.item_type,
+                "title": record.title,
+                "category_id": record.category_id,
+                "category_label": record.category_label,
+                "summary": record.summary,
+                "tools": _loads(record.tools_json),
+                "steps": _loads(record.steps_json),
+                "outputs": _loads(record.outputs_json),
+                "tags": _loads(record.tags_json),
+                "source_section": record.source_section,
+            }
+        )
+        record.sub_skill_id = sub_skill_id
+        record.sub_skill_label = sub_skill_label
+        record.updated_at = now
     db.commit()
 
 
@@ -127,12 +148,15 @@ def delete_ai_library_item(db: Session, item_id: str) -> bool:
 
 
 def _create_record(data: dict, now: datetime) -> AILibraryItemRecord:
+    data = _with_subskill(data)
     return AILibraryItemRecord(
         id=data["id"],
         item_type=data["item_type"],
         title=data["title"],
         category_id=data.get("category_id", ""),
         category_label=data.get("category_label", ""),
+        sub_skill_id=data.get("sub_skill_id", ""),
+        sub_skill_label=data.get("sub_skill_label", ""),
         summary=data.get("summary", ""),
         tools_json=json.dumps(data.get("tools", []), ensure_ascii=False),
         steps_json=json.dumps(data.get("steps", []), ensure_ascii=False),
@@ -146,6 +170,11 @@ def _create_record(data: dict, now: datetime) -> AILibraryItemRecord:
     )
 
 
+def _with_subskill(data: dict) -> dict:
+    sub_skill_id, sub_skill_label = classify_subskill(data)
+    return {**data, "sub_skill_id": sub_skill_id, "sub_skill_label": sub_skill_label}
+
+
 def _to_read(record: AILibraryItemRecord) -> AILibraryItemRead:
     return AILibraryItemRead(
         id=record.id,
@@ -153,6 +182,8 @@ def _to_read(record: AILibraryItemRecord) -> AILibraryItemRead:
         title=record.title,
         category_id=record.category_id,
         category_label=record.category_label,
+        sub_skill_id=record.sub_skill_id,
+        sub_skill_label=record.sub_skill_label,
         summary=record.summary,
         tools=_loads(record.tools_json),
         steps=_loads(record.steps_json),

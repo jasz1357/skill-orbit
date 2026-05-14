@@ -25,7 +25,11 @@
     font-family: "Inter", system-ui, sans-serif;
     -webkit-font-smoothing:antialiased;
   }
-  canvas{display:block}
+  canvas{
+    display:block;
+    transition:transform .28s cubic-bezier(.2,.8,.2,1);
+  }
+  body.ai-db-open canvas{ transform:translateX(220px); }
 
   /* ---------- HUD chrome ---------- */
   .hud{
@@ -546,6 +550,27 @@
   .panel .stat .v{color:var(--ink); font-size:13px; font-variant-numeric: tabular-nums;}
   .panel .stat.cat{ cursor: pointer; transition: color .15s, background .15s; padding-left: 12px; }
   .panel .stat.cat:hover{ background: rgba(255,255,255,0.03); }
+  .panel .stat.cat.maincat{
+    padding-top: 11px;
+    padding-bottom: 9px;
+    margin-top: 5px;
+    background: rgba(255,255,255,0.018);
+  }
+  .panel .stat.cat.maincat .k{
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    font-weight: 650;
+  }
+  .panel .stat.cat.subcat{
+    padding-left: 26px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    border-top-color: rgba(255,255,255,0.055);
+  }
+  .panel .stat.cat.subcat .k{
+    font-size: 9px;
+    letter-spacing: 0.12em;
+  }
   .panel .stat.cat .k::before{
     content:''; display:inline-block; width:5px; height:5px; border-radius:50%;
     margin-right: 8px; vertical-align: middle; transform: translateY(-1px);

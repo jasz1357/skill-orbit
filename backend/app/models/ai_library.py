@@ -11,6 +11,8 @@ class AILibraryItemBase(BaseModel):
     title: str = Field(min_length=1, max_length=180)
     category_id: str = Field(default="", max_length=48)
     category_label: str = Field(default="", max_length=80)
+    sub_skill_id: str = Field(default="", max_length=64)
+    sub_skill_label: str = Field(default="", max_length=80)
     summary: str = Field(default="", max_length=3000)
     tools: list[str] = Field(default_factory=list)
     steps: list[str] = Field(default_factory=list)
@@ -30,6 +32,8 @@ class AILibraryItemUpdate(BaseModel):
     title: Optional[str] = Field(default=None, min_length=1, max_length=180)
     category_id: Optional[str] = Field(default=None, max_length=48)
     category_label: Optional[str] = Field(default=None, max_length=80)
+    sub_skill_id: Optional[str] = Field(default=None, max_length=64)
+    sub_skill_label: Optional[str] = Field(default=None, max_length=80)
     summary: Optional[str] = Field(default=None, max_length=3000)
     tools: Optional[list[str]] = None
     steps: Optional[list[str]] = None
