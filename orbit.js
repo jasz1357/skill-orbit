@@ -1791,7 +1791,7 @@ function oklchToHex(L, C, hDeg){
 // Default rings come from the active theme
 const DEFAULT_RING_DEFS = THEMES[currentTheme].defaultRings;
 
-const RINGS_KEY_BASE = 'skill-orbit-rings-v11';
+const RINGS_KEY_BASE = 'skill-orbit-rings-v12';
 const ringsKey = () => `${RINGS_KEY_BASE}:${currentTheme}`;
 // one-time cleanup of legacy keys (Chinese labels & seeds, pre-theme storage)
 try{
@@ -1833,7 +1833,12 @@ function saveRingDefs(){
     const data = RINGS.map(r => ({
       id: r.id, mainId: r.mainId || r.id, label: r.label, labelCn: r.labelCn,
       color: '#' + new THREE.Color(r.color).getHexString(),
-      r: r.r, tilt: [r.tilt.x, r.tilt.y, r.tilt.z], speed: r.speed,
+      r: r.r, tilt: [r.tilt.x, r.tilt.y, r.tilt.z],
+      defaultR: r.defaultR || r.r,
+      defaultTilt: r.defaultTilt ? [r.defaultTilt.x, r.defaultTilt.y, r.defaultTilt.z] : [r.tilt.x, r.tilt.y, r.tilt.z],
+      defaultCenter: r.defaultCenter ? [r.defaultCenter.x, r.defaultCenter.y, r.defaultCenter.z] : [0, 0, 0],
+      defaultPresence: r.defaultPresence ?? 1,
+      speed: r.speed,
     }));
     localStorage.setItem(ringsKey(), JSON.stringify(data));
   }catch(e){}
@@ -1852,25 +1857,33 @@ function layoutOrbitRingDefs(defs){
   const focusLayout = { r:1.46, base:[ 0.54, 1.02,-0.46], fan:[ 0.34,-0.24, 0.30] };
 
   const laidOut = [];
-  const golden = Math.PI * (3 - Math.sqrt(5));
+  const atlasFamilies = [
+    { r:1.86, base:[ 0.46, 0.94,-0.38], fan:[ 0.040,-0.030, 0.045], center:[ 0.00, 0.02,-0.02] },
+    { r:2.02, base:[ 0.90,-0.36, 0.24], fan:[-0.035, 0.045,-0.030], center:[ 0.03, 0.00, 0.00] },
+    { r:2.18, base:[-0.58, 0.76, 0.42], fan:[ 0.045, 0.030,-0.035], center:[-0.02,-0.02, 0.03] },
+    { r:2.34, base:[-0.86,-0.28,-0.34], fan:[-0.030, 0.050, 0.032], center:[ 0.02, 0.03,-0.02] },
+    { r:2.50, base:[ 0.18,-0.92, 0.50], fan:[ 0.050, 0.030,-0.028], center:[-0.03, 0.00, 0.02] },
+    { r:2.66, base:[-0.34,-0.72,-0.48], fan:[-0.040, 0.035, 0.042], center:[ 0.00,-0.03, 0.00] },
+    { r:2.82, base:[ 1.02, 0.20,-0.54], fan:[-0.030,-0.040, 0.036], center:[ 0.03, 0.02,-0.03] },
+    { r:2.98, base:[-0.72, 0.88, 0.10], fan:[ 0.036,-0.035,-0.040], center:[-0.02, 0.01, 0.03] },
+  ];
   AI_MAIN_CATEGORIES.forEach((main, mainIndex) => {
     const subs = byMain.get(main.id) || [];
+    const family = atlasFamilies[mainIndex % atlasFamilies.length];
     const centeredOffset = (subs.length - 1) / 2;
     subs.forEach((def, subIndex) => {
       const subOffset = subIndex - centeredOffset;
-      const globalIndex = laidOut.length;
-      const phase = globalIndex * golden + mainIndex * 0.31;
       const focusRadius = focusLayout.r + subIndex * 0.09 + Math.abs(subOffset) * 0.012;
-      const defaultRadius = 1.78 + globalIndex * 0.115 + (mainIndex % 2) * 0.045;
+      const defaultRadius = family.r + subIndex * 0.045 + Math.abs(subOffset) * 0.010;
       const focusTilt = [
         focusLayout.base[0] + focusLayout.fan[0] * subOffset,
         focusLayout.base[1] + focusLayout.fan[1] * subOffset,
         focusLayout.base[2] + focusLayout.fan[2] * subOffset,
       ];
       const defaultTilt = [
-        Math.sin(phase) * 1.08 + (mainIndex % 3 - 1) * 0.18,
-        Math.cos(phase * 0.87) * 1.18,
-        Math.sin(phase * 1.21 + 0.6) * 0.92,
+        family.base[0] + family.fan[0] * subOffset,
+        family.base[1] + family.fan[1] * subOffset,
+        family.base[2] + family.fan[2] * subOffset,
       ];
       laidOut.push({
         ...def,
@@ -1879,10 +1892,11 @@ function layoutOrbitRingDefs(defs){
         defaultR: defaultRadius,
         defaultTilt,
         defaultCenter: [
-          Math.cos(phase) * 0.34,
-          Math.sin(phase * 0.73) * 0.20,
-          Math.sin(phase) * 0.34,
+          family.center[0] + subOffset * 0.018,
+          family.center[1] + subOffset * 0.010,
+          family.center[2] - subOffset * 0.018,
         ],
+        defaultPresence: subIndex === 0 ? 1 : subIndex === 1 ? 0.18 : subIndex === 2 ? 0.12 : 0.075,
         speed: RING_BASE_SPEED * Math.pow(RING_BASE_R / focusRadius, 1.38),
       });
     });
@@ -1923,6 +1937,7 @@ function buildRing(def){
     defaultTilt: new THREE.Euler(...(def.defaultTilt || def.tilt)),
     focusCenter: new THREE.Vector3(0, 0, 0),
     defaultCenter: new THREE.Vector3(...(def.defaultCenter || [0, 0, 0])),
+    defaultPresence: def.defaultPresence ?? 1,
     speed: def.speed,
   };
   const grp = new THREE.Group();
@@ -3677,9 +3692,10 @@ function animate(now){
     const orbitPhase = strHash01(cfg.id) * Math.PI * 2;
     const defaultPulse = isFocusedView ? 1 : 0.78 + 0.22 * Math.sin(now * 0.0014 + orbitPhase);
     const defaultSweep = isFocusedView ? 0 : Math.max(0, Math.sin(now * 0.00075 + orbitPhase * 1.7));
-    const targLine = isActive ? 0.38 : isOther ? 0.012 : 0.050 + defaultSweep * 0.018;
-    const targGlow = isActive ? 0.065 : isOther ? 0.002 : 0.011 + defaultSweep * 0.006;
-    const targHl   = isActive ? 0.16 : isFocusedView ? 0.0 : 0.014 * defaultPulse;
+    const presence = cfg.defaultPresence ?? 1;
+    const targLine = isActive ? 0.38 : isOther ? 0.012 : (0.038 + defaultSweep * 0.010) * presence;
+    const targGlow = isActive ? 0.065 : isOther ? 0.002 : (0.008 + defaultSweep * 0.003) * presence;
+    const targHl   = isActive ? 0.16 : isFocusedView ? 0.0 : 0.006 * defaultPulse * Math.min(1, presence * 1.2);
     const k = 1 - Math.pow(0.001, dt); // smooth lerp
     const lineMats = cfg._lineMats || [cfg._lineMat];
     lineMats.forEach((mat, i)=>{
