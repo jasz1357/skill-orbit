@@ -1728,6 +1728,75 @@ const atmoMat = new THREE.ShaderMaterial({
 const atmo = new THREE.Mesh(new THREE.SphereGeometry(EARTH_R*1.04, 64, 64), atmoMat);
 groupOrbit.add(atmo);
 
+// Landing-only main category rings: a curated Saturn-like rainbow system.
+// These are visual signposts for exploration; sub-skill orbits stay hidden
+// until a main category is focused.
+const landingMainRingGroup = new THREE.Group();
+landingMainRingGroup.rotation.set(0.62, 0.04, -0.02);
+groupOrbit.add(landingMainRingGroup);
+const landingMainRings = [];
+
+function buildLandingMainRings(){
+  landingMainRingGroup.clear();
+  landingMainRings.length = 0;
+  const count = Math.max(1, AI_MAIN_CATEGORIES.length);
+  const startR = 1.46;
+  const step = 0.125;
+  const bandW = Math.min(0.052, step * 0.44);
+
+  AI_MAIN_CATEGORIES.forEach((main, i) => {
+    const r = startR + i * step;
+    const color = new THREE.Color(main.color);
+    const bandGeo = new THREE.RingGeometry(r - bandW * 0.5, r + bandW * 0.5, 384, 1);
+    const haloGeo = new THREE.RingGeometry(r - bandW * 0.72, r + bandW * 0.72, 384, 1);
+    const edgeGeo = new THREE.RingGeometry(r + bandW * 0.42, r + bandW * 0.50, 384, 1);
+
+    const bandMat = new THREE.MeshBasicMaterial({
+      color,
+      transparent: true,
+      opacity: 0,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      depthTest: true,
+      depthWrite: false,
+    });
+    const haloMat = new THREE.MeshBasicMaterial({
+      color,
+      transparent: true,
+      opacity: 0,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      depthTest: true,
+      depthWrite: false,
+    });
+    const edgeMat = new THREE.MeshBasicMaterial({
+      color: color.clone().lerp(new THREE.Color('#ffffff'), 0.42),
+      transparent: true,
+      opacity: 0,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      depthTest: true,
+      depthWrite: false,
+    });
+
+    const halo = new THREE.Mesh(haloGeo, haloMat);
+    const band = new THREE.Mesh(bandGeo, bandMat);
+    const edge = new THREE.Mesh(edgeGeo, edgeMat);
+    [halo, band, edge].forEach(mesh => {
+      mesh.rotation.x = Math.PI / 2;
+      landingMainRingGroup.add(mesh);
+    });
+    landingMainRings.push({
+      haloMat,
+      bandMat,
+      edgeMat,
+      phase: i * 0.72 + strHash01(main.id) * Math.PI * 2,
+      emphasis: 0.9 + (i / Math.max(1, count - 1)) * 0.22,
+    });
+  });
+}
+buildLandingMainRings();
+
 // BLOOM atmosphere — thin, subtle moss halo (matches ORBIT's quiet rim)
 const atmoBloomMat = new THREE.ShaderMaterial({
   transparent: true, side: THREE.BackSide, depthWrite: false, blending: THREE.AdditiveBlending,
@@ -1791,7 +1860,7 @@ function oklchToHex(L, C, hDeg){
 // Default rings come from the active theme
 const DEFAULT_RING_DEFS = THEMES[currentTheme].defaultRings;
 
-const RINGS_KEY_BASE = 'skill-orbit-rings-v13';
+const RINGS_KEY_BASE = 'skill-orbit-rings-v14';
 const ringsKey = () => `${RINGS_KEY_BASE}:${currentTheme}`;
 // one-time cleanup of legacy keys (Chinese labels & seeds, pre-theme storage)
 try{
@@ -1887,7 +1956,7 @@ function layoutOrbitRingDefs(defs){
           mainOffset * 0.003,
           0,
         ],
-        defaultPresence: subIndex === 0 ? 1 : 0,
+        defaultPresence: 0,
         speed: RING_BASE_SPEED * Math.pow(RING_BASE_R / focusRadius, 1.38),
       });
     });
@@ -3661,6 +3730,21 @@ function animate(now){
       slideAnim = null;
     }
   }
+
+  const landingVisible = currentTheme === 'orbit' && !activeCatSet;
+  const landingK = 1 - Math.pow(0.001, dt);
+  landingMainRingGroup.visible = currentTheme === 'orbit';
+  landingMainRingGroup.rotation.z += dt * 0.0025 * motionScale;
+  landingMainRings.forEach((ring, i) => {
+    const pulse = 0.84 + 0.16 * Math.sin(now * 0.0012 + ring.phase);
+    const sweep = Math.max(0, Math.sin(now * 0.0007 + ring.phase * 1.4));
+    const bandTarget = landingVisible ? (0.078 + sweep * 0.018) * pulse * ring.emphasis : 0;
+    const haloTarget = landingVisible ? (0.035 + sweep * 0.010) * ring.emphasis : 0;
+    const edgeTarget = landingVisible ? (0.24 + sweep * 0.050) * pulse : 0;
+    ring.bandMat.opacity += (bandTarget - ring.bandMat.opacity) * landingK;
+    ring.haloMat.opacity += (haloTarget - ring.haloMat.opacity) * landingK;
+    ring.edgeMat.opacity += (edgeTarget - ring.edgeMat.opacity) * landingK;
+  });
 
   // animate ring opacity toward target based on activeCat
   for(const cfg of RINGS){
