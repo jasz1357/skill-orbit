@@ -16,45 +16,21 @@ from app.models.ai_skill import AISkillCreate, AISkillRead, AISkillUpdate
 
 
 def ensure_ai_skill_seed(db: Session) -> None:
-    existing_ids = set(db.scalars(select(AISkillRecord.id)).all())
-    existing_signatures = {
-        (record.name, record.category_id, record.tool)
-        for record in db.scalars(select(AISkillRecord)).all()
-    }
-    existing_tools = {
-        (record.tool or "").strip().lower()
-        for record in db.scalars(select(AISkillRecord)).all()
-        if (record.tool or "").strip()
-    }
+    records_by_id = {record.id: record for record in db.scalars(select(AISkillRecord)).all()}
+    seed_ids: set[str] = set()
     now = datetime.now(timezone.utc)
     for item in AI_SKILLS:
         item = _with_subskill(item)
-        signature = (item["name"], item["category_id"], item.get("tool", ""))
-        tool_key = (item.get("tool") or "").strip().lower()
-        if item["id"] in existing_ids or signature in existing_signatures or tool_key in existing_tools:
-            continue
-        db.add(_create_record(item, now))
-        existing_ids.add(item["id"])
-        existing_signatures.add(signature)
-        if tool_key:
-            existing_tools.add(tool_key)
-    for record in db.scalars(select(AISkillRecord).where(AISkillRecord.sub_skill_id == "")).all():
-        sub_skill_id, sub_skill_label = classify_subskill(
-            {
-                "id": record.id,
-                "name": record.name,
-                "category_id": record.category_id,
-                "category_label": record.category_label,
-                "tool": record.tool,
-                "stage": record.stage,
-                "description": record.description,
-                "tags": _loads(record.tags_json),
-                "examples": _loads(record.examples_json),
-            }
-        )
-        record.sub_skill_id = sub_skill_id
-        record.sub_skill_label = sub_skill_label
-        record.updated_at = now
+        seed_ids.add(item["id"])
+        record = records_by_id.get(item["id"])
+        if record:
+            _update_record(record, item, now)
+        else:
+            db.add(_create_record(item, now))
+
+    for record_id, record in records_by_id.items():
+        if record_id not in seed_ids:
+            db.delete(record)
     db.commit()
 
 
@@ -162,6 +138,27 @@ def _create_record(data: dict, now: datetime) -> AISkillRecord:
         created_at=now,
         updated_at=now,
     )
+
+
+def _update_record(record: AISkillRecord, data: dict, now: datetime) -> None:
+    data = _with_subskill(data)
+    record.name = data["name"]
+    record.category_id = data["category_id"]
+    record.category_label = data["category_label"]
+    record.sub_skill_id = data.get("sub_skill_id", "")
+    record.sub_skill_label = data.get("sub_skill_label", "")
+    record.tool = data.get("tool", "")
+    record.stage = data.get("stage", "")
+    record.description = data.get("description", "")
+    record.tags_json = json.dumps(data.get("tags", []), ensure_ascii=False)
+    record.examples_json = json.dumps(data.get("examples", []), ensure_ascii=False)
+    record.input_types_json = json.dumps(data.get("input_types", []), ensure_ascii=False)
+    record.output_types_json = json.dumps(data.get("output_types", []), ensure_ascii=False)
+    record.difficulty = data.get("difficulty", 2)
+    record.importance = data.get("importance", 50)
+    record.is_core = data.get("is_core", False)
+    record.is_active = data.get("is_active", True)
+    record.updated_at = now
 
 
 def _with_subskill(data: dict) -> dict:

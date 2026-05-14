@@ -29,7 +29,7 @@
     display:block;
     transition:transform .28s cubic-bezier(.2,.8,.2,1);
   }
-  body.ai-db-open canvas{ transform:translateX(220px); }
+  body.ai-db-open canvas{ transform:translateX(420px); }
 
   /* ---------- HUD chrome ---------- */
   .hud{
@@ -1020,6 +1020,25 @@
     line-height:1.5;
     letter-spacing:0;
     text-transform:none;
+  }
+  .db-skill .actions{
+    display:flex;
+    gap:8px;
+    margin-top:8px;
+  }
+  .db-skill .site{
+    border:1px solid rgba(126,214,230,.32);
+    color:#a8f1ff;
+    background:rgba(126,214,230,.06);
+    padding:4px 7px;
+    font-size:8px;
+    letter-spacing:.10em;
+    text-decoration:none;
+  }
+  .db-skill .site:hover{
+    border-color:rgba(126,214,230,.62);
+    color:#e8feff;
+    box-shadow:0 0 12px rgba(126,214,230,.16);
   }
   .db-skill .chips{
     display:flex;

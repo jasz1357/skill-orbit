@@ -2572,6 +2572,16 @@ function escapeHtml(s){
   return String(s || '').replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
 }
 
+function firstAiSkillWebsite(skill){
+  return (skill?.examples || []).find(x => /^https?:\/\//i.test(String(x || '').trim())) || '';
+}
+
+function renderAiSkillWebsite(skill){
+  const url = firstAiSkillWebsite(skill);
+  if(!url) return '';
+  return `<a class="site" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">官网 ↗</a>`;
+}
+
 function setText(selector, value){
   const el = document.querySelector(selector);
   if(el) el.textContent = value;
@@ -3039,7 +3049,7 @@ function renderAiDbList(){
       const catOk = aiDbCategory === 'all' || skill.category_id === aiDbCategory;
       if(!catOk) return false;
       if(!q) return true;
-      const hay = `${skill.name} ${skill.tool} ${skill.category_label} ${skill.stage} ${skill.description} ${(skill.tags||[]).join(' ')}`.toLowerCase();
+      const hay = `${skill.name} ${skill.tool} ${skill.category_label} ${skill.stage} ${skill.description} ${(skill.tags||[]).join(' ')} ${(skill.examples||[]).join(' ')}`.toLowerCase();
       return hay.includes(q);
     });
     if(!filtered.length){
@@ -3054,6 +3064,7 @@ function renderAiDbList(){
         </div>
         <div class="meta">${escapeHtml(categoryMetaLabel(skill))} · ${escapeHtml(skill.tool || t('tool'))} · ${escapeHtml(translateText(skill.stage || t('stage')))}</div>
         <div class="desc">${escapeHtml(displaySkillDescription(skill))}</div>
+        <div class="actions">${renderAiSkillWebsite(skill)}</div>
       </article>
     `).join('');
     return;
