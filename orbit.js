@@ -1745,14 +1745,71 @@ const LANDING_RING_PALETTE = [
   { core:'#39ffb6', halo:'#b5fff1', inner:'#e2fff6', outer:'#00b8ff' },
   { core:'#6ae6ff', halo:'#d7fff9', inner:'#f2ffff', outer:'#5a8cff' },
 ];
+const landingRingHitMeshes = [];
+
+function makeLandingSilkMaterial(palette, phase){
+  return new THREE.ShaderMaterial({
+    transparent: true,
+    side: THREE.DoubleSide,
+    depthTest: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    uniforms: {
+      uCore: { value: new THREE.Color(palette.core) },
+      uHalo: { value: new THREE.Color(palette.halo) },
+      uInner: { value: new THREE.Color(palette.inner) },
+      uOuter: { value: new THREE.Color(palette.outer) },
+      uOpacity: { value: 0 },
+      uTime: { value: 0 },
+      uPhase: { value: phase },
+    },
+    vertexShader: `
+      varying vec2 vUv;
+      void main(){
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      varying vec2 vUv;
+      uniform vec3 uCore;
+      uniform vec3 uHalo;
+      uniform vec3 uInner;
+      uniform vec3 uOuter;
+      uniform float uOpacity;
+      uniform float uTime;
+      uniform float uPhase;
+      void main(){
+        vec2 p = vUv - 0.5;
+        float a = atan(p.y, p.x);
+        float r = length(p) * 2.0;
+        float radial = smoothstep(0.70, 1.0, r);
+        float silk = 0.5 + 0.5 * sin(a * 10.0 + uTime * 0.58 + uPhase);
+        float fine = 0.5 + 0.5 * sin(a * 28.0 - uTime * 0.34 + uPhase * 1.7);
+        float sheen = pow(silk, 4.0) * 0.34 + fine * 0.10;
+        vec3 cool = mix(uCore, uHalo, 0.34 + sheen);
+        vec3 warmEdge = mix(uInner, uOuter, radial);
+        vec3 color = mix(cool, warmEdge, radial * 0.42);
+        float alpha = uOpacity * (0.74 + sheen);
+        gl_FragColor = vec4(color, alpha);
+      }
+    `,
+  });
+}
+
+function setLandingOpacity(mat, value){
+  if(mat.uniforms?.uOpacity) mat.uniforms.uOpacity.value = value;
+  else mat.opacity = value;
+}
 
 function buildLandingMainRings(){
   landingMainRingGroup.clear();
   landingMainRings.length = 0;
+  landingRingHitMeshes.length = 0;
   const count = Math.max(1, AI_MAIN_CATEGORIES.length);
   const startR = 1.46;
-  const step = 0.125;
-  const bandW = Math.min(0.052, step * 0.44);
+  const step = 0.145;
+  const bandW = Math.min(0.092, step * 0.64);
 
   AI_MAIN_CATEGORIES.forEach((main, i) => {
     const r = startR + i * step;
@@ -1765,16 +1822,10 @@ function buildLandingMainRings(){
     const haloGeo = new THREE.RingGeometry(r - bandW * 0.72, r + bandW * 0.72, 384, 1);
     const innerEdgeGeo = new THREE.RingGeometry(r - bandW * 0.50, r - bandW * 0.38, 384, 1);
     const outerEdgeGeo = new THREE.RingGeometry(r + bandW * 0.38, r + bandW * 0.50, 384, 1);
+    const hitGeo = new THREE.RingGeometry(r - bandW * 0.68, r + bandW * 0.68, 192, 1);
 
-    const bandMat = new THREE.MeshBasicMaterial({
-      color,
-      transparent: true,
-      opacity: 0,
-      side: THREE.DoubleSide,
-      blending: THREE.AdditiveBlending,
-      depthTest: true,
-      depthWrite: false,
-    });
+    const phase = i * 0.72 + strHash01(main.id) * Math.PI * 2;
+    const bandMat = makeLandingSilkMaterial(palette, phase);
     const haloMat = new THREE.MeshBasicMaterial({
       color: haloColor,
       transparent: true,
@@ -1802,21 +1853,32 @@ function buildLandingMainRings(){
       depthTest: true,
       depthWrite: false,
     });
+    const hitMat = new THREE.MeshBasicMaterial({
+      color,
+      transparent: true,
+      opacity: 0,
+      side: THREE.DoubleSide,
+      depthTest: false,
+      depthWrite: false,
+    });
 
     const halo = new THREE.Mesh(haloGeo, haloMat);
     const band = new THREE.Mesh(bandGeo, bandMat);
     const innerEdge = new THREE.Mesh(innerEdgeGeo, innerEdgeMat);
     const outerEdge = new THREE.Mesh(outerEdgeGeo, outerEdgeMat);
-    [halo, band, innerEdge, outerEdge].forEach(mesh => {
+    const hit = new THREE.Mesh(hitGeo, hitMat);
+    hit.userData.landingMainId = main.id;
+    [halo, band, innerEdge, outerEdge, hit].forEach(mesh => {
       mesh.rotation.x = Math.PI / 2;
       landingMainRingGroup.add(mesh);
     });
+    landingRingHitMeshes.push(hit);
     landingMainRings.push({
       haloMat,
       bandMat,
       innerEdgeMat,
       outerEdgeMat,
-      phase: i * 0.72 + strHash01(main.id) * Math.PI * 2,
+      phase,
       emphasis: 0.9 + (i / Math.max(1, count - 1)) * 0.22,
     });
   });
@@ -2387,6 +2449,18 @@ addEventListener('pointermove', (e)=>{
   tooltipEl.style.left = e.clientX + 'px';
   tooltipEl.style.top  = e.clientY + 'px';
 });
+
+function updateMouseFromEvent(e){
+  mouse.x = (e.clientX / innerWidth)*2 - 1;
+  mouse.y = -(e.clientY / innerHeight)*2 + 1;
+}
+
+function getLandingRingHit(){
+  if(currentTheme !== 'orbit' || activeCatSet) return null;
+  ray.setFromCamera(mouse, camera);
+  const hits = ray.intersectObjects(landingRingHitMeshes, false);
+  return hits[0]?.object?.userData?.landingMainId || null;
+}
 
 // ---------------- UI ----------------
 const $ = (s)=>document.querySelector(s);
@@ -3401,7 +3475,13 @@ addEventListener('keydown', (e)=>{
 
 // click on canvas to open node
 renderer.domElement.addEventListener('click', (e)=>{
-  // use current mouse coords already tracked
+  updateMouseFromEvent(e);
+  const landingMainId = getLandingRingHit();
+  if(landingMainId){
+    setActiveCategory(landingMainId);
+    return;
+  }
+
   ray.setFromCamera(mouse, camera);
   const hits = ray.intersectObjects(memoryNodes.map(n=>n.mesh), false);
   if(hits.length){
@@ -3762,16 +3842,21 @@ function animate(now){
   landingMainRingGroup.visible = currentTheme === 'orbit';
   landingMainRingGroup.rotation.z += dt * 0.0025 * motionScale;
   landingMainRings.forEach((ring, i) => {
+    if(ring.bandMat.uniforms?.uTime) ring.bandMat.uniforms.uTime.value = now * 0.001;
     const pulse = 0.84 + 0.16 * Math.sin(now * 0.0012 + ring.phase);
     const sweep = Math.max(0, Math.sin(now * 0.0007 + ring.phase * 1.4));
-    const bandTarget = landingVisible ? (0.090 + sweep * 0.020) * pulse * ring.emphasis : 0;
-    const haloTarget = landingVisible ? (0.048 + sweep * 0.014) * ring.emphasis : 0;
-    const innerEdgeTarget = landingVisible ? (0.20 + sweep * 0.050) * pulse : 0;
-    const outerEdgeTarget = landingVisible ? (0.26 + sweep * 0.060) * pulse : 0;
-    ring.bandMat.opacity += (bandTarget - ring.bandMat.opacity) * landingK;
+    const bandNow = ring.bandMat.uniforms?.uOpacity?.value ?? ring.bandMat.opacity ?? 0;
+    const haloNow = ring.haloMat.opacity ?? 0;
+    const innerNow = ring.innerEdgeMat.opacity ?? 0;
+    const outerNow = ring.outerEdgeMat.opacity ?? 0;
+    const bandTarget = landingVisible ? (0.115 + sweep * 0.026) * pulse * ring.emphasis : 0;
+    const haloTarget = landingVisible ? (0.058 + sweep * 0.016) * ring.emphasis : 0;
+    const innerEdgeTarget = landingVisible ? (0.22 + sweep * 0.055) * pulse : 0;
+    const outerEdgeTarget = landingVisible ? (0.28 + sweep * 0.064) * pulse : 0;
+    setLandingOpacity(ring.bandMat, bandNow + (bandTarget - bandNow) * landingK);
     ring.haloMat.opacity += (haloTarget - ring.haloMat.opacity) * landingK;
-    ring.innerEdgeMat.opacity += (innerEdgeTarget - ring.innerEdgeMat.opacity) * landingK;
-    ring.outerEdgeMat.opacity += (outerEdgeTarget - ring.outerEdgeMat.opacity) * landingK;
+    ring.innerEdgeMat.opacity += (innerEdgeTarget - innerNow) * landingK;
+    ring.outerEdgeMat.opacity += (outerEdgeTarget - outerNow) * landingK;
   });
 
   // animate ring opacity toward target based on activeCat
@@ -3905,7 +3990,17 @@ function animate(now){
       document.body.style.cursor = 'pointer';
     }
   } else {
-    if(hovered){ tooltipEl.classList.remove('show'); document.body.style.cursor=''; hovered = null; }
+    const landingMainId = getLandingRingHit();
+    if(landingMainId){
+      document.body.style.cursor = 'pointer';
+      if(hovered){ tooltipEl.classList.remove('show'); hovered = null; }
+    } else if(hovered){
+      tooltipEl.classList.remove('show');
+      document.body.style.cursor='';
+      hovered = null;
+    } else {
+      document.body.style.cursor='';
+    }
   }
 
   renderer.render(scene, camera);
