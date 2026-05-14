@@ -3674,8 +3674,8 @@ function animate(now){
     cfg._group.rotation.z += (targetTilt.z - cfg._group.rotation.z) * poseK;
     cfg._group.position.lerp(targetCenter, poseK);
 
-    const targLine = isActive ? 0.38 : isOther ? 0.012 : 0.010;
-    const targGlow = isActive ? 0.065 : isOther ? 0.002 : 0.0012;
+    const targLine = isActive ? 0.38 : isOther ? 0.012 : 0.026;
+    const targGlow = isActive ? 0.065 : isOther ? 0.002 : 0.006;
     const targHl   = isActive ? 0.16 : 0.0;
     const k = 1 - Math.pow(0.001, dt); // smooth lerp
     const lineMats = cfg._lineMats || [cfg._lineMat];
