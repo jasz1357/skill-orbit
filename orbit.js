@@ -3674,14 +3674,18 @@ function animate(now){
     cfg._group.rotation.z += (targetTilt.z - cfg._group.rotation.z) * poseK;
     cfg._group.position.lerp(targetCenter, poseK);
 
-    const targLine = isActive ? 0.38 : isOther ? 0.012 : 0.026;
-    const targGlow = isActive ? 0.065 : isOther ? 0.002 : 0.006;
-    const targHl   = isActive ? 0.16 : 0.0;
+    const orbitPhase = strHash01(cfg.id) * Math.PI * 2;
+    const defaultPulse = isFocusedView ? 1 : 0.78 + 0.22 * Math.sin(now * 0.0014 + orbitPhase);
+    const defaultSweep = isFocusedView ? 0 : Math.max(0, Math.sin(now * 0.00075 + orbitPhase * 1.7));
+    const targLine = isActive ? 0.38 : isOther ? 0.012 : 0.050 + defaultSweep * 0.018;
+    const targGlow = isActive ? 0.065 : isOther ? 0.002 : 0.011 + defaultSweep * 0.006;
+    const targHl   = isActive ? 0.16 : isFocusedView ? 0.0 : 0.014 * defaultPulse;
     const k = 1 - Math.pow(0.001, dt); // smooth lerp
     const lineMats = cfg._lineMats || [cfg._lineMat];
     lineMats.forEach((mat, i)=>{
       const weight = i === 0 ? 1 : i === 1 ? 0.62 : 0.42;
-      mat.opacity += (targLine * weight - mat.opacity) * k;
+      const arcPulse = isFocusedView ? 1 : 0.72 + 0.28 * Math.sin(now * 0.0011 + orbitPhase + i * 1.8);
+      mat.opacity += (targLine * weight * arcPulse - mat.opacity) * k;
     });
     cfg._glowMat.opacity += (targGlow - cfg._glowMat.opacity) * k;
     cfg._hlMat.opacity   += (targHl   - cfg._hlMat.opacity)   * k;
@@ -3709,7 +3713,7 @@ function animate(now){
     const tw = 0.82 + 0.14*Math.sin(now*0.003 + n.twinklePhase);
     const isFocusedNode = n._selected || hovered === n || (activeCatSet && activeCatSet.has(n.cat));
     const parentScale = n.ring._displayScale || 1;
-    const baseNodeScale = activeCatSet ? 0.085 : 0.040;
+    const baseNodeScale = activeCatSet ? 0.085 : 0.045;
     let s = (isFocusedNode ? 0.15 : baseNodeScale) * tw;
     if(n._selected) s = 0.28 * (0.9 + 0.15*Math.sin(now*0.012));
 
@@ -3726,7 +3730,7 @@ function animate(now){
     const depthScale   = THREE.MathUtils.lerp(1.0, 0.42, depthT);
     const depthOpacity = activeCatSet
       ? THREE.MathUtils.lerp(0.26, 0.075, depthT)
-      : THREE.MathUtils.lerp(0.14, 0.030, depthT);
+      : THREE.MathUtils.lerp(0.20, 0.045, depthT);
     s *= depthScale;
 
     // category focus: boost active cat nodes, dim others
