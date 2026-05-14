@@ -1791,7 +1791,7 @@ function oklchToHex(L, C, hDeg){
 // Default rings come from the active theme
 const DEFAULT_RING_DEFS = THEMES[currentTheme].defaultRings;
 
-const RINGS_KEY_BASE = 'skill-orbit-rings-v10';
+const RINGS_KEY_BASE = 'skill-orbit-rings-v11';
 const ringsKey = () => `${RINGS_KEY_BASE}:${currentTheme}`;
 // one-time cleanup of legacy keys (Chinese labels & seeds, pre-theme storage)
 try{
@@ -1850,35 +1850,27 @@ function layoutOrbitRingDefs(defs){
   });
 
   const focusLayout = { r:1.46, base:[ 0.54, 1.02,-0.46], fan:[ 0.34,-0.24, 0.30] };
-  const defaultLayouts = {
-    'ai-models':   { r:1.66, base:[ 1.08,-0.72, 0.32], fan:[-0.25, 0.34,-0.20], center:[-0.08, 0.03, 0.08], spread:[ 0.12, 0.08, 0.20] },
-    'ai-coding':   { r:1.96, base:[ 0.60, 0.88,-0.38], fan:[ 0.30,-0.18, 0.28], center:[ 0.06, 0.02,-0.05], spread:[-0.10, 0.10, 0.22] },
-    'ai-visual':   { r:2.26, base:[-0.70, 0.62, 0.46], fan:[ 0.22, 0.30,-0.24], center:[ 0.05,-0.04, 0.02], spread:[ 0.12,-0.08, 0.20] },
-    'ai-media':    { r:2.56, base:[-1.02,-0.28,-0.34], fan:[-0.18, 0.36, 0.22], center:[-0.05, 0.02,-0.04], spread:[-0.12,-0.08, 0.20] },
-    'ai-office':   { r:2.86, base:[ 0.26,-1.02, 0.52], fan:[ 0.36, 0.22,-0.18], center:[ 0.04, 0.04, 0.06], spread:[ 0.10, 0.10,-0.22] },
-    'ai-research': { r:3.16, base:[-0.42,-0.86,-0.52], fan:[-0.28, 0.24, 0.26], center:[-0.02,-0.04, 0.04], spread:[-0.12, 0.08,-0.20] },
-    'ai-agent':    { r:3.46, base:[ 1.12, 0.22,-0.62], fan:[-0.22,-0.34, 0.24], center:[ 0.08,-0.02,-0.08], spread:[ 0.12,-0.10,-0.20] },
-    'ai-business': { r:3.76, base:[-0.82, 0.96, 0.12], fan:[ 0.24,-0.26,-0.30], center:[-0.06, 0.04, 0.02], spread:[-0.10, 0.10, 0.18] },
-  };
 
   const laidOut = [];
+  const golden = Math.PI * (3 - Math.sqrt(5));
   AI_MAIN_CATEGORIES.forEach((main, mainIndex) => {
     const subs = byMain.get(main.id) || [];
-    const defaultLayout = defaultLayouts[main.id] || { r:1.7 + mainIndex * 0.3, base:tiltFromId(main.id), fan:[0.24, -0.22, 0.18], center:[0,0,0], spread:[0.1,0.08,0.16] };
     const centeredOffset = (subs.length - 1) / 2;
     subs.forEach((def, subIndex) => {
       const subOffset = subIndex - centeredOffset;
+      const globalIndex = laidOut.length;
+      const phase = globalIndex * golden + mainIndex * 0.31;
       const focusRadius = focusLayout.r + subIndex * 0.09 + Math.abs(subOffset) * 0.012;
-      const defaultRadius = defaultLayout.r + subIndex * 0.18 + Math.abs(subOffset) * 0.02;
+      const defaultRadius = 1.78 + globalIndex * 0.115 + (mainIndex % 2) * 0.045;
       const focusTilt = [
         focusLayout.base[0] + focusLayout.fan[0] * subOffset,
         focusLayout.base[1] + focusLayout.fan[1] * subOffset,
         focusLayout.base[2] + focusLayout.fan[2] * subOffset,
       ];
       const defaultTilt = [
-        defaultLayout.base[0] + defaultLayout.fan[0] * subOffset,
-        defaultLayout.base[1] + defaultLayout.fan[1] * subOffset,
-        defaultLayout.base[2] + defaultLayout.fan[2] * subOffset,
+        Math.sin(phase) * 1.08 + (mainIndex % 3 - 1) * 0.18,
+        Math.cos(phase * 0.87) * 1.18,
+        Math.sin(phase * 1.21 + 0.6) * 0.92,
       ];
       laidOut.push({
         ...def,
@@ -1887,9 +1879,9 @@ function layoutOrbitRingDefs(defs){
         defaultR: defaultRadius,
         defaultTilt,
         defaultCenter: [
-          defaultLayout.center[0] + defaultLayout.spread[0] * subOffset,
-          defaultLayout.center[1] + defaultLayout.spread[1] * subOffset,
-          defaultLayout.center[2] + defaultLayout.spread[2] * subOffset,
+          Math.cos(phase) * 0.34,
+          Math.sin(phase * 0.73) * 0.20,
+          Math.sin(phase) * 0.34,
         ],
         speed: RING_BASE_SPEED * Math.pow(RING_BASE_R / focusRadius, 1.38),
       });
@@ -2807,10 +2799,11 @@ function representativeItemsBySubSkill(skills, libraryItems=[]){
       .slice(0, Math.max(0, 3 - skillNodes.length))
       .map(normalizeAiLibraryItemToNode);
     const chosen = [...skillNodes, ...libraryNodes].slice(0, 3);
+    const ringIndex = RINGS.indexOf(ring);
     chosen.forEach((node, index) => {
-      const base = strHash01(`${ring.id}:anchor`) * Math.PI * 2;
-      const spread = chosen.length === 1 ? 0 : (Math.PI * 2) / chosen.length;
-      selected.push({ ...node, angle: base + index * spread });
+      const base = (ringIndex * Math.PI * (3 - Math.sqrt(5)) + strHash01(`${ring.id}:anchor`) * 0.65) % (Math.PI * 2);
+      const spread = chosen.length === 1 ? Math.PI : (Math.PI * 2) / chosen.length;
+      selected.push({ ...node, angle: base + index * spread + ringIndex * 0.11 });
     });
   }
   return selected;
