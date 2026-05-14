@@ -1791,7 +1791,7 @@ function oklchToHex(L, C, hDeg){
 // Default rings come from the active theme
 const DEFAULT_RING_DEFS = THEMES[currentTheme].defaultRings;
 
-const RINGS_KEY_BASE = 'skill-orbit-rings-v9';
+const RINGS_KEY_BASE = 'skill-orbit-rings-v10';
 const ringsKey = () => `${RINGS_KEY_BASE}:${currentTheme}`;
 // one-time cleanup of legacy keys (Chinese labels & seeds, pre-theme storage)
 try{
@@ -1849,23 +1849,49 @@ function layoutOrbitRingDefs(defs){
     bucket.push(def);
   });
 
-  const mainLayout = { r:1.46, base:[ 0.54, 1.02,-0.46], fan:[ 0.34,-0.24, 0.30] };
+  const focusLayout = { r:1.46, base:[ 0.54, 1.02,-0.46], fan:[ 0.34,-0.24, 0.30] };
+  const defaultLayouts = {
+    'ai-models':   { r:1.66, base:[ 1.08,-0.72, 0.32], fan:[-0.25, 0.34,-0.20], center:[-0.08, 0.03, 0.08], spread:[ 0.12, 0.08, 0.20] },
+    'ai-coding':   { r:1.96, base:[ 0.60, 0.88,-0.38], fan:[ 0.30,-0.18, 0.28], center:[ 0.06, 0.02,-0.05], spread:[-0.10, 0.10, 0.22] },
+    'ai-visual':   { r:2.26, base:[-0.70, 0.62, 0.46], fan:[ 0.22, 0.30,-0.24], center:[ 0.05,-0.04, 0.02], spread:[ 0.12,-0.08, 0.20] },
+    'ai-media':    { r:2.56, base:[-1.02,-0.28,-0.34], fan:[-0.18, 0.36, 0.22], center:[-0.05, 0.02,-0.04], spread:[-0.12,-0.08, 0.20] },
+    'ai-office':   { r:2.86, base:[ 0.26,-1.02, 0.52], fan:[ 0.36, 0.22,-0.18], center:[ 0.04, 0.04, 0.06], spread:[ 0.10, 0.10,-0.22] },
+    'ai-research': { r:3.16, base:[-0.42,-0.86,-0.52], fan:[-0.28, 0.24, 0.26], center:[-0.02,-0.04, 0.04], spread:[-0.12, 0.08,-0.20] },
+    'ai-agent':    { r:3.46, base:[ 1.12, 0.22,-0.62], fan:[-0.22,-0.34, 0.24], center:[ 0.08,-0.02,-0.08], spread:[ 0.12,-0.10,-0.20] },
+    'ai-business': { r:3.76, base:[-0.82, 0.96, 0.12], fan:[ 0.24,-0.26,-0.30], center:[-0.06, 0.04, 0.02], spread:[-0.10, 0.10, 0.18] },
+  };
 
   const laidOut = [];
   AI_MAIN_CATEGORIES.forEach((main, mainIndex) => {
     const subs = byMain.get(main.id) || [];
+    const defaultLayout = defaultLayouts[main.id] || { r:1.7 + mainIndex * 0.3, base:tiltFromId(main.id), fan:[0.24, -0.22, 0.18], center:[0,0,0], spread:[0.1,0.08,0.16] };
     const centeredOffset = (subs.length - 1) / 2;
     subs.forEach((def, subIndex) => {
       const subOffset = subIndex - centeredOffset;
-      const radius = mainLayout.r + subIndex * 0.09 + Math.abs(subOffset) * 0.012;
-      const tiltX = mainLayout.base[0] + mainLayout.fan[0] * subOffset;
-      const tiltY = mainLayout.base[1] + mainLayout.fan[1] * subOffset;
-      const tiltZ = mainLayout.base[2] + mainLayout.fan[2] * subOffset;
+      const focusRadius = focusLayout.r + subIndex * 0.09 + Math.abs(subOffset) * 0.012;
+      const defaultRadius = defaultLayout.r + subIndex * 0.18 + Math.abs(subOffset) * 0.02;
+      const focusTilt = [
+        focusLayout.base[0] + focusLayout.fan[0] * subOffset,
+        focusLayout.base[1] + focusLayout.fan[1] * subOffset,
+        focusLayout.base[2] + focusLayout.fan[2] * subOffset,
+      ];
+      const defaultTilt = [
+        defaultLayout.base[0] + defaultLayout.fan[0] * subOffset,
+        defaultLayout.base[1] + defaultLayout.fan[1] * subOffset,
+        defaultLayout.base[2] + defaultLayout.fan[2] * subOffset,
+      ];
       laidOut.push({
         ...def,
-        r: radius,
-        tilt: [tiltX, tiltY, tiltZ],
-        speed: RING_BASE_SPEED * Math.pow(RING_BASE_R / radius, 1.38),
+        r: focusRadius,
+        tilt: focusTilt,
+        defaultR: defaultRadius,
+        defaultTilt,
+        defaultCenter: [
+          defaultLayout.center[0] + defaultLayout.spread[0] * subOffset,
+          defaultLayout.center[1] + defaultLayout.spread[1] * subOffset,
+          defaultLayout.center[2] + defaultLayout.spread[2] * subOffset,
+        ],
+        speed: RING_BASE_SPEED * Math.pow(RING_BASE_R / focusRadius, 1.38),
       });
     });
   });
@@ -1899,10 +1925,20 @@ function buildRing(def){
     r: def.r,
     color: new THREE.Color(def.color),
     tilt: new THREE.Euler(def.tilt[0], def.tilt[1], def.tilt[2]),
+    focusR: def.r,
+    focusTilt: new THREE.Euler(def.tilt[0], def.tilt[1], def.tilt[2]),
+    defaultR: def.defaultR || def.r,
+    defaultTilt: new THREE.Euler(...(def.defaultTilt || def.tilt)),
+    focusCenter: new THREE.Vector3(0, 0, 0),
+    defaultCenter: new THREE.Vector3(...(def.defaultCenter || [0, 0, 0])),
     speed: def.speed,
   };
   const grp = new THREE.Group();
-  grp.rotation.copy(cfg.tilt);
+  grp.rotation.copy(cfg.defaultTilt);
+  grp.position.copy(cfg.defaultCenter);
+  const defaultScale = cfg.defaultR / cfg.focusR;
+  grp.scale.setScalar(defaultScale);
+  cfg._displayScale = defaultScale;
   // attach to whichever planet group is currently active so rings slide with the planet
   (currentTheme === 'bloom' ? groupBloom : groupOrbit).add(grp);
   ringGroups[cfg.id] = grp;
@@ -3631,8 +3667,22 @@ function animate(now){
   for(const cfg of RINGS){
     const isActive = activeCatSet ? activeCatSet.has(cfg.id) : false;
     const isOther  = activeCatSet && !isActive;
-    const targLine = isActive ? 0.38 : isOther ? 0.012 : 0.030;
-    const targGlow = isActive ? 0.065 : isOther ? 0.002 : 0.004;
+    const isFocusedView = !!activeCatSet;
+    const targetR = isFocusedView ? cfg.focusR : cfg.defaultR;
+    const targetScale = targetR / cfg.focusR;
+    const targetTilt = isFocusedView ? cfg.focusTilt : cfg.defaultTilt;
+    const targetCenter = isFocusedView ? cfg.focusCenter : cfg.defaultCenter;
+    const poseK = 1 - Math.pow(0.00008, dt);
+    cfg._displayScale = cfg._displayScale || cfg._group.scale.x || 1;
+    cfg._displayScale += (targetScale - cfg._displayScale) * poseK;
+    cfg._group.scale.setScalar(cfg._displayScale);
+    cfg._group.rotation.x += (targetTilt.x - cfg._group.rotation.x) * poseK;
+    cfg._group.rotation.y += (targetTilt.y - cfg._group.rotation.y) * poseK;
+    cfg._group.rotation.z += (targetTilt.z - cfg._group.rotation.z) * poseK;
+    cfg._group.position.lerp(targetCenter, poseK);
+
+    const targLine = isActive ? 0.38 : isOther ? 0.012 : 0.010;
+    const targGlow = isActive ? 0.065 : isOther ? 0.002 : 0.0012;
     const targHl   = isActive ? 0.16 : 0.0;
     const k = 1 - Math.pow(0.001, dt); // smooth lerp
     const lineMats = cfg._lineMats || [cfg._lineMat];
@@ -3665,7 +3715,9 @@ function animate(now){
     // twinkle scale: default nodes sit back like a quiet starfield.
     const tw = 0.82 + 0.14*Math.sin(now*0.003 + n.twinklePhase);
     const isFocusedNode = n._selected || hovered === n || (activeCatSet && activeCatSet.has(n.cat));
-    let s = (isFocusedNode ? 0.15 : 0.085) * tw;
+    const parentScale = n.ring._displayScale || 1;
+    const baseNodeScale = activeCatSet ? 0.085 : 0.040;
+    let s = (isFocusedNode ? 0.15 : baseNodeScale) * tw;
     if(n._selected) s = 0.28 * (0.9 + 0.15*Math.sin(now*0.012));
 
     // ---- depth attenuation ----
@@ -3679,7 +3731,9 @@ function animate(now){
     const far  = camWorld.length() + n.ring.r;
     const depthT = THREE.MathUtils.clamp((distCam - near) / Math.max(0.001, far - near), 0, 1);
     const depthScale   = THREE.MathUtils.lerp(1.0, 0.42, depthT);
-    const depthOpacity = THREE.MathUtils.lerp(0.26, 0.075, depthT);
+    const depthOpacity = activeCatSet
+      ? THREE.MathUtils.lerp(0.26, 0.075, depthT)
+      : THREE.MathUtils.lerp(0.14, 0.030, depthT);
     s *= depthScale;
 
     // category focus: boost active cat nodes, dim others
@@ -3711,7 +3765,8 @@ function animate(now){
       n.mesh.material.opacity += (targetOpacity - n.mesh.material.opacity) * km;
     }
 
-    n.mesh.scale.set(s, s, s);
+    const localS = s / Math.max(0.001, parentScale);
+    n.mesh.scale.set(localS, localS, localS);
   }
 
   // hover detection (sprites only)
