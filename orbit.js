@@ -1735,6 +1735,16 @@ const landingMainRingGroup = new THREE.Group();
 landingMainRingGroup.rotation.set(0.62, 0.04, -0.02);
 groupOrbit.add(landingMainRingGroup);
 const landingMainRings = [];
+const LANDING_RING_PALETTE = [
+  { core:'#00f6ff', halo:'#95ffff', inner:'#f4ffff', outer:'#2f6bff' },
+  { core:'#2f6bff', halo:'#7ff4ff', inner:'#cfe8ff', outer:'#745cff' },
+  { core:'#745cff', halo:'#89f7ff', inner:'#e5dcff', outer:'#c84dff' },
+  { core:'#d94dff', halo:'#9cffff', inner:'#ffd7ff', outer:'#ff3fae' },
+  { core:'#ff3fae', halo:'#8dfff4', inner:'#ffe1f5', outer:'#ff7a45' },
+  { core:'#ffb238', halo:'#50ffe0', inner:'#fff4bd', outer:'#c7ff48' },
+  { core:'#39ffb6', halo:'#b5fff1', inner:'#e2fff6', outer:'#00b8ff' },
+  { core:'#6ae6ff', halo:'#d7fff9', inner:'#f2ffff', outer:'#5a8cff' },
+];
 
 function buildLandingMainRings(){
   landingMainRingGroup.clear();
@@ -1746,10 +1756,15 @@ function buildLandingMainRings(){
 
   AI_MAIN_CATEGORIES.forEach((main, i) => {
     const r = startR + i * step;
-    const color = new THREE.Color(main.color);
+    const palette = LANDING_RING_PALETTE[i % LANDING_RING_PALETTE.length];
+    const color = new THREE.Color(palette.core);
+    const haloColor = new THREE.Color(palette.halo);
+    const innerColor = new THREE.Color(palette.inner);
+    const outerColor = new THREE.Color(palette.outer);
     const bandGeo = new THREE.RingGeometry(r - bandW * 0.5, r + bandW * 0.5, 384, 1);
     const haloGeo = new THREE.RingGeometry(r - bandW * 0.72, r + bandW * 0.72, 384, 1);
-    const edgeGeo = new THREE.RingGeometry(r + bandW * 0.42, r + bandW * 0.50, 384, 1);
+    const innerEdgeGeo = new THREE.RingGeometry(r - bandW * 0.50, r - bandW * 0.38, 384, 1);
+    const outerEdgeGeo = new THREE.RingGeometry(r + bandW * 0.38, r + bandW * 0.50, 384, 1);
 
     const bandMat = new THREE.MeshBasicMaterial({
       color,
@@ -1761,7 +1776,7 @@ function buildLandingMainRings(){
       depthWrite: false,
     });
     const haloMat = new THREE.MeshBasicMaterial({
-      color,
+      color: haloColor,
       transparent: true,
       opacity: 0,
       side: THREE.DoubleSide,
@@ -1769,8 +1784,17 @@ function buildLandingMainRings(){
       depthTest: true,
       depthWrite: false,
     });
-    const edgeMat = new THREE.MeshBasicMaterial({
-      color: color.clone().lerp(new THREE.Color('#ffffff'), 0.42),
+    const innerEdgeMat = new THREE.MeshBasicMaterial({
+      color: innerColor,
+      transparent: true,
+      opacity: 0,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      depthTest: true,
+      depthWrite: false,
+    });
+    const outerEdgeMat = new THREE.MeshBasicMaterial({
+      color: outerColor,
       transparent: true,
       opacity: 0,
       side: THREE.DoubleSide,
@@ -1781,15 +1805,17 @@ function buildLandingMainRings(){
 
     const halo = new THREE.Mesh(haloGeo, haloMat);
     const band = new THREE.Mesh(bandGeo, bandMat);
-    const edge = new THREE.Mesh(edgeGeo, edgeMat);
-    [halo, band, edge].forEach(mesh => {
+    const innerEdge = new THREE.Mesh(innerEdgeGeo, innerEdgeMat);
+    const outerEdge = new THREE.Mesh(outerEdgeGeo, outerEdgeMat);
+    [halo, band, innerEdge, outerEdge].forEach(mesh => {
       mesh.rotation.x = Math.PI / 2;
       landingMainRingGroup.add(mesh);
     });
     landingMainRings.push({
       haloMat,
       bandMat,
-      edgeMat,
+      innerEdgeMat,
+      outerEdgeMat,
       phase: i * 0.72 + strHash01(main.id) * Math.PI * 2,
       emphasis: 0.9 + (i / Math.max(1, count - 1)) * 0.22,
     });
@@ -3738,12 +3764,14 @@ function animate(now){
   landingMainRings.forEach((ring, i) => {
     const pulse = 0.84 + 0.16 * Math.sin(now * 0.0012 + ring.phase);
     const sweep = Math.max(0, Math.sin(now * 0.0007 + ring.phase * 1.4));
-    const bandTarget = landingVisible ? (0.078 + sweep * 0.018) * pulse * ring.emphasis : 0;
-    const haloTarget = landingVisible ? (0.035 + sweep * 0.010) * ring.emphasis : 0;
-    const edgeTarget = landingVisible ? (0.24 + sweep * 0.050) * pulse : 0;
+    const bandTarget = landingVisible ? (0.090 + sweep * 0.020) * pulse * ring.emphasis : 0;
+    const haloTarget = landingVisible ? (0.048 + sweep * 0.014) * ring.emphasis : 0;
+    const innerEdgeTarget = landingVisible ? (0.20 + sweep * 0.050) * pulse : 0;
+    const outerEdgeTarget = landingVisible ? (0.26 + sweep * 0.060) * pulse : 0;
     ring.bandMat.opacity += (bandTarget - ring.bandMat.opacity) * landingK;
     ring.haloMat.opacity += (haloTarget - ring.haloMat.opacity) * landingK;
-    ring.edgeMat.opacity += (edgeTarget - ring.edgeMat.opacity) * landingK;
+    ring.innerEdgeMat.opacity += (innerEdgeTarget - ring.innerEdgeMat.opacity) * landingK;
+    ring.outerEdgeMat.opacity += (outerEdgeTarget - ring.outerEdgeMat.opacity) * landingK;
   });
 
   // animate ring opacity toward target based on activeCat
