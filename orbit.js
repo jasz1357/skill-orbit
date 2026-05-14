@@ -1753,7 +1753,7 @@ function makeLandingSilkMaterial(palette, phase){
     side: THREE.DoubleSide,
     depthTest: true,
     depthWrite: false,
-    blending: THREE.AdditiveBlending,
+    blending: THREE.NormalBlending,
     uniforms: {
       uCore: { value: new THREE.Color(palette.core) },
       uHalo: { value: new THREE.Color(palette.halo) },
@@ -1786,11 +1786,13 @@ function makeLandingSilkMaterial(palette, phase){
         float radial = smoothstep(0.70, 1.0, r);
         float silk = 0.5 + 0.5 * sin(a * 10.0 + uTime * 0.58 + uPhase);
         float fine = 0.5 + 0.5 * sin(a * 28.0 - uTime * 0.34 + uPhase * 1.7);
-        float sheen = pow(silk, 4.0) * 0.34 + fine * 0.10;
-        vec3 cool = mix(uCore, uHalo, 0.34 + sheen);
+        float thread = 0.5 + 0.5 * sin(a * 72.0 + r * 18.0 + uTime * 0.18 + uPhase);
+        float sheen = pow(silk, 5.0) * 0.18 + fine * 0.055 + thread * 0.035;
+        vec3 silver = vec3(0.76, 0.84, 0.88);
+        vec3 cool = mix(mix(uCore, silver, 0.42), uHalo, 0.18 + sheen);
         vec3 warmEdge = mix(uInner, uOuter, radial);
-        vec3 color = mix(cool, warmEdge, radial * 0.42);
-        float alpha = uOpacity * (0.74 + sheen);
+        vec3 color = mix(cool, warmEdge, radial * 0.20);
+        float alpha = uOpacity * (0.36 + sheen);
         gl_FragColor = vec4(color, alpha);
       }
     `,
@@ -3849,10 +3851,10 @@ function animate(now){
     const haloNow = ring.haloMat.opacity ?? 0;
     const innerNow = ring.innerEdgeMat.opacity ?? 0;
     const outerNow = ring.outerEdgeMat.opacity ?? 0;
-    const bandTarget = landingVisible ? (0.115 + sweep * 0.026) * pulse * ring.emphasis : 0;
-    const haloTarget = landingVisible ? (0.058 + sweep * 0.016) * ring.emphasis : 0;
-    const innerEdgeTarget = landingVisible ? (0.22 + sweep * 0.055) * pulse : 0;
-    const outerEdgeTarget = landingVisible ? (0.28 + sweep * 0.064) * pulse : 0;
+    const bandTarget = landingVisible ? (0.078 + sweep * 0.018) * pulse * ring.emphasis : 0;
+    const haloTarget = landingVisible ? (0.044 + sweep * 0.012) * ring.emphasis : 0;
+    const innerEdgeTarget = landingVisible ? (0.105 + sweep * 0.030) * pulse : 0;
+    const outerEdgeTarget = landingVisible ? (0.135 + sweep * 0.036) * pulse : 0;
     setLandingOpacity(ring.bandMat, bandNow + (bandTarget - bandNow) * landingK);
     ring.haloMat.opacity += (haloTarget - ring.haloMat.opacity) * landingK;
     ring.innerEdgeMat.opacity += (innerEdgeTarget - innerNow) * landingK;
