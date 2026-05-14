@@ -1808,82 +1808,6 @@ function buildLandingMainRings(){
   landingMainRingGroup.clear();
   landingMainRings.length = 0;
   landingRingHitMeshes.length = 0;
-  const count = Math.max(1, AI_MAIN_CATEGORIES.length);
-  const startR = 1.46;
-  const step = 0.145;
-  const bandW = Math.min(0.092, step * 0.64);
-
-  AI_MAIN_CATEGORIES.forEach((main, i) => {
-    const r = startR + i * step;
-    const palette = LANDING_RING_PALETTE[i % LANDING_RING_PALETTE.length];
-    const color = new THREE.Color(palette.core);
-    const haloColor = new THREE.Color(palette.halo);
-    const innerColor = new THREE.Color(palette.inner);
-    const outerColor = new THREE.Color(palette.outer);
-    const bandGeo = new THREE.RingGeometry(r - bandW * 0.5, r + bandW * 0.5, 384, 1);
-    const haloGeo = new THREE.RingGeometry(r - bandW * 0.72, r + bandW * 0.72, 384, 1);
-    const innerEdgeGeo = new THREE.RingGeometry(r - bandW * 0.50, r - bandW * 0.38, 384, 1);
-    const outerEdgeGeo = new THREE.RingGeometry(r + bandW * 0.38, r + bandW * 0.50, 384, 1);
-    const hitGeo = new THREE.RingGeometry(r - bandW * 0.68, r + bandW * 0.68, 192, 1);
-
-    const phase = i * 0.72 + strHash01(main.id) * Math.PI * 2;
-    const bandMat = makeLandingSilkMaterial(palette, phase);
-    const haloMat = new THREE.MeshBasicMaterial({
-      color: haloColor,
-      transparent: true,
-      opacity: 0,
-      side: THREE.DoubleSide,
-      blending: THREE.AdditiveBlending,
-      depthTest: true,
-      depthWrite: false,
-    });
-    const innerEdgeMat = new THREE.MeshBasicMaterial({
-      color: innerColor,
-      transparent: true,
-      opacity: 0,
-      side: THREE.DoubleSide,
-      blending: THREE.AdditiveBlending,
-      depthTest: true,
-      depthWrite: false,
-    });
-    const outerEdgeMat = new THREE.MeshBasicMaterial({
-      color: outerColor,
-      transparent: true,
-      opacity: 0,
-      side: THREE.DoubleSide,
-      blending: THREE.AdditiveBlending,
-      depthTest: true,
-      depthWrite: false,
-    });
-    const hitMat = new THREE.MeshBasicMaterial({
-      color,
-      transparent: true,
-      opacity: 0,
-      side: THREE.DoubleSide,
-      depthTest: false,
-      depthWrite: false,
-    });
-
-    const halo = new THREE.Mesh(haloGeo, haloMat);
-    const band = new THREE.Mesh(bandGeo, bandMat);
-    const innerEdge = new THREE.Mesh(innerEdgeGeo, innerEdgeMat);
-    const outerEdge = new THREE.Mesh(outerEdgeGeo, outerEdgeMat);
-    const hit = new THREE.Mesh(hitGeo, hitMat);
-    hit.userData.landingMainId = main.id;
-    [halo, band, innerEdge, outerEdge, hit].forEach(mesh => {
-      mesh.rotation.x = Math.PI / 2;
-      landingMainRingGroup.add(mesh);
-    });
-    landingRingHitMeshes.push(hit);
-    landingMainRings.push({
-      haloMat,
-      bandMat,
-      innerEdgeMat,
-      outerEdgeMat,
-      phase,
-      emphasis: 0.9 + (i / Math.max(1, count - 1)) * 0.22,
-    });
-  });
 }
 buildLandingMainRings();
 
@@ -2127,10 +2051,35 @@ function buildRing(def){
   hl.rotation.x = Math.PI/2;
   grp.add(hl);
 
+  const beaconMats = [];
+  const beacons = Array.from({ length: 3 }, (_, i) => {
+    const mat = new THREE.SpriteMaterial({
+      map: spriteTex(),
+      color: cfg.color,
+      transparent: true,
+      opacity: 0,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const sp = new THREE.Sprite(mat);
+    sp.userData = { isOrbitBeacon: true };
+    sp.scale.set(0.14, 0.14, 0.14);
+    grp.add(sp);
+    beaconMats.push(mat);
+    return {
+      mesh: sp,
+      mat,
+      phase: offset + i * Math.PI * 2 / 3 + strHash01(`${cfg.id}:beacon:${i}`) * 0.42,
+      speed: cfg.speed * (0.72 + i * 0.16),
+    };
+  });
+
   cfg._lineMats = arcMats;
   cfg._lineMat = arcMats[0];
   cfg._glowMat = glowMat;
   cfg._hlMat = hlMat;
+  cfg._beacons = beacons;
+  cfg._beaconMats = beaconMats;
   cfg._group = grp;
   RINGS.push(cfg);
   return cfg;
@@ -2458,10 +2407,7 @@ function updateMouseFromEvent(e){
 }
 
 function getLandingRingHit(){
-  if(currentTheme !== 'orbit' || activeCatSet) return null;
-  ray.setFromCamera(mouse, camera);
-  const hits = ray.intersectObjects(landingRingHitMeshes, false);
-  return hits[0]?.object?.userData?.landingMainId || null;
+  return null;
 }
 
 // ---------------- UI ----------------
@@ -3841,7 +3787,8 @@ function animate(now){
 
   const landingVisible = currentTheme === 'orbit' && !activeCatSet;
   const landingK = 1 - Math.pow(0.001, dt);
-  landingMainRingGroup.visible = currentTheme === 'orbit';
+  starfield.visible = true;
+  landingMainRingGroup.visible = false;
   landingMainRingGroup.rotation.z += dt * 0.0025 * motionScale;
   landingMainRings.forEach((ring, i) => {
     if(ring.bandMat.uniforms?.uTime) ring.bandMat.uniforms.uTime.value = now * 0.001;
@@ -3895,6 +3842,21 @@ function animate(now){
     });
     cfg._glowMat.opacity += (targGlow - cfg._glowMat.opacity) * k;
     cfg._hlMat.opacity   += (targHl   - cfg._hlMat.opacity)   * k;
+
+    (cfg._beacons || []).forEach((beacon, i) => {
+      const angle = beacon.phase + now * 0.001 * beacon.speed * 8.0;
+      const wobble = Math.sin(angle * 2.0 + orbitPhase) * 0.014;
+      beacon.mesh.position.set(
+        Math.cos(angle) * cfg.r,
+        wobble,
+        Math.sin(angle) * cfg.r
+      );
+      const target = isActive ? 0.78 + 0.18 * Math.sin(now * 0.003 + beacon.phase) : 0;
+      beacon.mat.opacity += (target - beacon.mat.opacity) * k;
+      const scale = (isActive ? 0.13 + i * 0.015 : 0.001) / Math.max(0.001, cfg._displayScale || 1);
+      beacon.mesh.scale.setScalar(scale);
+      beacon.mesh.visible = beacon.mat.opacity > 0.006;
+    });
   }
 
   // camera world position, used for depth-based attenuation below
@@ -3902,7 +3864,7 @@ function animate(now){
 
   // animate nodes
   for(const n of memoryNodes){
-    n.mesh.visible = !!activeCatSet || n._selected;
+    n.mesh.visible = !!n._selected;
     if(!n.mesh.visible) continue;
     // motion: pause non-active categories when one is solo'd, and apply
     // global motionScale (pause / hover-slowdown).
