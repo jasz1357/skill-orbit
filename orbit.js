@@ -1791,7 +1791,7 @@ function oklchToHex(L, C, hDeg){
 // Default rings come from the active theme
 const DEFAULT_RING_DEFS = THEMES[currentTheme].defaultRings;
 
-const RINGS_KEY_BASE = 'skill-orbit-rings-v12';
+const RINGS_KEY_BASE = 'skill-orbit-rings-v13';
 const ringsKey = () => `${RINGS_KEY_BASE}:${currentTheme}`;
 // one-time cleanup of legacy keys (Chinese labels & seeds, pre-theme storage)
 try{
@@ -1857,33 +1857,24 @@ function layoutOrbitRingDefs(defs){
   const focusLayout = { r:1.46, base:[ 0.54, 1.02,-0.46], fan:[ 0.34,-0.24, 0.30] };
 
   const laidOut = [];
-  const atlasFamilies = [
-    { r:1.86, base:[ 0.46, 0.94,-0.38], fan:[ 0.040,-0.030, 0.045], center:[ 0.00, 0.02,-0.02] },
-    { r:2.02, base:[ 0.90,-0.36, 0.24], fan:[-0.035, 0.045,-0.030], center:[ 0.03, 0.00, 0.00] },
-    { r:2.18, base:[-0.58, 0.76, 0.42], fan:[ 0.045, 0.030,-0.035], center:[-0.02,-0.02, 0.03] },
-    { r:2.34, base:[-0.86,-0.28,-0.34], fan:[-0.030, 0.050, 0.032], center:[ 0.02, 0.03,-0.02] },
-    { r:2.50, base:[ 0.18,-0.92, 0.50], fan:[ 0.050, 0.030,-0.028], center:[-0.03, 0.00, 0.02] },
-    { r:2.66, base:[-0.34,-0.72,-0.48], fan:[-0.040, 0.035, 0.042], center:[ 0.00,-0.03, 0.00] },
-    { r:2.82, base:[ 1.02, 0.20,-0.54], fan:[-0.030,-0.040, 0.036], center:[ 0.03, 0.02,-0.03] },
-    { r:2.98, base:[-0.72, 0.88, 0.10], fan:[ 0.036,-0.035,-0.040], center:[-0.02, 0.01, 0.03] },
-  ];
+  const saturnBaseTilt = [0.62, 0.04, -0.02];
   AI_MAIN_CATEGORIES.forEach((main, mainIndex) => {
     const subs = byMain.get(main.id) || [];
-    const family = atlasFamilies[mainIndex % atlasFamilies.length];
     const centeredOffset = (subs.length - 1) / 2;
+    const mainOffset = mainIndex - (AI_MAIN_CATEGORIES.length - 1) / 2;
     subs.forEach((def, subIndex) => {
       const subOffset = subIndex - centeredOffset;
       const focusRadius = focusLayout.r + subIndex * 0.09 + Math.abs(subOffset) * 0.012;
-      const defaultRadius = family.r + subIndex * 0.045 + Math.abs(subOffset) * 0.010;
+      const defaultRadius = 1.74 + mainIndex * 0.075;
       const focusTilt = [
         focusLayout.base[0] + focusLayout.fan[0] * subOffset,
         focusLayout.base[1] + focusLayout.fan[1] * subOffset,
         focusLayout.base[2] + focusLayout.fan[2] * subOffset,
       ];
       const defaultTilt = [
-        family.base[0] + family.fan[0] * subOffset,
-        family.base[1] + family.fan[1] * subOffset,
-        family.base[2] + family.fan[2] * subOffset,
+        saturnBaseTilt[0] + mainOffset * 0.010,
+        saturnBaseTilt[1] + mainOffset * 0.004,
+        saturnBaseTilt[2] + mainOffset * 0.003,
       ];
       laidOut.push({
         ...def,
@@ -1892,11 +1883,11 @@ function layoutOrbitRingDefs(defs){
         defaultR: defaultRadius,
         defaultTilt,
         defaultCenter: [
-          family.center[0] + subOffset * 0.018,
-          family.center[1] + subOffset * 0.010,
-          family.center[2] - subOffset * 0.018,
+          0,
+          mainOffset * 0.003,
+          0,
         ],
-        defaultPresence: subIndex === 0 ? 1 : subIndex === 1 ? 0.18 : subIndex === 2 ? 0.12 : 0.075,
+        defaultPresence: subIndex === 0 ? 1 : 0,
         speed: RING_BASE_SPEED * Math.pow(RING_BASE_R / focusRadius, 1.38),
       });
     });
@@ -3690,17 +3681,17 @@ function animate(now){
     cfg._group.position.lerp(targetCenter, poseK);
 
     const orbitPhase = strHash01(cfg.id) * Math.PI * 2;
-    const defaultPulse = isFocusedView ? 1 : 0.78 + 0.22 * Math.sin(now * 0.0014 + orbitPhase);
-    const defaultSweep = isFocusedView ? 0 : Math.max(0, Math.sin(now * 0.00075 + orbitPhase * 1.7));
+    const defaultPulse = isFocusedView ? 1 : 0.88 + 0.12 * Math.sin(now * 0.001 + orbitPhase);
+    const defaultSweep = isFocusedView ? 0 : Math.max(0, Math.sin(now * 0.00055 + orbitPhase * 1.7));
     const presence = cfg.defaultPresence ?? 1;
-    const targLine = isActive ? 0.38 : isOther ? 0.012 : (0.038 + defaultSweep * 0.010) * presence;
-    const targGlow = isActive ? 0.065 : isOther ? 0.002 : (0.008 + defaultSweep * 0.003) * presence;
-    const targHl   = isActive ? 0.16 : isFocusedView ? 0.0 : 0.006 * defaultPulse * Math.min(1, presence * 1.2);
+    const targLine = isActive ? 0.38 : isOther ? 0.012 : (0.17 + defaultSweep * 0.035) * presence;
+    const targGlow = isActive ? 0.065 : isOther ? 0.002 : (0.034 + defaultSweep * 0.010) * presence;
+    const targHl   = isActive ? 0.16 : isFocusedView ? 0.0 : 0.040 * defaultPulse * presence;
     const k = 1 - Math.pow(0.001, dt); // smooth lerp
     const lineMats = cfg._lineMats || [cfg._lineMat];
     lineMats.forEach((mat, i)=>{
       const weight = i === 0 ? 1 : i === 1 ? 0.62 : 0.42;
-      const arcPulse = isFocusedView ? 1 : 0.72 + 0.28 * Math.sin(now * 0.0011 + orbitPhase + i * 1.8);
+      const arcPulse = isFocusedView ? 1 : 0.86 + 0.14 * Math.sin(now * 0.0009 + orbitPhase + i * 1.8);
       mat.opacity += (targLine * weight * arcPulse - mat.opacity) * k;
     });
     cfg._glowMat.opacity += (targGlow - cfg._glowMat.opacity) * k;
@@ -3712,6 +3703,8 @@ function animate(now){
 
   // animate nodes
   for(const n of memoryNodes){
+    n.mesh.visible = !!activeCatSet || n._selected;
+    if(!n.mesh.visible) continue;
     // motion: pause non-active categories when one is solo'd, and apply
     // global motionScale (pause / hover-slowdown).
     const isActiveCat = !activeCatSet || activeCatSet.has(n.cat);
