@@ -13,21 +13,21 @@ const THEMES = {
     tagline: 'A LIVING MAP OF AI CAPABILITIES',
     defaultRings: [
       { id:'models-general-assistants',      mainId:'ai-models',   label:'GENERAL AI',       labelCn:'通用助手',       color:'#ffb066', r:1.32, tilt:[ 0.24, 0.10, 0.04], speed:0.064 },
-      { id:'models-reasoning-long-context',  mainId:'ai-models',   label:'REASONING',        labelCn:'推理长上下文',   color:'#ffc47d', r:1.42, tilt:[ 0.32, 0.03, 0.12], speed:0.057 },
+      { id:'models-reasoning-long-context',  mainId:'ai-models',   label:'REASONING',        labelCn:'长文推理',       color:'#ffc47d', r:1.42, tilt:[ 0.32, 0.03, 0.12], speed:0.057 },
       { id:'models-chinese-ecosystem',       mainId:'ai-models',   label:'CHINESE MODELS',   labelCn:'中文模型',       color:'#ffd28f', r:1.52, tilt:[ 0.18, 0.18,-0.06], speed:0.051 },
-      { id:'models-local-open-source',       mainId:'ai-models',   label:'LOCAL MODELS',     labelCn:'本地开源',       color:'#ffdfaa', r:1.62, tilt:[ 0.38,-0.05, 0.09], speed:0.046 },
+      { id:'models-local-open-source',       mainId:'ai-models',   label:'LOCAL MODELS',     labelCn:'本地模型',       color:'#ffdfaa', r:1.62, tilt:[ 0.38,-0.05, 0.09], speed:0.046 },
 
       { id:'coding-app-prototype',           mainId:'ai-coding',   label:'APP PROTOTYPE',    labelCn:'应用原型',       color:'#7ed6e6', r:1.76, tilt:[-0.38, 0.34, 0.12], speed:0.041 },
-      { id:'coding-code-edit-review',        mainId:'ai-coding',   label:'CODE REVIEW',      labelCn:'代码审查',       color:'#8ce2f0', r:1.86, tilt:[-0.46, 0.24, 0.22], speed:0.038 },
+      { id:'coding-code-edit-review',        mainId:'ai-coding',   label:'CODE REVIEW',      labelCn:'代码生成审查',   color:'#8ce2f0', r:1.86, tilt:[-0.46, 0.24, 0.22], speed:0.038 },
       { id:'coding-devops-testing',          mainId:'ai-coding',   label:'DEVOPS QA',        labelCn:'部署测试',       color:'#a2e8f4', r:1.96, tilt:[-0.26, 0.42,-0.02], speed:0.035 },
       { id:'coding-data-backend',            mainId:'ai-coding',   label:'BACKEND API',      labelCn:'后端数据',       color:'#b8eef7', r:2.06, tilt:[-0.54, 0.16,-0.12], speed:0.032 },
 
-      { id:'visual-image-generation',        mainId:'ai-visual',   label:'IMAGE EDIT',       labelCn:'图像修图',       color:'#e69aa3', r:2.20, tilt:[ 0.62,-0.22, 0.10], speed:0.030 },
+      { id:'visual-image-generation',        mainId:'ai-visual',   label:'IMAGE EDIT',       labelCn:'图像生成修图',   color:'#e69aa3', r:2.20, tilt:[ 0.62,-0.22, 0.10], speed:0.030 },
       { id:'visual-brand-design',            mainId:'ai-visual',   label:'BRAND DESIGN',     labelCn:'品牌设计',       color:'#eda8b1', r:2.30, tilt:[ 0.52,-0.34, 0.18], speed:0.028 },
       { id:'visual-ui-prototype',            mainId:'ai-visual',   label:'UI MOCKUP',        labelCn:'UI 产品稿',      color:'#f0b5bd', r:2.40, tilt:[ 0.74,-0.12,-0.04], speed:0.026 },
       { id:'visual-3d-assets',               mainId:'ai-visual',   label:'3D ASSETS',        labelCn:'3D 资产',        color:'#f5c2c9', r:2.50, tilt:[ 0.44,-0.42, 0.04], speed:0.024 },
 
-      { id:'media-video-editing',            mainId:'ai-media',    label:'VIDEO EDIT',       labelCn:'视频剪辑',       color:'#b99cff', r:2.64, tilt:[-0.70,-0.10,-0.15], speed:0.023 },
+      { id:'media-video-editing',            mainId:'ai-media',    label:'VIDEO EDIT',       labelCn:'视频生成剪辑',   color:'#b99cff', r:2.64, tilt:[-0.70,-0.10,-0.15], speed:0.023 },
       { id:'media-audio-voice-music',        mainId:'ai-media',    label:'AUDIO VOICE',      labelCn:'音频语音',       color:'#c5aaff', r:2.74, tilt:[-0.58,-0.24,-0.04], speed:0.021 },
       { id:'media-avatar-livestream',        mainId:'ai-media',    label:'AVATAR LIVE',      labelCn:'数字人直播',     color:'#d1b8ff', r:2.84, tilt:[-0.78, 0.02,-0.22], speed:0.020 },
       { id:'media-social-publishing',        mainId:'ai-media',    label:'SOCIAL PUBLISH',   labelCn:'社媒发布',       color:'#dcc8ff', r:2.94, tilt:[-0.50,-0.36, 0.10], speed:0.019 },
@@ -35,9 +35,9 @@ const THEMES = {
       { id:'office-ppt-decks',               mainId:'ai-office',   label:'PPT DECKS',        labelCn:'PPT 汇报',       color:'#ffe27a', r:3.08, tilt:[ 0.14, 0.52,-0.08], speed:0.018 },
       { id:'office-doc-writing',             mainId:'ai-office',   label:'DOC WRITING',      labelCn:'文档写作',       color:'#ffea96', r:3.18, tilt:[ 0.26, 0.42, 0.08], speed:0.017 },
       { id:'office-sheets-data',             mainId:'ai-office',   label:'SHEETS DATA',      labelCn:'表格数据',       color:'#fff0ad', r:3.28, tilt:[ 0.02, 0.62,-0.16], speed:0.016 },
-      { id:'office-meetings-knowledge',      mainId:'ai-office',   label:'MEETING NOTES',    labelCn:'会议知识库',     color:'#fff5c2', r:3.38, tilt:[ 0.34, 0.30, 0.14], speed:0.015 },
+      { id:'office-meetings-knowledge',      mainId:'ai-office',   label:'MEETING NOTES',    labelCn:'会议知识',       color:'#fff5c2', r:3.38, tilt:[ 0.34, 0.30, 0.14], speed:0.015 },
 
-      { id:'research-web-search',            mainId:'ai-research', label:'SOURCE SEARCH',    labelCn:'来源搜索',       color:'#91e6a7', r:3.52, tilt:[-0.18,-0.46, 0.18], speed:0.014 },
+      { id:'research-web-search',            mainId:'ai-research', label:'SOURCE SEARCH',    labelCn:'来源核查',       color:'#91e6a7', r:3.52, tilt:[-0.18,-0.46, 0.18], speed:0.014 },
       { id:'research-academic-literature',   mainId:'ai-research', label:'PAPERS',           labelCn:'论文文献',       color:'#a3ebb5', r:3.62, tilt:[-0.30,-0.36, 0.04], speed:0.013 },
       { id:'research-market-competitive',    mainId:'ai-research', label:'MARKET INTEL',     labelCn:'市场竞品',       color:'#b6f0c4', r:3.72, tilt:[-0.06,-0.56, 0.26], speed:0.012 },
       { id:'research-data-reports',          mainId:'ai-research', label:'DATA REPORTS',     labelCn:'数据报告',       color:'#c8f5d2', r:3.82, tilt:[-0.36,-0.24, 0.16], speed:0.011 },
@@ -2467,6 +2467,114 @@ const AI_STACK_GROUPS = {
   'data-meeting': new Set(['ai-business', 'ai-office']),
 };
 
+const AI_SUBCATEGORY_LABELS_ZH = {
+  'models-general-assistants': '通用助手',
+  'models-reasoning-long-context': '长文推理',
+  'models-chinese-ecosystem': '中文模型',
+  'models-local-open-source': '本地模型',
+  'coding-app-prototype': '应用原型',
+  'coding-code-edit-review': '代码生成审查',
+  'coding-devops-testing': '部署测试',
+  'coding-data-backend': '后端数据',
+  'visual-image-generation': '图像生成修图',
+  'visual-brand-design': '品牌设计',
+  'visual-ui-prototype': 'UI 产品稿',
+  'visual-3d-assets': '3D 资产',
+  'media-video-editing': '视频生成剪辑',
+  'media-audio-voice-music': '音频语音',
+  'media-avatar-livestream': '数字人直播',
+  'media-social-publishing': '社媒发布',
+  'office-ppt-decks': 'PPT 汇报',
+  'office-doc-writing': '文档写作',
+  'office-sheets-data': '表格数据',
+  'office-meetings-knowledge': '会议知识',
+  'research-web-search': '来源核查',
+  'research-academic-literature': '论文文献',
+  'research-market-competitive': '市场竞品',
+  'research-data-reports': '数据报告',
+  'agent-workflow-automation': '工作流自动化',
+  'agent-browser-task': '浏览器任务',
+  'agent-bots-rag': 'Bot 与 RAG',
+  'agent-api-mcp-integrations': 'API 与 MCP',
+  'business-marketing-growth': '营销增长',
+  'business-sales-crm': '销售 CRM',
+  'business-support-community': '客服社群',
+  'business-ops-finance-legal': '运营法务',
+  'business-ecommerce-product': '电商产品',
+};
+
+const AI_SUBCATEGORY_LABELS_EN = {
+  'models-general-assistants': 'GENERAL AI',
+  'models-reasoning-long-context': 'REASONING',
+  'models-chinese-ecosystem': 'CHINESE MODELS',
+  'models-local-open-source': 'LOCAL MODELS',
+  'coding-app-prototype': 'APP PROTOTYPE',
+  'coding-code-edit-review': 'CODE REVIEW',
+  'coding-devops-testing': 'DEVOPS QA',
+  'coding-data-backend': 'BACKEND API',
+  'visual-image-generation': 'IMAGE EDIT',
+  'visual-brand-design': 'BRAND DESIGN',
+  'visual-ui-prototype': 'UI MOCKUP',
+  'visual-3d-assets': '3D ASSETS',
+  'media-video-editing': 'VIDEO EDIT',
+  'media-audio-voice-music': 'AUDIO VOICE',
+  'media-avatar-livestream': 'AVATAR LIVE',
+  'media-social-publishing': 'SOCIAL PUBLISH',
+  'office-ppt-decks': 'PPT DECKS',
+  'office-doc-writing': 'DOC WRITING',
+  'office-sheets-data': 'SHEETS DATA',
+  'office-meetings-knowledge': 'MEETING NOTES',
+  'research-web-search': 'SOURCE CHECK',
+  'research-academic-literature': 'PAPERS',
+  'research-market-competitive': 'MARKET INTEL',
+  'research-data-reports': 'DATA REPORTS',
+  'agent-workflow-automation': 'WORKFLOW AUTO',
+  'agent-browser-task': 'BROWSER AGENT',
+  'agent-bots-rag': 'BOT RAG',
+  'agent-api-mcp-integrations': 'API MCP',
+  'business-marketing-growth': 'MARKETING SEO',
+  'business-sales-crm': 'SALES CRM',
+  'business-support-community': 'SUPPORT',
+  'business-ops-finance-legal': 'OPS LEGAL',
+  'business-ecommerce-product': 'ECOM PRODUCT',
+};
+
+const AI_SUBCATEGORY_HINTS_ZH = {
+  'models-general-assistants': '日常问答、拆任务、写草稿',
+  'models-reasoning-long-context': '复杂推理、长资料、方案设计',
+  'models-chinese-ecosystem': '中文写作、中文资料、多模态',
+  'models-local-open-source': '本地运行、隐私数据、开源模型',
+  'coding-code-edit-review': '写代码、改代码、审查 diff',
+  'coding-app-prototype': '网页、SaaS、全栈原型',
+  'coding-data-backend': '数据库、认证、API 接入',
+  'coding-devops-testing': '部署、CI、测试和日志',
+  'visual-image-generation': '出图、修图、参考图改造',
+  'visual-brand-design': 'Logo、海报、品牌视觉',
+  'visual-ui-prototype': '产品界面、网站、交互原型',
+  'visual-3d-assets': '3D 模型和资产生成',
+  'media-video-editing': '视频生成、剪辑、分镜',
+  'media-audio-voice-music': '配音、音乐、录音清理',
+  'media-avatar-livestream': '数字人口播和营销视频',
+  'media-social-publishing': '社媒排程和发布',
+  'office-ppt-decks': 'PPT、提案、商业汇报',
+  'office-doc-writing': '文档、翻译、英文润色',
+  'office-sheets-data': '表格分析、公式、图表',
+  'office-meetings-knowledge': '会议纪要、资料问答、知识库',
+  'research-web-search': '联网搜索、来源引用、事实核查',
+  'research-academic-literature': '论文检索、证据、引用',
+  'research-market-competitive': '竞品、关键词、市场情报',
+  'research-data-reports': 'CSV、数据洞察、图表报告',
+  'agent-api-mcp-integrations': 'API、MCP、外部工具连接',
+  'agent-workflow-automation': '触发器、流程、应用集成',
+  'agent-browser-task': '网页操作、表单、多步骤任务',
+  'agent-bots-rag': '知识库 Bot、RAG、Agent 应用',
+  'business-marketing-growth': '营销文案、SEO、增长内容',
+  'business-sales-crm': '线索、CRM、销售外联',
+  'business-support-community': '客服工单、知识库、支持',
+  'business-ops-finance-legal': '合同、法务、运营辅助',
+  'business-ecommerce-product': '店铺、商品、电商运营',
+};
+
 function colorForCat(cat){
   const cfg = RINGS.find(r=>r.id===cat);
   if(cfg) return '#' + cfg.color.getHexString();
@@ -2944,10 +3052,9 @@ function representativeItemsBySubSkill(skills, libraryItems=[]){
 
 function categoryMetaLabel(item){
   const main = displayCategoryLabel(item?.category_label || '');
-  const ring = item?.sub_skill_id ? RINGS.find(r => r.id === item.sub_skill_id) : null;
-  const sub = currentLang === 'zh'
-    ? (ring?.labelCn || item?.sub_skill_label || '')
-    : (item?.sub_skill_label || ring?.label || '');
+  const sub = item?.sub_skill_id
+    ? aiSkillSubCategoryLabel(item.sub_skill_id)
+    : (item?.sub_skill_label || '');
   return sub ? `${main} · ${sub}` : main;
 }
 
@@ -2990,6 +3097,7 @@ const aiDbFilter = document.getElementById('ai-db-filter');
 const aiDbList = document.getElementById('ai-db-list');
 let aiDbType = 'skills';
 let aiDbCategory = 'all';
+let aiDbSubCategory = 'all';
 let aiDbSkills = [];
 let aiDbLibraryItems = [];
 
@@ -3019,6 +3127,41 @@ function stackCategoryMatches(item){
   return stackGroupForItem(item) === aiDbCategory;
 }
 
+function aiSkillSubCategoryLabel(subId){
+  const mapped = currentLang === 'zh'
+    ? AI_SUBCATEGORY_LABELS_ZH[subId]
+    : AI_SUBCATEGORY_LABELS_EN[subId];
+  if(mapped) return mapped;
+  const ring = RINGS.find(r => r.id === subId);
+  if(ring){
+    return currentLang === 'zh' ? (ring.labelCn || ring.label) : ring.label;
+  }
+  return titleFromSlug(subId);
+}
+
+function aiSkillSubCategoryHint(subId){
+  if(currentLang === 'zh') return AI_SUBCATEGORY_HINTS_ZH[subId] || aiSkillSubCategoryLabel(subId);
+  return aiSkillSubCategoryLabel(subId);
+}
+
+function aiSkillSubCategoryOptions(categoryId){
+  if(!Array.isArray(aiDbSkills) || !aiDbSkills.length) return [];
+  const present = new Set(
+    aiDbSkills
+      .filter(skill => skill.category_id === categoryId && skill.sub_skill_id)
+      .map(skill => skill.sub_skill_id)
+  );
+  const ordered = RINGS
+    .filter(ring => ring.mainId === categoryId && present.has(ring.id))
+    .map(ring => [ring.id, aiSkillSubCategoryLabel(ring.id)]);
+  const orderedIds = new Set(ordered.map(([id]) => id));
+  const extras = [...present]
+    .filter(id => !orderedIds.has(id))
+    .sort()
+    .map(id => [id, aiSkillSubCategoryLabel(id)]);
+  return [...ordered, ...extras];
+}
+
 function renderAiDbTypeTabs(){
   if(!aiDbTypeTabs) return;
   aiDbTypeTabs.querySelectorAll('[data-db-type]').forEach(btn => {
@@ -3036,9 +3179,34 @@ function renderAiDbFilters(){
   const filters = aiDbType === 'skills'
     ? (currentLang === 'zh' ? AI_CATEGORY_FILTERS_ZH : AI_CATEGORY_FILTERS)
     : (currentLang === 'zh' ? AI_STACK_FILTERS_ZH : AI_STACK_FILTERS);
-  aiDbFilter.innerHTML = filters.map(([id, label]) =>
-    `<button type="button" data-ai-cat="${id}" class="${aiDbCategory === id ? 'active' : ''}">${label}</button>`
+  const mainButtons = filters.map(([id, label]) =>
+    `<button type="button" data-ai-cat="${id}" class="${aiDbCategory === id ? 'active' : ''}">${escapeHtml(label)}</button>`
   ).join('');
+  if(aiDbType !== 'skills' || aiDbCategory === 'all'){
+    aiDbSubCategory = 'all';
+    aiDbFilter.innerHTML = `<div class="db-filter-row">${mainButtons}</div>`;
+    return;
+  }
+
+  const subOptions = aiSkillSubCategoryOptions(aiDbCategory);
+  if(!subOptions.length){
+    aiDbSubCategory = 'all';
+    aiDbFilter.innerHTML = `<div class="db-filter-row">${mainButtons}</div>`;
+    return;
+  }
+  const hasActiveSub = subOptions.some(([id]) => id === aiDbSubCategory);
+  if(!hasActiveSub) aiDbSubCategory = 'all';
+  const allLabel = currentLang === 'zh' ? '全部小类' : 'ALL SUBTYPES';
+  const subButtons = [['all', allLabel], ...subOptions].map(([id, label]) => {
+    const hint = id === 'all' ? (currentLang === 'zh' ? '显示这个大类下的全部技能' : 'Show every skill in this category') : aiSkillSubCategoryHint(id);
+    return `<button type="button" data-ai-sub="${escapeHtml(id)}" title="${escapeHtml(hint)}" class="${aiDbSubCategory === id ? 'active' : ''}">${escapeHtml(label)}</button>`;
+  }).join('');
+  const label = currentLang === 'zh' ? '继续细分' : 'SUBCATEGORY';
+  aiDbFilter.innerHTML = `
+    <div class="db-filter-row">${mainButtons}</div>
+    <div class="db-filter-label">${escapeHtml(label)}</div>
+    <div class="db-filter-row sub">${subButtons}</div>
+  `;
 }
 
 function renderAiDbList(){
@@ -3048,8 +3216,10 @@ function renderAiDbList(){
     const filtered = aiDbSkills.filter(skill => {
       const catOk = aiDbCategory === 'all' || skill.category_id === aiDbCategory;
       if(!catOk) return false;
+      const subOk = aiDbSubCategory === 'all' || skill.sub_skill_id === aiDbSubCategory;
+      if(!subOk) return false;
       if(!q) return true;
-      const hay = `${skill.name} ${skill.tool} ${skill.category_label} ${skill.stage} ${skill.description} ${(skill.tags||[]).join(' ')} ${(skill.examples||[]).join(' ')}`.toLowerCase();
+      const hay = `${skill.name} ${skill.tool} ${skill.category_label} ${skill.sub_skill_label} ${skill.stage} ${skill.description} ${(skill.tags||[]).join(' ')} ${(skill.examples||[]).join(' ')}`.toLowerCase();
       return hay.includes(q);
     });
     if(!filtered.length){
@@ -3147,13 +3317,22 @@ aiDbTypeTabs?.addEventListener('click', (e)=>{
   if(!btn) return;
   aiDbType = btn.dataset.dbType;
   aiDbCategory = 'all';
+  aiDbSubCategory = 'all';
   if(aiDbSearch) aiDbSearch.value = '';
   loadAiDatabase();
 });
 aiDbFilter?.addEventListener('click', (e)=>{
+  const subBtn = e.target.closest('[data-ai-sub]');
+  if(subBtn){
+    aiDbSubCategory = subBtn.dataset.aiSub || 'all';
+    renderAiDbFilters();
+    renderAiDbList();
+    return;
+  }
   const btn = e.target.closest('[data-ai-cat]');
   if(!btn) return;
   aiDbCategory = btn.dataset.aiCat;
+  aiDbSubCategory = 'all';
   renderAiDbFilters();
   renderAiDbList();
 });

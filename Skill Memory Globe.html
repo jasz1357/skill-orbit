@@ -972,8 +972,24 @@
   .db-filter{
     display:flex;
     flex-wrap:wrap;
-    gap:6px;
+    gap:8px;
     margin-top:10px;
+  }
+  .db-filter-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    width:100%;
+  }
+  .db-filter-row.sub{
+    gap:5px;
+  }
+  .db-filter-label{
+    width:100%;
+    margin:2px 0 -2px;
+    color:rgba(232,230,223,.38);
+    font-size:8px;
+    letter-spacing:.18em;
   }
   .db-filter button{
     border:1px solid var(--line);
@@ -984,6 +1000,12 @@
     letter-spacing:.12em;
     padding:5px 7px;
     cursor:pointer;
+  }
+  .db-filter [data-ai-sub]{
+    font-size:8px;
+    letter-spacing:.08em;
+    color:rgba(232,230,223,.58);
+    background:rgba(255,255,255,.025);
   }
   .db-filter button.active,
   .db-filter button:hover{ color:var(--amber); border-color:rgba(255,176,102,.45); }
