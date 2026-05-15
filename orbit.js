@@ -2539,6 +2539,89 @@ const AI_SUBCATEGORY_LABELS_EN = {
   'business-ecommerce-product': 'ECOM PRODUCT',
 };
 
+const AI_SUBCATEGORY_GROUP_LABELS_ZH = {
+  'models-general-assistants': '通用问答',
+  'models-reasoning-long-context': '长文推理',
+  'models-chinese-ecosystem': '中文模型',
+  'models-local-open-source': '本地模型',
+  'coding-code-edit-review': '写代码 / 审代码',
+  'coding-app-prototype': '做应用原型',
+  'coding-data-backend': '接后端数据',
+  'coding-devops-testing': '部署测试',
+  'visual-image-generation': '生成 / 修图片',
+  'visual-brand-design': '做品牌海报',
+  'visual-ui-prototype': '做 UI 原型',
+  'visual-3d-assets': '做 3D 资产',
+  'media-video-editing': '做视频',
+  'media-audio-voice-music': '配音 / 音乐',
+  'media-avatar-livestream': '做数字人',
+  'media-social-publishing': '发社媒',
+  'office-ppt-decks': '做 PPT',
+  'office-doc-writing': '写文档 / 翻译',
+  'office-sheets-data': '做 Excel',
+  'office-meetings-knowledge': '做会议纪要',
+  'research-web-search': '查资料',
+  'research-academic-literature': '查论文',
+  'research-market-competitive': '做竞品研究',
+  'research-data-reports': '做数据报告',
+  'agent-api-mcp-integrations': '连 API / MCP',
+  'agent-workflow-automation': '搭自动化流程',
+  'agent-browser-task': '做网页任务',
+  'agent-bots-rag': '搭 Bot / RAG',
+  'business-marketing-growth': '做营销内容',
+  'business-sales-crm': '找销售线索',
+  'business-support-community': '做客服支持',
+  'business-ops-finance-legal': '做法务运营',
+  'business-ecommerce-product': '做电商运营',
+};
+
+const AI_SUBCATEGORY_GROUP_LABELS_EN = {
+  'models-general-assistants': 'General Q&A',
+  'models-reasoning-long-context': 'Long Reasoning',
+  'models-chinese-ecosystem': 'Chinese Models',
+  'models-local-open-source': 'Local Models',
+  'coding-code-edit-review': 'Code / Review',
+  'coding-app-prototype': 'App Prototype',
+  'coding-data-backend': 'Backend Data',
+  'coding-devops-testing': 'Deploy / Test',
+  'visual-image-generation': 'Image / Retouch',
+  'visual-brand-design': 'Brand Visuals',
+  'visual-ui-prototype': 'UI Prototype',
+  'visual-3d-assets': '3D Assets',
+  'media-video-editing': 'Video',
+  'media-audio-voice-music': 'Voice / Music',
+  'media-avatar-livestream': 'Avatar Video',
+  'media-social-publishing': 'Social Publish',
+  'office-ppt-decks': 'Make PPT',
+  'office-doc-writing': 'Docs / Translate',
+  'office-sheets-data': 'Excel / Sheets',
+  'office-meetings-knowledge': 'Meeting Notes',
+  'research-web-search': 'Web Research',
+  'research-academic-literature': 'Papers',
+  'research-market-competitive': 'Competitors',
+  'research-data-reports': 'Data Reports',
+  'agent-api-mcp-integrations': 'API / MCP',
+  'agent-workflow-automation': 'Automation Flow',
+  'agent-browser-task': 'Browser Tasks',
+  'agent-bots-rag': 'Bot / RAG',
+  'business-marketing-growth': 'Marketing Content',
+  'business-sales-crm': 'Sales Leads',
+  'business-support-community': 'Support',
+  'business-ops-finance-legal': 'Ops / Legal',
+  'business-ecommerce-product': 'E-commerce Ops',
+};
+
+const AI_SUBCATEGORY_ORDER = {
+  'ai-models': ['models-general-assistants', 'models-reasoning-long-context', 'models-chinese-ecosystem', 'models-local-open-source'],
+  'ai-coding': ['coding-code-edit-review', 'coding-app-prototype', 'coding-data-backend', 'coding-devops-testing'],
+  'ai-visual': ['visual-image-generation', 'visual-brand-design', 'visual-ui-prototype', 'visual-3d-assets'],
+  'ai-media': ['media-video-editing', 'media-audio-voice-music', 'media-avatar-livestream', 'media-social-publishing'],
+  'ai-office': ['office-ppt-decks', 'office-sheets-data', 'office-doc-writing', 'office-meetings-knowledge'],
+  'ai-research': ['research-web-search', 'research-academic-literature', 'research-market-competitive', 'research-data-reports'],
+  'ai-agent': ['agent-workflow-automation', 'agent-api-mcp-integrations', 'agent-browser-task', 'agent-bots-rag'],
+  'ai-business': ['business-marketing-growth', 'business-sales-crm', 'business-ecommerce-product', 'business-support-community', 'business-ops-finance-legal'],
+};
+
 const AI_SUBCATEGORY_HINTS_ZH = {
   'models-general-assistants': '日常问答、拆任务、写草稿',
   'models-reasoning-long-context': '复杂推理、长资料、方案设计',
@@ -3129,8 +3212,8 @@ function stackCategoryMatches(item){
 
 function aiSkillSubCategoryLabel(subId){
   const mapped = currentLang === 'zh'
-    ? AI_SUBCATEGORY_LABELS_ZH[subId]
-    : AI_SUBCATEGORY_LABELS_EN[subId];
+    ? (AI_SUBCATEGORY_GROUP_LABELS_ZH[subId] || AI_SUBCATEGORY_LABELS_ZH[subId])
+    : (AI_SUBCATEGORY_GROUP_LABELS_EN[subId] || AI_SUBCATEGORY_LABELS_EN[subId]);
   if(mapped) return mapped;
   const ring = RINGS.find(r => r.id === subId);
   if(ring){
@@ -3151,15 +3234,99 @@ function aiSkillSubCategoryOptions(categoryId){
       .filter(skill => skill.category_id === categoryId && skill.sub_skill_id)
       .map(skill => skill.sub_skill_id)
   );
-  const ordered = RINGS
-    .filter(ring => ring.mainId === categoryId && present.has(ring.id))
-    .map(ring => [ring.id, aiSkillSubCategoryLabel(ring.id)]);
+  const preferred = AI_SUBCATEGORY_ORDER[categoryId] || RINGS.filter(ring => ring.mainId === categoryId).map(ring => ring.id);
+  const ordered = preferred
+    .filter(id => present.has(id))
+    .map(id => [id, aiSkillSubCategoryLabel(id)]);
   const orderedIds = new Set(ordered.map(([id]) => id));
   const extras = [...present]
     .filter(id => !orderedIds.has(id))
     .sort()
     .map(id => [id, aiSkillSubCategoryLabel(id)]);
   return [...ordered, ...extras];
+}
+
+function aiMainCategoryLabel(categoryId){
+  const main = AI_MAIN_CATEGORIES.find(item => item.id === categoryId);
+  if(!main) return displayCategoryLabel(categoryId);
+  return currentLang === 'zh' ? main.labelCn : main.label;
+}
+
+function aiMainCategoryOrder(categoryId){
+  const index = AI_MAIN_CATEGORIES.findIndex(item => item.id === categoryId);
+  return index === -1 ? 999 : index;
+}
+
+function aiSubCategoryOrder(categoryId, subId){
+  const options = aiSkillSubCategoryOptions(categoryId);
+  const index = options.findIndex(([id]) => id === subId);
+  return index === -1 ? 999 : index;
+}
+
+function renderAiSkillCard(skill){
+  return `
+    <article class="db-skill" data-ai-skill="${escapeHtml(skill.id)}">
+      <div class="top">
+        <span>${escapeHtml(displaySkillName(skill))}</span>
+        ${skill.is_core ? `<span class="core">${escapeHtml(t('core'))}</span>` : ''}
+      </div>
+      <div class="meta">${escapeHtml(categoryMetaLabel(skill))} · ${escapeHtml(skill.tool || t('tool'))} · ${escapeHtml(translateText(skill.stage || t('stage')))}</div>
+      <div class="desc">${escapeHtml(displaySkillDescription(skill))}</div>
+      <div class="actions">${renderAiSkillWebsite(skill)}</div>
+    </article>
+  `;
+}
+
+function renderAiSkillSubGroup(categoryId, subId, skills){
+  const title = aiSkillSubCategoryLabel(subId || categoryId);
+  const hint = aiSkillSubCategoryHint(subId || categoryId);
+  return `
+    <section class="db-skill-group">
+      <header class="db-skill-group-head">
+        <div>
+          <div class="db-skill-group-title">${escapeHtml(title)}</div>
+          <div class="db-skill-group-hint">${escapeHtml(hint)}</div>
+        </div>
+        <span class="db-skill-group-count">${String(skills.length).padStart(2, '0')}</span>
+      </header>
+      ${skills.map(renderAiSkillCard).join('')}
+    </section>
+  `;
+}
+
+function renderAiSkillGroups(skills){
+  const sorted = skills.slice().sort((a, b) =>
+    aiMainCategoryOrder(a.category_id) - aiMainCategoryOrder(b.category_id) ||
+    aiSubCategoryOrder(a.category_id, a.sub_skill_id) - aiSubCategoryOrder(b.category_id, b.sub_skill_id) ||
+    Number(b.importance || 0) - Number(a.importance || 0) ||
+    displaySkillName(a).localeCompare(displaySkillName(b))
+  );
+
+  const byCategory = new Map();
+  sorted.forEach(skill => {
+    const categoryId = skill.category_id || 'unknown';
+    if(!byCategory.has(categoryId)) byCategory.set(categoryId, []);
+    byCategory.get(categoryId).push(skill);
+  });
+
+  return [...byCategory.entries()].map(([categoryId, categorySkills]) => {
+    const bySub = new Map();
+    categorySkills.forEach(skill => {
+      const subId = skill.sub_skill_id || categoryId;
+      if(!bySub.has(subId)) bySub.set(subId, []);
+      bySub.get(subId).push(skill);
+    });
+    const subSections = [...bySub.entries()].map(([subId, subSkills]) =>
+      renderAiSkillSubGroup(categoryId, subId, subSkills)
+    ).join('');
+    if(aiDbCategory !== 'all') return subSections;
+    return `
+      <section class="db-main-group">
+        <div class="db-main-group-title">${escapeHtml(aiMainCategoryLabel(categoryId))}</div>
+        ${subSections}
+      </section>
+    `;
+  }).join('');
 }
 
 function renderAiDbTypeTabs(){
@@ -3182,31 +3349,8 @@ function renderAiDbFilters(){
   const mainButtons = filters.map(([id, label]) =>
     `<button type="button" data-ai-cat="${id}" class="${aiDbCategory === id ? 'active' : ''}">${escapeHtml(label)}</button>`
   ).join('');
-  if(aiDbType !== 'skills' || aiDbCategory === 'all'){
-    aiDbSubCategory = 'all';
-    aiDbFilter.innerHTML = `<div class="db-filter-row">${mainButtons}</div>`;
-    return;
-  }
-
-  const subOptions = aiSkillSubCategoryOptions(aiDbCategory);
-  if(!subOptions.length){
-    aiDbSubCategory = 'all';
-    aiDbFilter.innerHTML = `<div class="db-filter-row">${mainButtons}</div>`;
-    return;
-  }
-  const hasActiveSub = subOptions.some(([id]) => id === aiDbSubCategory);
-  if(!hasActiveSub) aiDbSubCategory = 'all';
-  const allLabel = currentLang === 'zh' ? '全部小类' : 'ALL SUBTYPES';
-  const subButtons = [['all', allLabel], ...subOptions].map(([id, label]) => {
-    const hint = id === 'all' ? (currentLang === 'zh' ? '显示这个大类下的全部技能' : 'Show every skill in this category') : aiSkillSubCategoryHint(id);
-    return `<button type="button" data-ai-sub="${escapeHtml(id)}" title="${escapeHtml(hint)}" class="${aiDbSubCategory === id ? 'active' : ''}">${escapeHtml(label)}</button>`;
-  }).join('');
-  const label = currentLang === 'zh' ? '继续细分' : 'SUBCATEGORY';
-  aiDbFilter.innerHTML = `
-    <div class="db-filter-row">${mainButtons}</div>
-    <div class="db-filter-label">${escapeHtml(label)}</div>
-    <div class="db-filter-row sub">${subButtons}</div>
-  `;
+  aiDbSubCategory = 'all';
+  aiDbFilter.innerHTML = `<div class="db-filter-row">${mainButtons}</div>`;
 }
 
 function renderAiDbList(){
@@ -3216,8 +3360,6 @@ function renderAiDbList(){
     const filtered = aiDbSkills.filter(skill => {
       const catOk = aiDbCategory === 'all' || skill.category_id === aiDbCategory;
       if(!catOk) return false;
-      const subOk = aiDbSubCategory === 'all' || skill.sub_skill_id === aiDbSubCategory;
-      if(!subOk) return false;
       if(!q) return true;
       const hay = `${skill.name} ${skill.tool} ${skill.category_label} ${skill.sub_skill_label} ${skill.stage} ${skill.description} ${(skill.tags||[]).join(' ')} ${(skill.examples||[]).join(' ')}`.toLowerCase();
       return hay.includes(q);
@@ -3226,17 +3368,7 @@ function renderAiDbList(){
       aiDbList.innerHTML = `<div class="db-empty">${escapeHtml(t('noMatchingSkills'))}</div>`;
       return;
     }
-    aiDbList.innerHTML = filtered.map(skill => `
-      <article class="db-skill" data-ai-skill="${escapeHtml(skill.id)}">
-        <div class="top">
-          <span>${escapeHtml(displaySkillName(skill))}</span>
-          ${skill.is_core ? `<span class="core">${escapeHtml(t('core'))}</span>` : ''}
-        </div>
-        <div class="meta">${escapeHtml(categoryMetaLabel(skill))} · ${escapeHtml(skill.tool || t('tool'))} · ${escapeHtml(translateText(skill.stage || t('stage')))}</div>
-        <div class="desc">${escapeHtml(displaySkillDescription(skill))}</div>
-        <div class="actions">${renderAiSkillWebsite(skill)}</div>
-      </article>
-    `).join('');
+    aiDbList.innerHTML = renderAiSkillGroups(filtered);
     return;
   }
 
@@ -3322,13 +3454,6 @@ aiDbTypeTabs?.addEventListener('click', (e)=>{
   loadAiDatabase();
 });
 aiDbFilter?.addEventListener('click', (e)=>{
-  const subBtn = e.target.closest('[data-ai-sub]');
-  if(subBtn){
-    aiDbSubCategory = subBtn.dataset.aiSub || 'all';
-    renderAiDbFilters();
-    renderAiDbList();
-    return;
-  }
   const btn = e.target.closest('[data-ai-cat]');
   if(!btn) return;
   aiDbCategory = btn.dataset.aiCat;
