@@ -1116,8 +1116,42 @@
     letter-spacing:0;
     text-transform:none;
   }
+  .workflow-detail{
+    margin-top:10px;
+  }
+  .workflow-label{
+    color:var(--amber);
+    font-size:8px;
+    letter-spacing:.16em;
+    margin-bottom:5px;
+  }
+  .workflow-text{
+    color:rgba(232,230,223,.74);
+    font-size:10px;
+    line-height:1.55;
+    letter-spacing:0;
+    text-transform:none;
+  }
+  .workflow-steps{
+    display:grid;
+    gap:5px;
+  }
+  .workflow-steps div{
+    display:grid;
+    grid-template-columns:18px 1fr;
+    gap:7px;
+    color:rgba(232,230,223,.74);
+    font-size:10px;
+    line-height:1.5;
+    letter-spacing:0;
+    text-transform:none;
+  }
+  .workflow-steps span{
+    color:rgba(126,214,230,.86);
+  }
   .db-skill .actions{
     display:flex;
+    flex-wrap:wrap;
     gap:8px;
     margin-top:8px;
   }
@@ -1134,6 +1168,11 @@
     border-color:rgba(126,214,230,.62);
     color:#e8feff;
     box-shadow:0 0 12px rgba(126,214,230,.16);
+  }
+  .db-no-link{
+    color:rgba(232,230,223,.42);
+    font-size:9px;
+    letter-spacing:.08em;
   }
   .db-skill .chips{
     display:flex;
@@ -2035,7 +2074,7 @@
   "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
 }}
 </script>
-<script type="module" src="orbit.js?v=20260515-expand-groups"></script>
+<script type="module" src="orbit.js?v=20260515-workflow-accordion"></script>
 
 </body>
 </html>

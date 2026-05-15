@@ -2467,6 +2467,26 @@ const AI_STACK_GROUPS = {
   'data-meeting': new Set(['ai-business', 'ai-office']),
 };
 
+const AI_STACK_GROUP_LABELS_ZH = {
+  creation: '创作交付',
+  research: '研究知识',
+  coding: '编程开发',
+  business: '商务运营',
+  automation: '自动化',
+  'data-meeting': '数据会议',
+};
+
+const AI_STACK_GROUP_LABELS_EN = {
+  creation: 'CREATION',
+  research: 'RESEARCH',
+  coding: 'CODING',
+  business: 'BUSINESS',
+  automation: 'AUTOMATION',
+  'data-meeting': 'DATA / MEETING',
+};
+
+const AI_STACK_GROUP_ORDER = ['creation', 'research', 'coding', 'business', 'automation', 'data-meeting'];
+
 const AI_SUBCATEGORY_LABELS_ZH = {
   'models-general-assistants': '通用助手',
   'models-reasoning-long-context': '长文推理',
@@ -2656,6 +2676,93 @@ const AI_SUBCATEGORY_HINTS_ZH = {
   'business-support-community': '客服工单、知识库、支持',
   'business-ops-finance-legal': '合同、法务、运营辅助',
   'business-ecommerce-product': '店铺、商品、电商运营',
+};
+
+const TOOL_WEBSITES = {
+  'chatgpt': 'https://chatgpt.com',
+  'gpt-4': 'https://chatgpt.com',
+  'gpt-4o': 'https://chatgpt.com',
+  'openai': 'https://platform.openai.com',
+  'claude': 'https://claude.ai',
+  'claude api': 'https://console.anthropic.com',
+  'claude code': 'https://www.anthropic.com/claude-code',
+  'gemini': 'https://gemini.google.com',
+  'perplexity': 'https://www.perplexity.ai',
+  'cursor': 'https://cursor.com',
+  'v0': 'https://v0.dev',
+  'v0.dev': 'https://v0.dev',
+  'bolt': 'https://bolt.new',
+  'bolt.new': 'https://bolt.new',
+  'lovable': 'https://lovable.dev',
+  'replit': 'https://replit.com',
+  'github': 'https://github.com',
+  'github actions': 'https://github.com/features/actions',
+  'copilot': 'https://github.com/features/copilot',
+  'supabase': 'https://supabase.com',
+  'firebase': 'https://firebase.google.com',
+  'vercel': 'https://vercel.com',
+  'netlify': 'https://www.netlify.com',
+  'posthog': 'https://posthog.com',
+  'stripe': 'https://stripe.com',
+  'notion': 'https://www.notion.com',
+  'notion ai': 'https://www.notion.com/product/ai',
+  'confluence': 'https://www.atlassian.com/software/confluence',
+  'slack': 'https://slack.com',
+  'linear': 'https://linear.app',
+  'figma': 'https://www.figma.com',
+  'canva': 'https://www.canva.com',
+  'gamma': 'https://gamma.app',
+  'midjourney': 'https://www.midjourney.com',
+  'runway': 'https://runwayml.com',
+  'suno': 'https://suno.com',
+  'elevenlabs': 'https://elevenlabs.io',
+  'heygen': 'https://www.heygen.com',
+  'buffer': 'https://buffer.com',
+  'whisper': 'https://openai.com/research/whisper',
+  'assemblyai': 'https://www.assemblyai.com',
+  'opus clip': 'https://www.opus.pro',
+  'submagic': 'https://www.submagic.co',
+  'yt-dlp': 'https://github.com/yt-dlp/yt-dlp',
+  'youtube': 'https://www.youtube.com',
+  'deepL': 'https://www.deepl.com',
+  'deepl': 'https://www.deepl.com',
+  'zapier': 'https://zapier.com',
+  'make': 'https://www.make.com',
+  'make.com': 'https://www.make.com',
+  'n8n': 'https://n8n.io',
+  'dify': 'https://dify.ai',
+  'coze': 'https://www.coze.com',
+  'langchain': 'https://www.langchain.com',
+  'llamaindex': 'https://www.llamaindex.ai',
+  'llamaindex': 'https://www.llamaindex.ai',
+  'qdrant': 'https://qdrant.tech',
+  'pinecone': 'https://www.pinecone.io',
+  'langfuse': 'https://langfuse.com',
+  'hubspot': 'https://www.hubspot.com',
+  'salesforce': 'https://www.salesforce.com',
+  'apollo': 'https://www.apollo.io',
+  'clay': 'https://www.clay.com',
+  'intercom': 'https://www.intercom.com',
+  'zendesk': 'https://www.zendesk.com',
+  'shopify': 'https://www.shopify.com',
+  'semrush': 'https://www.semrush.com',
+  'ahrefs': 'https://ahrefs.com',
+  'similarweb': 'https://www.similarweb.com',
+  'notebooklm': 'https://notebooklm.google.com',
+  'elicit': 'https://elicit.com',
+  'consensus': 'https://consensus.app',
+  'zotero': 'https://www.zotero.org',
+  'julius': 'https://julius.ai',
+  'otter': 'https://otter.ai',
+  'fireflies': 'https://fireflies.ai',
+  'granola': 'https://www.granola.ai',
+  'outlook': 'https://outlook.live.com',
+  'google calendar': 'https://calendar.google.com',
+  'google docs': 'https://docs.google.com',
+  'google sheets': 'https://sheets.google.com',
+  'gmail': 'https://mail.google.com',
+  'excel': 'https://www.microsoft.com/microsoft-365/excel',
+  'power bi': 'https://www.microsoft.com/power-platform/products/power-bi',
 };
 
 function colorForCat(cat){
@@ -3338,6 +3445,196 @@ function renderAiSkillGroups(skills){
   }).join('');
 }
 
+function stackMainGroupLabel(groupId){
+  return currentLang === 'zh'
+    ? (AI_STACK_GROUP_LABELS_ZH[groupId] || groupId)
+    : (AI_STACK_GROUP_LABELS_EN[groupId] || titleFromSlug(groupId).toUpperCase());
+}
+
+function stackMainGroupOrder(groupId){
+  const index = AI_STACK_GROUP_ORDER.indexOf(groupId);
+  return index === -1 ? 999 : index;
+}
+
+function stackSubGroupForItem(item){
+  return item?.sub_skill_id || stackGroupForItem(item);
+}
+
+function stackSubGroupLabel(subId){
+  return aiSkillSubCategoryLabel(subId);
+}
+
+function stackSubGroupHint(subId){
+  return aiSkillSubCategoryHint(subId);
+}
+
+function normalizeToolKey(value){
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[（(].*?[)）]/g, '')
+    .replace(/\s+/g, ' ');
+}
+
+function toolWebsite(tool){
+  const key = normalizeToolKey(tool);
+  if(TOOL_WEBSITES[key]) return TOOL_WEBSITES[key];
+  const compact = key.replace(/[^a-z0-9]+/g, '');
+  const hit = Object.keys(TOOL_WEBSITES).find(name => name.replace(/[^a-z0-9]+/g, '') === compact);
+  return hit ? TOOL_WEBSITES[hit] : '';
+}
+
+function cleanLibrarySentence(value){
+  return String(value || '')
+    .replace(/^来自《[^》]+》的工具组合[:：]\s*/i, '')
+    .replace(/^来自《[^》]+》的项目工作流[:：]\s*/i, '')
+    .replace(/^来自[^:：]+[:：]\s*/i, '')
+    .replace(/工具分工[:：]\s*/g, '')
+    .replace(/；/g, '； ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function stackPurpose(item){
+  const title = displayLibraryTitle(item);
+  const tools = (item.tools || []).slice(0, 4).map(displayLibraryChip).join(' + ');
+  const sub = stackSubGroupLabel(stackSubGroupForItem(item));
+  if(currentLang === 'zh'){
+    return `目的：用${tools ? ` ${tools} ` : ' AI 工具'}完成「${title}」，适合${sub}场景。`;
+  }
+  return `Purpose: use ${tools || 'AI tools'} to complete "${title}" for ${sub} work.`;
+}
+
+function stackTutorialSteps(item){
+  const rawSteps = (item.steps || []).map(step => cleanLibrarySentence(displayLibraryChip(step))).filter(Boolean);
+  if(rawSteps.length) return rawSteps.slice(0, 5);
+  const tools = (item.tools || []).slice(0, 5).map(displayLibraryChip).filter(Boolean);
+  if(currentLang === 'zh'){
+    return [
+      '先明确目标、输入素材、交付格式和限制。',
+      tools.length ? `按顺序使用 ${tools.join(' → ')} 处理核心任务。` : '按工作流顺序处理核心任务。',
+      '检查结果是否可交付，补齐缺口和人工判断。',
+      '导出、发布或交给下一个系统继续执行。',
+    ];
+  }
+  return [
+    'Define the goal, inputs, output format, and constraints.',
+    tools.length ? `Run the workflow through ${tools.join(' → ')}.` : 'Run the workflow in order.',
+    'Review the result, fill gaps, and add human judgment.',
+    'Export, publish, or hand off to the next system.',
+  ];
+}
+
+function renderStackTutorial(item){
+  return stackTutorialSteps(item)
+    .map((step, index) => `<div><span>${index + 1}</span>${escapeHtml(step)}</div>`)
+    .join('');
+}
+
+function stackToolLinks(item){
+  const seen = new Set();
+  return (item.tools || [])
+    .map(tool => [displayLibraryChip(tool), toolWebsite(tool)])
+    .filter(([label, url]) => {
+      if(!url || seen.has(url)) return false;
+      seen.add(url);
+      return true;
+    })
+    .slice(0, 8);
+}
+
+function renderStackToolLinks(item){
+  const links = stackToolLinks(item);
+  if(!links.length) return `<span class="db-no-link">${escapeHtml(currentLang === 'zh' ? '暂无官网链接' : 'No official link yet')}</span>`;
+  return links.map(([label, url]) =>
+    `<a class="site" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)} ↗</a>`
+  ).join('');
+}
+
+function renderAiLibraryCard(item){
+  return `
+    <article class="db-skill workflow-card" data-ai-library="${escapeHtml(item.id)}">
+      <div class="top">
+        <span>${escapeHtml(displayLibraryTitle(item))}</span>
+        <span class="core">${escapeHtml(t('stacks'))}</span>
+      </div>
+      <div class="meta">${escapeHtml(categoryMetaLabel(item) || displayCategoryLabel(item.category_label || t('aiLibrary')))} · ${escapeHtml(item.item_type === 'workflow' ? t('workflow') : t('integration'))}</div>
+      <div class="workflow-detail">
+        <div class="workflow-label">${escapeHtml(currentLang === 'zh' ? '目的' : 'Purpose')}</div>
+        <div class="workflow-text">${escapeHtml(stackPurpose(item))}</div>
+      </div>
+      <div class="workflow-detail">
+        <div class="workflow-label">${escapeHtml(currentLang === 'zh' ? '使用教程' : 'How to use')}</div>
+        <div class="workflow-steps">${renderStackTutorial(item)}</div>
+      </div>
+      <div class="workflow-detail">
+        <div class="workflow-label">${escapeHtml(currentLang === 'zh' ? '官网' : 'Official sites')}</div>
+        <div class="actions">${renderStackToolLinks(item)}</div>
+      </div>
+    </article>
+  `;
+}
+
+function renderAiLibrarySubGroup(mainGroup, subId, items){
+  const groupId = `stack::${mainGroup}::${subId || mainGroup}`;
+  const isOpen = aiDbExpandedGroup === groupId || !!(aiDbSearch?.value || '').trim();
+  const actionLabel = currentLang === 'zh' ? (isOpen ? '收起' : '展开') : (isOpen ? 'COLLAPSE' : 'EXPAND');
+  return `
+    <section class="db-skill-group ${isOpen ? 'open' : ''}" data-ai-group="${escapeHtml(groupId)}">
+      <button type="button" class="db-skill-group-head" data-ai-group-toggle="${escapeHtml(groupId)}" aria-expanded="${isOpen ? 'true' : 'false'}">
+        <div>
+          <div class="db-skill-group-title">${escapeHtml(stackSubGroupLabel(subId || mainGroup))}</div>
+          <div class="db-skill-group-hint">${escapeHtml(stackSubGroupHint(subId || mainGroup))}</div>
+        </div>
+        <span class="db-skill-group-meta">
+          <span class="db-skill-group-count">${String(items.length).padStart(2, '0')}</span>
+          <span class="db-skill-group-action">${escapeHtml(actionLabel)}</span>
+        </span>
+      </button>
+      <div class="db-skill-group-body">
+        ${items.map(renderAiLibraryCard).join('')}
+      </div>
+    </section>
+  `;
+}
+
+function renderAiLibraryGroups(items){
+  const sorted = items.slice().sort((a, b) => {
+    const groupA = stackGroupForItem(a);
+    const groupB = stackGroupForItem(b);
+    return stackMainGroupOrder(groupA) - stackMainGroupOrder(groupB) ||
+      aiSubCategoryOrder(a.category_id, stackSubGroupForItem(a)) - aiSubCategoryOrder(b.category_id, stackSubGroupForItem(b)) ||
+      practicalLibraryScore(b) - practicalLibraryScore(a) ||
+      displayLibraryTitle(a).localeCompare(displayLibraryTitle(b));
+  });
+
+  const byMain = new Map();
+  sorted.forEach(item => {
+    const main = stackGroupForItem(item);
+    if(!byMain.has(main)) byMain.set(main, []);
+    byMain.get(main).push(item);
+  });
+
+  return [...byMain.entries()].map(([mainGroup, groupItems]) => {
+    const bySub = new Map();
+    groupItems.forEach(item => {
+      const subId = stackSubGroupForItem(item);
+      if(!bySub.has(subId)) bySub.set(subId, []);
+      bySub.get(subId).push(item);
+    });
+    const subSections = [...bySub.entries()].map(([subId, subItems]) =>
+      renderAiLibrarySubGroup(mainGroup, subId, subItems)
+    ).join('');
+    if(aiDbCategory !== 'all') return subSections;
+    return `
+      <section class="db-main-group">
+        <div class="db-main-group-title">${escapeHtml(stackMainGroupLabel(mainGroup))}</div>
+        ${subSections}
+      </section>
+    `;
+  }).join('');
+}
+
 function renderAiDbTypeTabs(){
   if(!aiDbTypeTabs) return;
   aiDbTypeTabs.querySelectorAll('[data-db-type]').forEach(btn => {
@@ -3395,20 +3692,8 @@ function renderAiDbList(){
     aiDbList.innerHTML = `<div class="db-empty">${escapeHtml(t('noMatchingType', aiDbType))}</div>`;
     return;
   }
-  aiDbList.innerHTML = filtered.map(item => {
-    const primary = item.outputs?.length ? item.outputs : item.tools || [];
-    return `
-      <article class="db-skill" data-ai-library="${escapeHtml(item.id)}">
-        <div class="top">
-          <span>${escapeHtml(displayLibraryTitle(item))}</span>
-          <span class="core">${escapeHtml(t('stacks'))}</span>
-        </div>
-        <div class="meta">${escapeHtml(categoryMetaLabel(item) || displayCategoryLabel(item.category_label || t('aiLibrary')))} · ${escapeHtml(item.item_type === 'workflow' ? t('workflow') : t('integration'))} · ${escapeHtml(displaySourceSection(item.source_section || 'PDF'))}</div>
-        <div class="desc">${escapeHtml(displayLibrarySummary(item))}</div>
-        <div class="chips">${primary.slice(0, 8).map(x => `<span>${escapeHtml(displayLibraryChip(x))}</span>`).join('')}</div>
-      </article>
-    `;
-  }).join('');
+  aiDbList.innerHTML = renderAiLibraryGroups(filtered);
+  aiDbList.scrollTop = previousScroll;
 }
 
 async function loadAiDatabase(){
