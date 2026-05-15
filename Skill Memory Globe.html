@@ -1029,12 +1029,22 @@
     background:linear-gradient(90deg, rgba(255,176,102,.035), transparent 46%);
   }
   .db-skill-group-head{
+    width:100%;
     display:flex;
     justify-content:space-between;
+    align-items:flex-start;
     gap:12px;
     padding:10px 6px 8px;
     border-bottom:1px solid rgba(232,230,223,.08);
+    border-left:0;
+    border-right:0;
+    border-top:0;
+    background:transparent;
+    font-family:inherit;
+    text-align:left;
+    cursor:pointer;
   }
+  .db-skill-group-head:hover .db-skill-group-title{ color:#ffd7a0; }
   .db-skill-group-title{
     color:var(--amber);
     font-size:12px;
@@ -1049,10 +1059,33 @@
     text-transform:none;
   }
   .db-skill-group-count{
-    flex:0 0 auto;
     color:rgba(232,230,223,.45);
     font-size:11px;
     letter-spacing:.16em;
+  }
+  .db-skill-group-meta{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding-top:1px;
+  }
+  .db-skill-group-action{
+    color:rgba(126,214,230,.72);
+    border:1px solid rgba(126,214,230,.22);
+    padding:2px 5px;
+    font-size:8px;
+    letter-spacing:.10em;
+  }
+  .db-skill-group.open .db-skill-group-action{
+    color:var(--amber);
+    border-color:rgba(255,176,102,.38);
+  }
+  .db-skill-group-body{
+    display:none;
+  }
+  .db-skill-group.open .db-skill-group-body{
+    display:block;
   }
   .db-skill{
     border-bottom:1px solid rgba(232,230,223,.08);

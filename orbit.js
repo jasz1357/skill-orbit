@@ -3181,6 +3181,7 @@ const aiDbList = document.getElementById('ai-db-list');
 let aiDbType = 'skills';
 let aiDbCategory = 'all';
 let aiDbSubCategory = 'all';
+let aiDbExpandedGroup = '';
 let aiDbSkills = [];
 let aiDbLibraryItems = [];
 
@@ -3280,16 +3281,24 @@ function renderAiSkillCard(skill){
 function renderAiSkillSubGroup(categoryId, subId, skills){
   const title = aiSkillSubCategoryLabel(subId || categoryId);
   const hint = aiSkillSubCategoryHint(subId || categoryId);
+  const groupId = `${categoryId}::${subId || categoryId}`;
+  const isOpen = aiDbExpandedGroup === groupId || !!(aiDbSearch?.value || '').trim();
+  const actionLabel = currentLang === 'zh' ? (isOpen ? '收起' : '展开') : (isOpen ? 'COLLAPSE' : 'EXPAND');
   return `
-    <section class="db-skill-group">
-      <header class="db-skill-group-head">
+    <section class="db-skill-group ${isOpen ? 'open' : ''}" data-ai-group="${escapeHtml(groupId)}">
+      <button type="button" class="db-skill-group-head" data-ai-group-toggle="${escapeHtml(groupId)}" aria-expanded="${isOpen ? 'true' : 'false'}">
         <div>
           <div class="db-skill-group-title">${escapeHtml(title)}</div>
           <div class="db-skill-group-hint">${escapeHtml(hint)}</div>
         </div>
-        <span class="db-skill-group-count">${String(skills.length).padStart(2, '0')}</span>
-      </header>
-      ${skills.map(renderAiSkillCard).join('')}
+        <span class="db-skill-group-meta">
+          <span class="db-skill-group-count">${String(skills.length).padStart(2, '0')}</span>
+          <span class="db-skill-group-action">${escapeHtml(actionLabel)}</span>
+        </span>
+      </button>
+      <div class="db-skill-group-body">
+        ${skills.map(renderAiSkillCard).join('')}
+      </div>
     </section>
   `;
 }
@@ -3356,7 +3365,9 @@ function renderAiDbFilters(){
 function renderAiDbList(){
   if(!aiDbList) return;
   const q = (aiDbSearch?.value || '').trim().toLowerCase();
+  const previousScroll = aiDbList.scrollTop || 0;
   if(aiDbType === 'skills'){
+    if(q) aiDbExpandedGroup = '';
     const filtered = aiDbSkills.filter(skill => {
       const catOk = aiDbCategory === 'all' || skill.category_id === aiDbCategory;
       if(!catOk) return false;
@@ -3369,6 +3380,7 @@ function renderAiDbList(){
       return;
     }
     aiDbList.innerHTML = renderAiSkillGroups(filtered);
+    aiDbList.scrollTop = previousScroll;
     return;
   }
 
@@ -3450,6 +3462,7 @@ aiDbTypeTabs?.addEventListener('click', (e)=>{
   aiDbType = btn.dataset.dbType;
   aiDbCategory = 'all';
   aiDbSubCategory = 'all';
+  aiDbExpandedGroup = '';
   if(aiDbSearch) aiDbSearch.value = '';
   loadAiDatabase();
 });
@@ -3458,8 +3471,21 @@ aiDbFilter?.addEventListener('click', (e)=>{
   if(!btn) return;
   aiDbCategory = btn.dataset.aiCat;
   aiDbSubCategory = 'all';
+  aiDbExpandedGroup = '';
   renderAiDbFilters();
   renderAiDbList();
+});
+aiDbList?.addEventListener('click', (e)=>{
+  const btn = e.target.closest('[data-ai-group-toggle]');
+  if(!btn) return;
+  const groupId = btn.dataset.aiGroupToggle || '';
+  aiDbExpandedGroup = aiDbExpandedGroup === groupId ? '' : groupId;
+  renderAiDbList();
+  if(aiDbExpandedGroup){
+    requestAnimationFrame(() => {
+      aiDbList.querySelector(`[data-ai-group="${CSS.escape(aiDbExpandedGroup)}"]`)?.scrollIntoView({ block:'nearest', behavior:'smooth' });
+    });
+  }
 });
 
 // classify a skill (heuristic fallback if AI fails)
