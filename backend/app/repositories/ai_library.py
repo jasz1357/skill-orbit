@@ -9,7 +9,7 @@ from uuid import uuid4
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
-from app.db.ai_library_seed import AI_LIBRARY_ITEMS
+from app.db.ai_library_seed import AI_LIBRARY_EXCLUDED_IDS, AI_LIBRARY_ITEMS
 from app.db.ai_subskill_taxonomy import classify_subskill
 from app.db.models import AILibraryItemRecord
 from app.models.ai_library import AILibraryItemCreate, AILibraryItemRead, AILibraryItemUpdate
@@ -17,6 +17,13 @@ from app.repositories.ai_skills import _search_terms
 
 
 def ensure_ai_library_seed(db: Session) -> None:
+    if AI_LIBRARY_EXCLUDED_IDS:
+        for record in db.scalars(
+            select(AILibraryItemRecord).where(AILibraryItemRecord.id.in_(AI_LIBRARY_EXCLUDED_IDS))
+        ).all():
+            db.delete(record)
+        db.commit()
+
     existing_ids = set(db.scalars(select(AILibraryItemRecord.id)).all())
     existing_signatures = {
         (

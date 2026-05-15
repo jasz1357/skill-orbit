@@ -64,7 +64,7 @@ def workflow(
     }
 
 
-AI_LIBRARY_ITEMS = [
+_RAW_AI_LIBRARY_ITEMS = [
     combo("combo-claude-outlook-calendar", "Claude + Outlook + Google Calendar", "ai-office", "AI OFFICE", ["Claude", "Outlook", "Google Calendar"], "Read email, extract schedule intent, and create calendar actions.", ["email", "calendar", "automation"], 86),
     combo("combo-raycast-claude-api", "Raycast AI + Claude API", "ai-agent", "AI AGENT", ["Raycast AI", "Claude API"], "Turn local Mac commands into fast AI-powered personal workflows.", ["mac", "shortcut", "api"], 78),
     combo("combo-deepl-claude-translation", "DeepL + Claude", "ai-office", "AI OFFICE", ["DeepL", "Claude"], "Translate first, then polish tone, terminology, and final writing quality.", ["translation", "writing"], 78),
@@ -137,6 +137,52 @@ AI_LIBRARY_ITEMS = [
     workflow("workflow-support-automation", "项目工作流 20：客服 80% 工单 AI 自助解决", "ai-business", "AI BUSINESS", ["Coze", "Dify", "RAG", "Intercom", "Zendesk", "Claude", "Linear"], ["RAG Bot", "客服知识库", "工单升级流程"], ["Coze/Dify 搭建客服 RAG Bot", "整理 FAQ 和知识库", "Intercom/Zendesk 接入对话", "Claude 做复杂回复和总结", "Linear 回流产品缺陷", "持续优化召回和回答质量"], ["support", "rag", "automation"], 90),
 ]
 
-AI_LIBRARY_ITEMS.extend(workflow_library_items())
-AI_LIBRARY_ITEMS.extend(china_library_items())
-AI_LIBRARY_ITEMS.extend(expanded_library_items())
+_RAW_AI_LIBRARY_ITEMS.extend(workflow_library_items())
+_RAW_AI_LIBRARY_ITEMS.extend(china_library_items())
+_RAW_AI_LIBRARY_ITEMS.extend(expanded_library_items())
+
+
+PRIVATE_MATCHING_KEYWORDS = ("相亲", "婚介", "脱单", "dating", "hinge", "bumble", "tinder")
+LOW_SIGNAL_TITLES = {"商务：", "个人效率："}
+
+
+def _library_text(item: dict) -> str:
+    values = [
+        item.get("id", ""),
+        item.get("title", ""),
+        item.get("summary", ""),
+        " ".join(item.get("tools", [])),
+        " ".join(item.get("steps", [])),
+        " ".join(item.get("outputs", [])),
+        " ".join(item.get("tags", [])),
+    ]
+    return " ".join(str(value) for value in values).lower()
+
+
+def _should_drop_library_item(item: dict, titles_with_workflow: set[str]) -> bool:
+    if any(keyword.lower() in _library_text(item) for keyword in PRIVATE_MATCHING_KEYWORDS):
+        return True
+    if not item.get("tools") or str(item.get("title", "")).strip() in LOW_SIGNAL_TITLES:
+        return True
+    if item.get("item_type") == "combination" and item.get("title") in titles_with_workflow:
+        return True
+    return False
+
+
+def _curate_library_items(items: list[dict]) -> tuple[list[dict], set[str]]:
+    titles_with_workflow = {
+        item.get("title", "")
+        for item in items
+        if item.get("item_type") == "workflow"
+    }
+    curated: list[dict] = []
+    excluded: set[str] = set()
+    for item in items:
+        if _should_drop_library_item(item, titles_with_workflow):
+            excluded.add(item["id"])
+        else:
+            curated.append(item)
+    return curated, excluded
+
+
+AI_LIBRARY_ITEMS, AI_LIBRARY_EXCLUDED_IDS = _curate_library_items(_RAW_AI_LIBRARY_ITEMS)
