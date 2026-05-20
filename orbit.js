@@ -119,6 +119,7 @@ const I18N = {
     dbTitle: 'AI SKILL DATABASE',
     dbSub: 'Complete AI skill library and workflow stacks from the guide. Core skills appear as orbit nodes.',
     skills: 'SKILLS',
+    skill: 'SKILL',
     stacks: 'WORKFLOW STACKS',
     integration: 'INTEGRATION',
     combo: 'INTEGRATION',
@@ -167,6 +168,11 @@ const I18N = {
     memoryNodeHead: 'MEMORY NODE',
     parsing: 'parsing',
     foundSkills: count => `I found ${count} AI skill${count > 1 ? 's' : ''} in the database.`,
+    foundRecommendations: count => `You need these ${count} related AI workflow stack${count > 1 ? 's' : ''}:`,
+    foundPlans: count => `I recommend these ${count} plan${count > 1 ? 's' : ''}:`,
+    bestFor: 'Best for',
+    needs: 'Needs',
+    outputs: 'Outputs',
     noDirectMatch: 'No direct database match yet. Try a broader tool or task keyword.',
     loggedOrbit: 'Logged to the orbit.',
     loggedMemoryOrbit: 'Logged to the memory orbit.',
@@ -202,6 +208,7 @@ const I18N = {
     dbTitle: 'AI 技能数据库',
     dbSub: '来自指南的完整 AI 技能库和工作流栈。核心技能会显示在星球轨道上。',
     skills: '技能',
+    skill: '技能',
     stacks: '工作流栈',
     integration: '工具组合',
     combo: '工具组合',
@@ -250,6 +257,11 @@ const I18N = {
     memoryNodeHead: '技能节点',
     parsing: '解析中',
     foundSkills: count => `我在数据库里找到了 ${count} 个相关 AI 技能。`,
+    foundRecommendations: count => `你需要这些 ${count} 个相关 AI 工作流组合：`,
+    foundPlans: count => `我推荐这 ${count} 个方案：`,
+    bestFor: '适合',
+    needs: '需要',
+    outputs: '产出',
     noDirectMatch: '暂时没有直接匹配。可以试试更宽泛的工具或任务关键词。',
     loggedOrbit: '已记录到技能星轨。',
     loggedMemoryOrbit: '已记录到技能星轨。',
@@ -3190,6 +3202,77 @@ function normalizeAiLibraryItemToNode(item){
   };
 }
 
+function displayRecommendationTitle(rec){
+  if(rec?.item){
+    return rec.source_type === 'skill' ? displaySkillName(rec.item) : displayLibraryTitle(rec.item);
+  }
+  return rec?.title || '';
+}
+
+function recommendationPurpose(rec){
+  if(rec?.item && rec.source_type !== 'skill') return stackPurpose(rec.item);
+  return rec?.summary || '';
+}
+
+function renderRecommendation(rec, index){
+  const item = rec.item || rec;
+  const sw = colorForCat(rec.sub_skill_id || rec.category_id);
+  const tools = Array.isArray(rec.tools) && rec.tools.length
+    ? rec.tools.slice(0, 5).map(displayLibraryChip).join(' + ')
+    : '';
+  const purpose = recommendationPurpose(rec);
+  const typeLabel = rec.source_type === 'workflow'
+    ? t('workflow')
+    : rec.source_type === 'combination'
+      ? t('integration')
+      : t('skill');
+  return `
+    <div class="chat-rec" data-chat-source="${escapeHtml(rec.source_id)}">
+      <div class="chat-rec-top">
+        <span class="sw" style="background:${sw}; box-shadow:0 0 8px ${sw}"></span>
+        <strong>${index + 1}. ${escapeHtml(displayRecommendationTitle(rec))}</strong>
+        <span>${escapeHtml(typeLabel)} · ${Math.round((rec.score || 0) * 100)}%</span>
+      </div>
+      ${tools ? `<div class="chat-rec-tools">${escapeHtml(tools)}</div>` : ''}
+      ${purpose ? `<div class="chat-rec-purpose">${escapeHtml(purpose)}</div>` : ''}
+    </div>
+  `;
+}
+
+function renderRecommendedPlan(plan, index){
+  const rec = plan.recommendation || {};
+  const sw = colorForCat(rec.sub_skill_id || rec.category_id);
+  const tools = Array.isArray(rec.tools) && rec.tools.length
+    ? rec.tools.slice(0, 5).map(displayLibraryChip).join(' + ')
+    : '';
+  const inputs = Array.isArray(plan.required_inputs) ? plan.required_inputs.slice(0, 4).join(', ') : '';
+  const outputs = Array.isArray(plan.expected_outputs) ? plan.expected_outputs.slice(0, 4).join(', ') : '';
+  return `
+    <div class="chat-rec" data-chat-source="${escapeHtml(rec.source_id || '')}">
+      <div class="chat-rec-label">${escapeHtml(plan.label || plan.plan_type || '')}</div>
+      <div class="chat-rec-top">
+        <span class="sw" style="background:${sw}; box-shadow:0 0 8px ${sw}"></span>
+        <strong>${index + 1}. ${escapeHtml(displayRecommendationTitle(rec))}</strong>
+        <span>${Math.round((plan.score || rec.score || 0) * 100)}%</span>
+      </div>
+      ${tools ? `<div class="chat-rec-tools">${escapeHtml(tools)}</div>` : ''}
+      ${plan.reason ? `<div class="chat-rec-reason">${escapeHtml(plan.reason)}</div>` : ''}
+      ${plan.best_for ? `<div class="chat-rec-purpose"><strong>${escapeHtml(t('bestFor'))}:</strong> ${escapeHtml(plan.best_for)}</div>` : ''}
+      ${inputs ? `<div class="chat-rec-small">${escapeHtml(t('needs'))}: ${escapeHtml(inputs)}</div>` : ''}
+      ${outputs ? `<div class="chat-rec-small">${escapeHtml(t('outputs'))}: ${escapeHtml(outputs)}</div>` : ''}
+    </div>
+  `;
+}
+
+function highlightRecommendationNodes(recommendations){
+  (recommendations || []).forEach(rec => {
+    const nodeId = rec.source_type === 'skill' ? rec.source_id : `library-${rec.source_id}`;
+    const node = memoryNodes.find(n => n.id === nodeId || n.id === rec.source_id);
+    if(node) node._selected = true;
+    setTimeout(()=>{ if(node) node._selected = false; }, 2400);
+  });
+}
+
 function practicalSkillScore(skill){
   const text = `${skill.name || ''} ${skill.tool || ''} ${skill.stage || ''} ${skill.description || ''} ${(skill.tags || []).join(' ')}`.toLowerCase();
   let score = Number(skill.importance || 0);
@@ -3904,23 +3987,19 @@ async function handleSend(){
   }
 
   try{
-    const matches = await fetchJson(`/ai-skills?q=${encodeURIComponent(text)}&limit=8`);
+    const plan = await fetchJson('/ai-skills/recommend', {
+      method: 'POST',
+      body: JSON.stringify({ query: text, top_k: 3 }),
+    });
     clearInterval(tID);
     ind.remove();
-    if(matches.length){
-      const top = matches.slice(0, 5);
+    const plans = Array.isArray(plan?.plans) ? plan.plans : [];
+    if(plans.length){
       appendMsg('ai',
-        `${escapeHtml(t('foundSkills', top.length))}<br/>` +
-        top.map(skill => {
-          const sw = colorForCat(skill.category_id);
-          return `<span class="pill"><span class="sw" style="background:${sw}; box-shadow:0 0 8px ${sw}"></span>${escapeHtml(displaySkillName(skill))}</span>`;
-        }).join('<br/>')
+        `${escapeHtml(t('foundPlans', plans.length))}<br/>` +
+        plans.map(renderRecommendedPlan).join('')
       );
-      top.forEach(skill => {
-        const node = memoryNodes.find(n => n.id === skill.id);
-        if(node) node._selected = true;
-        setTimeout(()=>{ if(node) node._selected = false; }, 1800);
-      });
+      highlightRecommendationNodes(plans.map(p => p.recommendation).filter(Boolean));
     } else {
       appendMsg('ai', escapeHtml(t('noDirectMatch')));
     }

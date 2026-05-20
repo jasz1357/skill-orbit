@@ -14,6 +14,11 @@ class Settings(BaseSettings):
     default_admin_username: str = "admin"
     default_admin_email: str = "admin@example.com"
     default_admin_password: str = "admin123"
+    embedding_provider: str = "local"
+    embedding_dimension: int = 384
+    openai_api_key: str = ""
+    openai_embedding_model: str = "text-embedding-3-small"
+    ai_search_default_threshold: float = 0.24
     cors_origins_raw: str = Field(default="", alias="CORS_ORIGINS")
 
     @property

@@ -5,6 +5,7 @@ from app.api.router import api_router
 from app.core.config import settings
 from app.db.session import SessionLocal
 from app.repositories.ai_library import ensure_ai_library_seed
+from app.repositories.ai_embeddings import ensure_ai_embedding_seed
 from app.repositories.ai_skills import ensure_ai_skill_seed
 from app.repositories.ai_subskills import ensure_ai_subskill_seed
 from app.repositories.users import ensure_admin_user
@@ -36,6 +37,7 @@ def create_app() -> FastAPI:
             ensure_ai_subskill_seed(db)
             ensure_ai_skill_seed(db)
             ensure_ai_library_seed(db)
+            ensure_ai_embedding_seed(db)
         finally:
             db.close()
 

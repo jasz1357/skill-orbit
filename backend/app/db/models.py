@@ -141,3 +141,32 @@ class AILibraryItemRecord(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)
+
+
+class AIEmbeddingRecord(Base):
+    __tablename__ = "ai_embedding_records"
+    __table_args__ = (
+        Index("ix_ai_embedding_records_source", "source_type", "source_id", unique=True),
+        Index("ix_ai_embedding_records_source_type", "source_type"),
+        Index("ix_ai_embedding_records_category_id", "category_id"),
+        Index("ix_ai_embedding_records_sub_skill_id", "sub_skill_id"),
+        Index("ix_ai_embedding_records_content_hash", "content_hash"),
+    )
+
+    id: Mapped[str] = mapped_column(String(120), primary_key=True)
+    source_id: Mapped[str] = mapped_column(String(120), nullable=False)
+    source_type: Mapped[str] = mapped_column(String(24), nullable=False)
+    title: Mapped[str] = mapped_column(String(180), nullable=False)
+    category_id: Mapped[str] = mapped_column(String(48), nullable=False, default="")
+    category_label: Mapped[str] = mapped_column(String(80), nullable=False, default="")
+    sub_skill_id: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    sub_skill_label: Mapped[str] = mapped_column(String(80), nullable=False, default="")
+    content: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    embedding_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
+    metadata_json: Mapped[str] = mapped_column(Text, nullable=False, default="{}")
+    content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    embedding_provider: Mapped[str] = mapped_column(String(32), nullable=False, default="local")
+    embedding_model: Mapped[str] = mapped_column(String(80), nullable=False, default="local-hash")
+    embedding_dimension: Mapped[int] = mapped_column(Integer, nullable=False, default=384)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)
