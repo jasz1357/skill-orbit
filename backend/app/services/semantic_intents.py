@@ -39,7 +39,7 @@ INTENTS: tuple[IntentDefinition, ...] = (
         id="visual_design",
         label="Visual design, image generation, brand assets, and layout",
         use_case="Use when the user wants images, brand visuals, product graphics, UI visuals, posters, or design assets.",
-        triggers=("image", "visual", "design", "brand", "poster", "midjourney", "recraft", "photoshop", "图片", "图像", "设计", "视觉", "海报", "品牌", "logo", "配图"),
+        triggers=("image", "visual", "design", "brand", "poster", "midjourney", "recraft", "photoshop", "图片", "图像", "设计", "视觉", "海报", "品牌", "logo", "配图", "产品图", "社媒图"),
         expansion_terms=("image", "visual", "design", "brand", "poster", "midjourney", "recraft", "photoshop", "canva", "图片", "图像", "视觉", "设计", "品牌", "海报"),
     ),
     IntentDefinition(

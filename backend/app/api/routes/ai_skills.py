@@ -3,17 +3,37 @@ from __future__ import annotations
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
-from app.models.ai_embedding import AIComposeRequest, AIComposeResponse, AIEmbeddingSearchResult, AIRecommendResponse
+from app.api.deps import bearer_scheme, get_db
+from app.core.security import verify_access_token
+from app.models.ai_embedding import (
+    AIAdviceResponse,
+    AIComposeRequest,
+    AIComposeResponse,
+    AIEmbeddingSearchResult,
+    AIRecommendationFeedbackCreate,
+    AIRecommendationFeedbackRead,
+    AIRecommendResponse,
+)
 from app.models.ai_library import AILibraryItemCreate, AILibraryItemRead, AILibraryItemUpdate
 from app.models.ai_skill import AISkillCreate, AISkillRead, AISkillUpdate
 from app.repositories import ai_embeddings
 from app.repositories import ai_library
 from app.repositories import ai_skills
+from app.repositories import users
 
 router = APIRouter()
+
+
+def _optional_user_id(db: Session, credentials: Optional[HTTPAuthorizationCredentials]) -> Optional[str]:
+    if not credentials:
+        return None
+    user_id = verify_access_token(credentials.credentials)
+    if not user_id:
+        return None
+    return user_id if users.get_user(db, user_id) else None
 
 
 @router.get("", response_model=list[AISkillRead])
@@ -70,7 +90,7 @@ async def compose_ai_skill_plan(payload: AIComposeRequest, db: Session = Depends
 
 @router.post("/recommend", response_model=AIRecommendResponse)
 async def recommend_ai_skill_plans(payload: AIComposeRequest, db: Session = Depends(get_db)) -> AIRecommendResponse:
-    intent_ids, plans, supporting_skills = ai_embeddings.recommend_ai_plans(
+    intent_ids, plans, comparison, supporting_skills = ai_embeddings.recommend_ai_plans(
         db,
         query=payload.query,
         top_k=min(payload.top_k, 5),
@@ -86,8 +106,57 @@ async def recommend_ai_skill_plans(payload: AIComposeRequest, db: Session = Depe
         message=message,
         intent_ids=intent_ids,
         plans=plans,
+        comparison=comparison,
         supporting_skills=supporting_skills,
     )
+
+
+@router.post("/advice", response_model=AIAdviceResponse)
+async def advise_ai_skill_plans(payload: AIComposeRequest, db: Session = Depends(get_db)) -> AIAdviceResponse:
+    intent_ids, questions = ai_embeddings.clarify_ai_request(payload.query)
+    if questions:
+        return AIAdviceResponse(
+            query=payload.query,
+            message="I need a little more context before recommending the best workflow.",
+            intent_ids=intent_ids,
+            needs_clarification=True,
+            clarification_questions=questions,
+            plans=[],
+            comparison=[],
+            supporting_skills=[],
+        )
+
+    intent_ids, plans, comparison, supporting_skills = ai_embeddings.recommend_ai_plans(
+        db,
+        query=payload.query,
+        top_k=min(payload.top_k, 5),
+        threshold=payload.threshold,
+    )
+    message = (
+        "I found recommended AI workflow plans for this task."
+        if plans
+        else "I could not find a strong recommended plan yet. Try describing the desired output and constraints."
+    )
+    return AIAdviceResponse(
+        query=payload.query,
+        message=message,
+        intent_ids=intent_ids,
+        needs_clarification=False,
+        clarification_questions=[],
+        plans=plans,
+        comparison=comparison,
+        supporting_skills=supporting_skills,
+    )
+
+
+@router.post("/feedback", response_model=AIRecommendationFeedbackRead, status_code=status.HTTP_201_CREATED)
+async def create_ai_recommendation_feedback(
+    payload: AIRecommendationFeedbackCreate,
+    db: Session = Depends(get_db),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
+) -> AIRecommendationFeedbackRead:
+    user_id = _optional_user_id(db, credentials)
+    return ai_embeddings.create_recommendation_feedback(db, payload, user_id=user_id)
 
 
 @router.get("/library", response_model=list[AILibraryItemRead])

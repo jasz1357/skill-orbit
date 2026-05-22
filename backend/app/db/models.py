@@ -170,3 +170,23 @@ class AIEmbeddingRecord(Base):
     embedding_dimension: Mapped[int] = mapped_column(Integer, nullable=False, default=384)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)
+
+
+class AIRecommendationFeedbackRecord(Base):
+    __tablename__ = "ai_recommendation_feedback"
+    __table_args__ = (
+        Index("ix_ai_recommendation_feedback_source", "source_type", "source_id"),
+        Index("ix_ai_recommendation_feedback_user_id", "user_id"),
+        Index("ix_ai_recommendation_feedback_rating", "rating"),
+        Index("ix_ai_recommendation_feedback_created_at", "created_at"),
+    )
+
+    id: Mapped[str] = mapped_column(String(48), primary_key=True)
+    user_id: Mapped[Optional[str]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    query: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    source_id: Mapped[str] = mapped_column(String(120), nullable=False)
+    source_type: Mapped[str] = mapped_column(String(24), nullable=False)
+    plan_type: Mapped[str] = mapped_column(String(40), nullable=False, default="")
+    rating: Mapped[str] = mapped_column(String(24), nullable=False)
+    comment: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)

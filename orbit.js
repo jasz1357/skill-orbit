@@ -170,9 +170,26 @@ const I18N = {
     foundSkills: count => `I found ${count} AI skill${count > 1 ? 's' : ''} in the database.`,
     foundRecommendations: count => `You need these ${count} related AI workflow stack${count > 1 ? 's' : ''}:`,
     foundPlans: count => `I recommend these ${count} plan${count > 1 ? 's' : ''}:`,
+    clarifyFirst: 'A few details will help me recommend better:',
     bestFor: 'Best for',
     needs: 'Needs',
     outputs: 'Outputs',
+    pros: 'Pros',
+    cons: 'Cons',
+    steps: 'Steps',
+    useful: 'Useful',
+    notFit: 'Not fit',
+    tooComplex: 'Too complex',
+    feedbackSaved: 'Feedback saved.',
+    other: 'Other',
+    continue: 'Continue',
+    continueRefine: 'Continue refining',
+    fastChoice: 'Fast choice',
+    refinedChoice: 'Refined choice',
+    defaultFastPlan: 'Without refining, start with the fastest existing plan:',
+    refinedPlan: 'For a stronger result, use this more complete plan:',
+    chooseOneEach: 'Choose one option for each question first.',
+    addDetailPlaceholder: 'Type your custom detail...',
     noDirectMatch: 'No direct database match yet. Try a broader tool or task keyword.',
     loggedOrbit: 'Logged to the orbit.',
     loggedMemoryOrbit: 'Logged to the memory orbit.',
@@ -259,9 +276,26 @@ const I18N = {
     foundSkills: count => `我在数据库里找到了 ${count} 个相关 AI 技能。`,
     foundRecommendations: count => `你需要这些 ${count} 个相关 AI 工作流组合：`,
     foundPlans: count => `我推荐这 ${count} 个方案：`,
+    clarifyFirst: '我需要先确认几个细节，才能推荐得更准：',
     bestFor: '适合',
     needs: '需要',
     outputs: '产出',
+    pros: '优点',
+    cons: '缺点',
+    steps: '步骤',
+    useful: '有用',
+    notFit: '不适合',
+    tooComplex: '太复杂',
+    feedbackSaved: '反馈已保存。',
+    other: '其他',
+    continue: '继续',
+    continueRefine: '继续细化',
+    fastChoice: '更快方案',
+    refinedChoice: '更优方案',
+    defaultFastPlan: '不继续细化时，先采用现有方案里更快的这一套：',
+    refinedPlan: '继续细化后，优先采用更完整、更稳的这一套：',
+    chooseOneEach: '请先为每个问题选择一个选项。',
+    addDetailPlaceholder: '输入你的补充说明...',
     noDirectMatch: '暂时没有直接匹配。可以试试更宽泛的工具或任务关键词。',
     loggedOrbit: '已记录到技能星轨。',
     loggedMemoryOrbit: '已记录到技能星轨。',
@@ -2427,6 +2461,8 @@ const $ = (s)=>document.querySelector(s);
 const feedEl = $('#feed');
 const inputEl = $('#input');
 const sendBtn = $('#send');
+let lastRecommendationQuery = '';
+let clarificationBaseQuery = '';
 const skillListEl = $('#skill-list');
 const skillUl = $('#skill-ul');
 const API_BASE = 'http://127.0.0.1:8000/api/v1';
@@ -3247,8 +3283,11 @@ function renderRecommendedPlan(plan, index){
     : '';
   const inputs = Array.isArray(plan.required_inputs) ? plan.required_inputs.slice(0, 4).join(', ') : '';
   const outputs = Array.isArray(plan.expected_outputs) ? plan.expected_outputs.slice(0, 4).join(', ') : '';
+  const pros = Array.isArray(plan.pros) ? plan.pros.slice(0, 4).join(', ') : '';
+  const cons = Array.isArray(plan.cons) ? plan.cons.slice(0, 3).join(', ') : '';
+  const steps = Array.isArray(plan.execution_steps) ? plan.execution_steps.slice(0, 5) : [];
   return `
-    <div class="chat-rec" data-chat-source="${escapeHtml(rec.source_id || '')}">
+    <div class="chat-rec" data-chat-source="${escapeHtml(rec.source_id || '')}" data-chat-type="${escapeHtml(rec.source_type || '')}" data-plan-type="${escapeHtml(plan.plan_type || '')}">
       <div class="chat-rec-label">${escapeHtml(plan.label || plan.plan_type || '')}</div>
       <div class="chat-rec-top">
         <span class="sw" style="background:${sw}; box-shadow:0 0 8px ${sw}"></span>
@@ -3258,8 +3297,91 @@ function renderRecommendedPlan(plan, index){
       ${tools ? `<div class="chat-rec-tools">${escapeHtml(tools)}</div>` : ''}
       ${plan.reason ? `<div class="chat-rec-reason">${escapeHtml(plan.reason)}</div>` : ''}
       ${plan.best_for ? `<div class="chat-rec-purpose"><strong>${escapeHtml(t('bestFor'))}:</strong> ${escapeHtml(plan.best_for)}</div>` : ''}
+      ${pros ? `<div class="chat-rec-small">${escapeHtml(t('pros'))}: ${escapeHtml(pros)}</div>` : ''}
+      ${cons ? `<div class="chat-rec-small">${escapeHtml(t('cons'))}: ${escapeHtml(cons)}</div>` : ''}
+      ${steps.length ? `<ol class="chat-rec-steps">${steps.map(step => `<li>${escapeHtml(step)}</li>`).join('')}</ol>` : ''}
       ${inputs ? `<div class="chat-rec-small">${escapeHtml(t('needs'))}: ${escapeHtml(inputs)}</div>` : ''}
       ${outputs ? `<div class="chat-rec-small">${escapeHtml(t('outputs'))}: ${escapeHtml(outputs)}</div>` : ''}
+      <div class="chat-rec-feedback">
+        <button type="button" data-feedback="up">${escapeHtml(t('useful'))}</button>
+        <button type="button" data-feedback="down">${escapeHtml(t('notFit'))}</button>
+        <button type="button" data-feedback="too_complex">${escapeHtml(t('tooComplex'))}</button>
+      </div>
+    </div>
+  `;
+}
+
+function recommendDefaultPlan(plans){
+  return plans.find(plan => plan.plan_type === 'fastest') || plans[0] || null;
+}
+
+function recommendRefinedPlan(plans){
+  const qualityPlans = plans.filter(plan => plan.plan_type !== 'fastest');
+  return qualityPlans.sort((left, right) => Number(right.score || 0) - Number(left.score || 0))[0] || recommendDefaultPlan(plans);
+}
+
+function renderPlanChoiceCard(plan, label, message){
+  const rec = plan?.recommendation || {};
+  if(!rec.source_id && !rec.title) return '';
+  const sw = colorForCat(rec.sub_skill_id || rec.category_id);
+  const tools = Array.isArray(rec.tools) && rec.tools.length
+    ? rec.tools.slice(0, 5).map(displayLibraryChip).join(' + ')
+    : '';
+  return `
+    <div class="plan-choice-card" data-plan-choice-card="active">
+      <div class="chat-rec-label">${escapeHtml(label)}</div>
+      <div class="plan-choice-message">${escapeHtml(message)}</div>
+      <div class="chat-rec-top">
+        <span class="sw" style="background:${sw}; box-shadow:0 0 8px ${sw}"></span>
+        <strong>${escapeHtml(displayRecommendationTitle(rec))}</strong>
+      </div>
+      ${tools ? `<div class="chat-rec-tools">${escapeHtml(tools)}</div>` : ''}
+      ${plan?.reason ? `<div class="chat-rec-reason">${escapeHtml(plan.reason)}</div>` : ''}
+    </div>
+  `;
+}
+
+function renderPlanChoice(plans){
+  const fastPlan = recommendDefaultPlan(plans);
+  const refinedPlan = recommendRefinedPlan(plans);
+  if(!fastPlan) return '';
+  return `
+    <div class="plan-choice" data-plan-choice="active">
+      ${renderPlanChoiceCard(fastPlan, t('fastChoice'), t('defaultFastPlan'))}
+      ${refinedPlan && refinedPlan !== fastPlan ? `
+        <template data-refined-plan-template>
+          ${renderPlanChoiceCard(refinedPlan, t('refinedChoice'), t('refinedPlan'))}
+        </template>
+        <div class="plan-choice-actions">
+          <button type="button" data-refine-plan="true">${escapeHtml(t('continueRefine'))}</button>
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+function renderClarificationQuestion(question, index){
+  const examples = Array.isArray(question.examples) ? question.examples.slice(0, 3).join(' / ') : '';
+  const options = Array.isArray(question.options) ? question.options.slice(0, 7) : [];
+  return `
+    <div class="chat-rec clarification-card" data-clarify-question="${escapeHtml(question.id || String(index))}">
+      <div class="chat-rec-label">${index + 1}</div>
+      <div class="chat-rec-reason">${escapeHtml(question.question || '')}</div>
+      ${question.why ? `<div class="chat-rec-purpose">${escapeHtml(question.why)}</div>` : ''}
+      ${options.length ? `<div class="clarify-options">${options.map(option => `<button type="button" data-clarify-option="${escapeHtml(option)}">${escapeHtml(option)}</button>`).join('')}<button type="button" data-clarify-other="true">${escapeHtml(t('other'))}</button></div>` : ''}
+      ${!options.length && examples ? `<div class="chat-rec-small">${escapeHtml(examples)}</div>` : ''}
+    </div>
+  `;
+}
+
+function renderClarificationGroup(questions){
+  return `
+    <div class="clarification-group" data-clarification-group="active">
+      ${questions.map(renderClarificationQuestion).join('')}
+      <div class="clarify-actions">
+        <button type="button" data-clarify-submit="true">${escapeHtml(t('continue'))}</button>
+        <span data-clarify-warning></span>
+      </div>
     </div>
   `;
 }
@@ -3271,6 +3393,88 @@ function highlightRecommendationNodes(recommendations){
     if(node) node._selected = true;
     setTimeout(()=>{ if(node) node._selected = false; }, 2400);
   });
+}
+
+async function sendRecommendationFeedback(button){
+  const card = button.closest('.chat-rec');
+  if(!card) return;
+  const sourceId = card.dataset.chatSource || '';
+  const sourceType = card.dataset.chatType || 'workflow';
+  const planType = card.dataset.planType || '';
+  if(!sourceId) return;
+  button.disabled = true;
+  try{
+    await fetchJson('/ai-skills/feedback', {
+      method: 'POST',
+      body: JSON.stringify({
+        query: lastRecommendationQuery || '',
+        source_id: sourceId,
+        source_type: sourceType,
+        plan_type: planType,
+        rating: button.dataset.feedback || 'up',
+      }),
+    });
+    button.textContent = t('feedbackSaved');
+  }catch(e){
+    button.disabled = false;
+  }
+}
+
+function chooseClarificationOption(button){
+  const option = button.dataset.clarifyOption || '';
+  if(!option) return;
+  const card = button.closest('.clarification-card');
+  if(!card) return;
+  card.dataset.clarifyAnswer = option;
+  card.querySelectorAll('button[data-clarify-option], button[data-clarify-other]').forEach(btn => btn.classList.remove('selected'));
+  button.classList.add('selected');
+  const customInput = card.querySelector('input[data-clarify-custom]');
+  if(customInput) customInput.remove();
+}
+
+function chooseClarificationOther(button){
+  const card = button.closest('.clarification-card');
+  if(!card) return;
+  card.dataset.clarifyAnswer = '';
+  card.querySelectorAll('button[data-clarify-option], button[data-clarify-other]').forEach(btn => btn.classList.remove('selected'));
+  button.classList.add('selected');
+  let customInput = card.querySelector('input[data-clarify-custom]');
+  if(!customInput){
+    customInput = document.createElement('input');
+    customInput.type = 'text';
+    customInput.dataset.clarifyCustom = 'true';
+    customInput.className = 'clarify-custom';
+    customInput.placeholder = t('addDetailPlaceholder');
+    customInput.addEventListener('input', () => {
+      card.dataset.clarifyAnswer = customInput.value.trim();
+    });
+    card.appendChild(customInput);
+  }
+  customInput.focus();
+}
+
+function submitClarificationGroup(button){
+  const group = button.closest('[data-clarification-group]');
+  if(!group) return;
+  const cards = Array.from(group.querySelectorAll('.clarification-card'));
+  const answers = cards.map(card => (card.dataset.clarifyAnswer || '').trim()).filter(Boolean);
+  const warning = group.querySelector('[data-clarify-warning]');
+  if(answers.length < cards.length){
+    if(warning) warning.textContent = t('chooseOneEach');
+    return;
+  }
+  const base = clarificationBaseQuery || lastRecommendationQuery || '';
+  inputEl.value = `${base}；${answers.join('；')}`;
+  handleSend();
+}
+
+function chooseRefinedPlan(button){
+  const choice = button.closest('[data-plan-choice]');
+  const template = choice?.querySelector('template[data-refined-plan-template]');
+  const card = choice?.querySelector('[data-plan-choice-card]');
+  if(!choice || !template || !card) return;
+  card.outerHTML = template.innerHTML.trim();
+  button.closest('.plan-choice-actions')?.remove();
 }
 
 function practicalSkillScore(skill){
@@ -3987,17 +4191,32 @@ async function handleSend(){
   }
 
   try{
-    const plan = await fetchJson('/ai-skills/recommend', {
+    const plan = await fetchJson('/ai-skills/advice', {
       method: 'POST',
       body: JSON.stringify({ query: text, top_k: 3 }),
     });
     clearInterval(tID);
     ind.remove();
+    const questions = Array.isArray(plan?.clarification_questions) ? plan.clarification_questions : [];
+    if(plan?.needs_clarification && questions.length){
+      clarificationBaseQuery = text;
+      lastRecommendationQuery = text;
+      appendMsg('ai',
+        `${escapeHtml(t('clarifyFirst'))}<br/>` +
+        renderClarificationGroup(questions)
+      );
+      sendBtn.disabled = false;
+      inputEl.focus();
+      return;
+    }
     const plans = Array.isArray(plan?.plans) ? plan.plans : [];
     if(plans.length){
+      lastRecommendationQuery = text;
+      clarificationBaseQuery = '';
       appendMsg('ai',
         `${escapeHtml(t('foundPlans', plans.length))}<br/>` +
-        plans.map(renderRecommendedPlan).join('')
+        plans.map(renderRecommendedPlan).join('') +
+        renderPlanChoice(plans)
       );
       highlightRecommendationNodes(plans.map(p => p.recommendation).filter(Boolean));
     } else {
@@ -4033,6 +4252,18 @@ async function handleSend(){
 sendBtn.addEventListener('click', handleSend);
 inputEl.addEventListener('keydown', (e)=>{
   if(e.key === 'Enter') handleSend();
+});
+feedEl.addEventListener('click', (e)=>{
+  const feedbackButton = e.target.closest('button[data-feedback]');
+  if(feedbackButton) sendRecommendationFeedback(feedbackButton);
+  const clarifyButton = e.target.closest('button[data-clarify-option]');
+  if(clarifyButton) chooseClarificationOption(clarifyButton);
+  const clarifyOtherButton = e.target.closest('button[data-clarify-other]');
+  if(clarifyOtherButton) chooseClarificationOther(clarifyOtherButton);
+  const clarifySubmitButton = e.target.closest('button[data-clarify-submit]');
+  if(clarifySubmitButton) submitClarificationGroup(clarifySubmitButton);
+  const refinePlanButton = e.target.closest('button[data-refine-plan]');
+  if(refinePlanButton) chooseRefinedPlan(refinePlanButton);
 });
 
 // click on skill list -> open detail card; or delete via × button

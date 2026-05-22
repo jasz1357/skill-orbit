@@ -58,17 +58,50 @@ Ranking combines vector similarity, intent overlap, direct title/category match,
 - `GET /api/v1/ai-skills/search?q=...&types=combination,workflow&top_k=8`
 - `POST /api/v1/ai-skills/compose`
 - `POST /api/v1/ai-skills/recommend`
+- `POST /api/v1/ai-skills/advice`
 
-`recommend` is what the frontend chat uses. It first retrieves candidate combinations/workflows, then reranks them into a small set of recommendation plans such as fastest path, best visual deck, or business-ready proposal. Each plan includes:
+`advice` is what the frontend chat uses. It first checks whether the user request has enough context. If the request is too vague, it returns `needs_clarification=true` and 1-3 clarification questions. If the request is specific enough, it returns the same recommendation plan shape as `recommend`.
+
+`recommend` retrieves candidate combinations/workflows, then reranks them into a small set of recommendation plans such as fastest path, best visual deck, or business-ready proposal. Each plan includes:
 
 - recommendation type
 - reason
 - best-fit scenario
 - tradeoff
+- pros and cons
+- execution steps
 - required inputs
 - expected outputs
 
 `compose` remains available as the lower-level semantic retrieval endpoint.
+
+## Feedback Learning
+
+The frontend can post lightweight recommendation feedback to:
+
+- `POST /api/v1/ai-skills/feedback`
+
+Supported ratings:
+
+- `up`
+- `down`
+- `too_complex`
+- `too_slow`
+- `want_faster`
+- `want_better`
+- `used`
+
+Feedback is stored in `ai_recommendation_feedback`. The recommender reads accumulated feedback and applies a small ranking adjustment, so repeatedly useful workflows become slightly more likely to appear, while poor-fit workflows are gently demoted.
+
+## Clarification Option Reranking
+
+Clarification choices are appended to the original request before recommendation. The recommender now gives those choices explicit weight:
+
+- audience, such as client, class, boss/team, investor, thesis defense
+- material state, such as existing docs, from scratch, data table, links, old PPT polish
+- priority, such as fast, visual polish, professional quality, logical rigor, business proposal
+
+The option-aware reranker only adjusts candidates already retrieved by semantic search, then adds a stable query-specific tie break. This keeps results relevant while making different option combinations produce different plan orders.
 
 ## Update Flow
 
