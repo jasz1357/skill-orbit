@@ -3,6 +3,7 @@ from __future__ import annotations
 from app.db.ai_workflow_100_seed import workflow_library_items
 from app.db.china_ai_tool_workflow_seed import china_library_items
 from app.db.expanded_ai_tool_workflow_seed import expanded_library_items
+from app.db.hot_ai_2026_seed import hot_ai_library_items
 
 
 def combo(
@@ -140,6 +141,7 @@ _RAW_AI_LIBRARY_ITEMS = [
 _RAW_AI_LIBRARY_ITEMS.extend(workflow_library_items())
 _RAW_AI_LIBRARY_ITEMS.extend(china_library_items())
 _RAW_AI_LIBRARY_ITEMS.extend(expanded_library_items())
+_RAW_AI_LIBRARY_ITEMS.extend(hot_ai_library_items())
 
 
 PRIVATE_MATCHING_KEYWORDS = ("相亲", "婚介", "脱单", "dating", "hinge", "bumble", "tinder")
