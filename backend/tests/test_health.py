@@ -114,3 +114,21 @@ def test_ai_advice_option_choices_change_plan_order() -> None:
     fast_titles = [plan["recommendation"]["title"] for plan in fast_response.json()["plans"]]
     visual_titles = [plan["recommendation"]["title"] for plan in visual_response.json()["plans"]]
     assert fast_titles != visual_titles
+
+
+def test_hot_ai_seed_adds_current_tool_cards() -> None:
+    with TestClient(app) as client:
+        response = client.get("/api/v1/ai-skills", params={"q": "DeepSeek", "limit": 20})
+
+    assert response.status_code == 200
+    tool_ids = {item["id"] for item in response.json()}
+    assert "deepseek-reasoning-coding" in tool_ids
+
+
+def test_hot_ai_library_surfaces_video_ad_stack() -> None:
+    with TestClient(app) as client:
+        response = client.get("/api/v1/ai-skills/library", params={"q": "Veo Runway Kling CapCut", "limit": 20})
+
+    assert response.status_code == 200
+    item_ids = {item["id"] for item in response.json()}
+    assert "combo-video-ad-factory" in item_ids

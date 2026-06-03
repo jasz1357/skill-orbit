@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from app.db.hot_ai_2026_seed import hot_ai_skill_items
+
 AI_SKILL_CATEGORIES = [{'id': 'ai-models', 'label': 'AI MODELS', 'color': '#ffb066', 'radius': 1.45, 'tilt': [0.26, 0.1, 0.04], 'speed': 0.06}, {'id': 'ai-coding', 'label': 'AI CODING', 'color': '#7ed6e6', 'radius': 1.78, 'tilt': [-0.38, 0.34, 0.12], 'speed': 0.044}, {'id': 'ai-visual', 'label': 'AI VISUAL', 'color': '#e69aa3', 'radius': 2.11, 'tilt': [0.62, -0.22, 0.1], 'speed': 0.034}, {'id': 'ai-media', 'label': 'AI MEDIA', 'color': '#b99cff', 'radius': 2.44, 'tilt': [-0.7, -0.1, -0.15], 'speed': 0.027}, {'id': 'ai-office', 'label': 'AI OFFICE', 'color': '#ffe27a', 'radius': 2.77, 'tilt': [0.14, 0.52, -0.08], 'speed': 0.022}, {'id': 'ai-research', 'label': 'AI RESEARCH', 'color': '#91e6a7', 'radius': 3.1, 'tilt': [-0.18, -0.46, 0.18], 'speed': 0.018}, {'id': 'ai-agent', 'label': 'AI AGENT', 'color': '#ff8ed1', 'radius': 3.43, 'tilt': [0.78, 0.22, -0.18], 'speed': 0.015}, {'id': 'ai-business', 'label': 'AI BUSINESS', 'color': '#9fb7ff', 'radius': 3.76, 'tilt': [-0.58, 0.58, 0.22], 'speed': 0.013}]
 
 def skill(
@@ -100,3 +102,5 @@ AI_SKILLS = [
     skill('harvey-legal-ai', '用 Harvey 做法律文档辅助', 'ai-business', 'Harvey', '法务', ['法务', '合同', '审查'], '目的：法务辅助。1上传合同 2问风险 3人工复核', 'https://www.harvey.ai', sub_skill_id='business-ops-finance-legal', sub_skill_label='Ops, Finance, Legal & HR', core=False, importance=76),
     skill('shopify-sidekick', '用 Shopify Sidekick 做电商运营', 'ai-business', 'Shopify Sidekick', '电商', ['电商', '商品', '运营'], '目的：电商运营。1问店铺 2改商品 3看数据', 'https://www.shopify.com/magic', sub_skill_id='business-ecommerce-product', sub_skill_label='E-commerce & Product Ops', core=False, importance=80),
 ]
+
+AI_SKILLS.extend(hot_ai_skill_items())
