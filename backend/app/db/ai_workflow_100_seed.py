@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 
-# Generated from /Users/jasminezhang1357/Desktop/AI工作流100条.pdf.
+# Generated from the "AI workflow 100" source PDF.
 # The PDF is treated as a seed source for AI Skill Database items.
 # Each source row produces one combination item and one workflow item;
 # missing tools from those combinations are added as contextual skills.

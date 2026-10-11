@@ -5,7 +5,7 @@ FastAPI backend skeleton for the Skill Orbit memory globe.
 ## Local Run
 
 ```bash
-cd "/Users/jasminezhang1357/Desktop/MP3 2"
+cd skill-orbit
 ./start_backend.sh
 ```
 
@@ -14,7 +14,7 @@ Open `http://localhost:8000/docs`.
 ## Docker Run
 
 ```bash
-cd "/Users/jasminezhang1357/Desktop/MP3 2"
+cd skill-orbit
 cp .env.example .env
 docker compose up --build
 ```
@@ -34,9 +34,6 @@ This backend now includes a real SQLite persistence layer:
 
 The AI assistant uses `/api/v1/ai-skills/compose` to retrieve related workflow stacks. By default it runs with a local hash embedding index, so no API key is required. To use OpenAI embeddings later, set `EMBEDDING_PROVIDER=openai`, `OPENAI_API_KEY`, and optionally `OPENAI_EMBEDDING_MODEL=text-embedding-3-small`.
 
-Default local admin:
+Default local admin account: see `DEFAULT_ADMIN_*` in `.env.example`.
 
-- Username: `admin`
-- Password: `admin123`
-
-Change these in `.env` before using the project beyond local development.
+Change these in your own `.env` before using the project beyond local development.

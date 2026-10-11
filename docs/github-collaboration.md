@@ -13,7 +13,7 @@ This project should use GitHub as the shared source of truth. Local `.env`, SQLi
 If this folder is not a git repo yet:
 
 ```bash
-cd "/Users/jasminezhang1357/Desktop/MP3 2"
+cd skill-orbit
 git init
 git add .
 git commit -m "Initial Skill Orbit project"
