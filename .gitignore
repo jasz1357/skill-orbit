@@ -25,3 +25,6 @@ __pycache__/
 .idea/
 .vscode/
 *.swp
+
+# Pasted images / local uploads (kept on each computer, not committed)
+uploads/

@@ -72,9 +72,7 @@ echo
 echo "Opening Skill Orbit..."
 open "$FRONTEND_URL"
 echo
-echo "Default backend login:"
-echo "  username: admin"
-echo "  password: admin123"
+echo "Default backend login: see DEFAULT_ADMIN_* in .env.example"
 echo
 echo "Logs:"
 echo "  $LOG_DIR/backend.log"
